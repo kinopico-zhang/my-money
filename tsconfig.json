@@ -1,0 +1,18 @@
+{
+  // 纯逻辑模块的类型检查 (tsc --checkJS): bookkeeping-merge (同步合并
+  // LWW 规则)。页面脚本 (bookkeeping-*.js) 依赖页面 DOM 宿主, 类型声明
+  // 成本高, 由 ESLint 把关。
+  // types:[] — 不自动引入 node_modules/@types (共享目录里有别的包声明)
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "es2020",
+    "lib": ["dom", "es2020"],
+    "types": []
+  },
+  "include": [
+    "app/bookkeeping/static/bookkeeping-merge.js",
+    "frontend-globals.d.ts"
+  ]
+}
