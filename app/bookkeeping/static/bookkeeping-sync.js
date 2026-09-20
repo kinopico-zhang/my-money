@@ -78,13 +78,6 @@ document.addEventListener("visibilitychange", () => {
 });
 setInterval(syncNow, 60000);
 
-// 顶栏刷新 = 立即同步 (全站刷新按钮最右的统一位)
-$("#refresh-btn").addEventListener("click", async () => {
-  $("#refresh-btn").classList.add("busy");
-  await syncNow();
-  $("#refresh-btn").classList.remove("busy");
-});
-
 async function loadCategories() {   // 类别树: 缓存先用, 联网刷新 (离线优先同账目)
   try {
     const r = await fetch("/bookkeeping/api/categories", { cache: "no-store" });
