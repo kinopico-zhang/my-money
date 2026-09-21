@@ -39,10 +39,9 @@ function entriesToUpload(localEntries, dirtyIds) {
          note, deleted, updated_at: updatedAt }));
 }
 
-// 从完整条目里挑出该展示的 (按月份 + 记账人 + 未删除)
-function visibleEntries(entries, month, person) {
-  return entries.filter(e => !e.deleted && e.date.startsWith(month) &&
-    (!person || e.createdByName === person));
+// 从完整条目里挑出该展示的 (记账人筛过 + 未删除) —— 瀑布流看全月份, 不再按月切
+function visibleEntries(entries, person) {
+  return entries.filter(e => !e.deleted && (!person || e.createdByName === person));
 }
 
 // 月度合计: {expense, income} (只算未删除的)

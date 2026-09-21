@@ -9,11 +9,10 @@
   --ink-2: rgba(235,235,245,.62);
   --ink-3: rgba(235,235,245,.32);
   --hairline: rgba(255,255,255,.09);
-  --nav-bg: rgba(10,10,12,.72);
   --blue: #3987e5;
   --green: #5fd47f;
   --red: #e5695f;
-  --cat-icon: var(--ink-2);   /* 类别图标统一色 (列表圆点与类别格子共用) */
+  --cat-icon: #8e8e93;   /* 类别图标统一色: 实色灰 (不用半透明白, 深灰圆底上发虚) */
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
@@ -23,75 +22,21 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
                "Helvetica Neue", system-ui, sans-serif;
   font-size: 14px; line-height: 1.45;
-  min-height: 100vh; min-height: 100dvh;
+  min-height: 100vh;
+  min-height: var(--shell-h, 100dvh);   /* 冻矮补偿: webview 还原高度赖账时
+                                           bookkeeping-viewport.js 钉真满高, 底部黑边补回 */
   display: flex; flex-direction: column;
+  touch-action: pan-y;   /* 全应用禁双指缩放 (跟 My Music / My Tesla 一致):
+                            在 body 收口, 把手/图标这类手势面自带更窄的 touch-action */
 }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 button, a, summary { touch-action: manipulation; }
 
-/* ---------- 顶部导航 (毛玻璃, 与全站一致) ---------- */
-header {
-  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
-  background: var(--nav-bg);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
-  z-index: 50;
-}
-.nav-row { display: flex; align-items: baseline; gap: 8px; }
-.nav-row > * { flex-shrink: 0; }
-.nav-menu { position: relative; align-self: center; margin-left: auto; }
-.nav-menu summary {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 12px; color: var(--ink-1); background: var(--surface-2);
-  padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
-  list-style: none; -webkit-user-select: none; user-select: none;
-}
-.nav-menu summary::-webkit-details-marker { display: none; }
-.nav-menu summary:active { opacity: .7; }
-.nav-menu[open] summary { background: var(--surface-3); }
-.nav-menu .chev { transition: transform .18s; }
-.nav-menu[open] .chev { transform: rotate(180deg); }
-.nav-menu .menu {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 128px; z-index: 30;
-  display: flex; flex-direction: column; padding: 5px;
-  background: rgba(44,44,46,.88);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--hairline); border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.5);
-}
-.nav-menu .menu a {
-  font-size: 14px; color: var(--ink-1); text-decoration: none;
-  padding: 9px 12px; border-radius: 10px; white-space: nowrap;
-}
-.nav-menu .menu a:active { background: var(--surface-3); }
-.nav-menu .menu a.on { color: #7db3f0; }
-.brand-menu { margin-left: 0; }
-.brand-menu summary {
-  font-size: 20px; font-weight: 700; letter-spacing: -.3px;
-  background: none; padding: 0; border-radius: 0;
-}
-.brand-menu[open] summary { background: none; }
-.brand-menu .chev { color: var(--ink-3); }
-.brand-menu .menu { left: 0; right: auto; }
-.nav-menu .menu .logout-row {
-  color: #e5484d; border-top: 1px solid var(--hairline); margin-top: 5px;
-}
-.nav-menu .menu button {
-  font-size: 14px; color: var(--ink-1); text-align: left;
-  padding: 9px 12px; border-radius: 10px; white-space: nowrap;
-}
-@media (max-width: 479px) {
-  header { position: relative; }
-  .nav-menu { position: static; }
-  .nav-menu .menu { left: 12px; right: 12px; }
-}
-
-/* ---------- 同步状态条 ---------- */
+/* ---------- 同步状态条 (页面第一行: 顶栏菜单撤了, 这里垫高让开状态栏/刘海) ---------- */
 .sync-strip {
   display: flex; align-items: center; gap: 6px; justify-content: center;
-  font-size: 11.5px; color: var(--ink-3); padding: 7px 14px;
+  font-size: 11.5px; color: var(--ink-3);
+  padding: calc(env(safe-area-inset-top) + 7px) 14px 7px;
   background: rgba(28,28,30,.6); border-bottom: 1px solid var(--hairline);
 }
 .sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
@@ -99,28 +44,66 @@ header {
 .sync-strip.pending .dot { background: #d8a35a; }
 .sync-strip.off .dot { background: var(--ink-3); }
 
-/* ---------- 月度栏 ---------- */
+/* ---------- 日历卡 (主页顶: 月份切换 + 每天收支, 点日子跳到瀑布流那天) ---------- */
 main {
   flex: 1; width: 100%; max-width: 560px; margin: 0 auto;
   padding: 14px 16px calc(env(safe-area-inset-bottom) + 96px);
 }
-.month-bar {
-  display: flex; align-items: center; gap: 4px; margin-bottom: 10px;
+.cal-card {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: 14px; padding: 8px 10px 10px; margin-bottom: 12px;
 }
-.month-bar .mon { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
-.month-bar button {
-  flex: none; width: 34px; height: 34px; border-radius: 50%;
-  color: var(--ink-2); background: var(--surface-2); font-size: 17px;
+.cal-head { display: flex; align-items: center; gap: 4px; }
+.cal-head button {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  color: var(--ink-2); background: var(--surface-2); font-size: 16px;
 }
-.month-bar button:active { background: var(--surface-3); }
-.sum-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.sum-cell {
-  flex: 1; background: var(--surface); border: 1px solid var(--hairline);
-  border-radius: 14px; padding: 10px 14px;
+.cal-head button:active { background: var(--surface-3); }
+.cal-title { flex: 1; text-align: center; font-size: 15px; font-weight: 700; }
+.cal-title .msum {
+  display: block; font-size: 10.5px; font-weight: 400; color: var(--ink-3);
+  margin-top: 1px; font-variant-numeric: tabular-nums;
 }
-.sum-cell .k { font-size: 11.5px; color: var(--ink-3); }
-.sum-cell .v { font-size: 19px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.sum-cell .v.in { color: var(--green); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 6px; }
+.cal-wd { text-align: center; font-size: 10px; color: var(--ink-3); padding: 2px 0 3px; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 46px; padding: 2px 1px; border-radius: 9px;
+}
+.cal-day:active { background: var(--surface-2); }
+.cal-day .d { font-size: 12.5px; font-weight: 600; height: 17px; line-height: 17px; }
+.cal-day .e, .cal-day .i {
+  font-size: 9.5px; height: 12px; line-height: 12px; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}              /* 槽位行高钉死且常驻 (没数也占行): 日期/支出/收入各排各的水平线 */
+.cal-day .e { color: var(--red); }      /* 每天支出柔红 (与账目行/记一笔同一个调子) */
+.cal-day .i { color: var(--green); }
+.cal-day.today { box-shadow: inset 0 0 0 1px var(--blue); }
+.cal-day.blank { min-height: 0; }       /* 月初补位的空格 */
+
+/* 日历离屏的气泡 (列表滚上来了): 磨砂胶囊浮在顶上 (my-music 播放气泡同款质感),
+   让开最上面的状态栏模糊区; 点了滚回日历展开 */
+#cal-bar {
+  position: fixed; z-index: 7;
+  top: calc(env(safe-area-inset-top) + 10px);
+  left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 16px;
+  max-width: calc(100vw - 24px);
+  font-size: 12.5px; font-weight: 700; color: var(--ink-2);
+  background: rgba(44,44,46,.7);      /* 磨砂玻璃: blur(20) 把底下划过的账糊成影子透上来 */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--hairline); border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+#cal-bar .msum {
+  font-size: 10.5px; font-weight: 400; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#cal-bar[hidden] { display: none; }
 
 /* 记账人筛选 (横滑胶囊) */
 .person-row {
@@ -160,8 +143,32 @@ main {
 }
 .entry .l2 { font-size: 11.5px; color: var(--ink-3); margin-top: 1px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.entry .amt { flex: none; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.entry .l3 { font-size: 10.5px; color: var(--ink-3); margin-top: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry .amt { flex: none; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums;
+  color: var(--red); }              /* 支出柔红; 收入 .in 下面盖成绿 */
 .entry .amt.in { color: var(--green); }
+
+/* 月份头 (瀑布流里换月的地方): 滚动时吸在顶上, 盖着下面的日组不透底 */
+.month-head {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13.5px; font-weight: 700; color: var(--ink-2);
+  padding: 12px 4px 7px; background: var(--bg);
+}
+body.cal-mini .month-head { top: calc(env(safe-area-inset-top) + 54px); }
+/* ↑ 气泡浮在顶上时月份头让到它下面吸 (10 间隙 + 36 气泡高 + 8, 改就一起改) */
+.month-head .msum {
+  font-size: 11px; font-weight: 400; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+#feed-more { height: 44px; }    /* 瀑布流哨兵: 滚进视口就再展开一段 (观察器盯它) */
+#feed-top {
+  display: flex; align-items: center; justify-content: center;
+  height: 36px; color: var(--ink-3); font-size: 15px;
+}                               /* 往上展开的哨兵: 日历跳走后窗口上沿之上还有 (点了也展开) */
+#feed-top[hidden] { display: none; }
+.feed-end { text-align: center; color: var(--ink-3); font-size: 12px; padding: 18px 0 8px; }
 .list-empty { text-align: center; color: var(--ink-3); font-size: 13px; padding: 44px 0; }
 
 /* ---------- 记一笔 (悬浮) ---------- */

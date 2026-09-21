@@ -12,41 +12,34 @@
 <link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/bookkeeping/static/manifest.json">
   <title>My Money</title>
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=2">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=2">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=1">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=11">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=17">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=3">
 </head>
-<body>
-
-<header>
-  <div class="nav-row">
-    <details class="nav-menu brand-menu" id="brand-menu">
-      <summary>My Money<svg class="chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
-      <div class="menu">
-        <a href="/bookkeeping/changelog">更新日志</a>
-        <button type="button" class="logout-row" id="logout" title="退出登录">退出登录</button>
-      </div>
-    </details>
-  </div>
-</header>
+<body data-kind="expense">
 
 <div class="sync-strip" id="sync-strip">
   <span class="dot"></span><span id="sync-text">本地账本</span>
 </div>
 
+<div id="cal-bar" hidden></div>
+
 <main>
-  <div class="month-bar">
-    <button type="button" id="mon-prev" aria-label="上月">‹</button>
-    <div class="mon" id="mon-label"></div>
-    <button type="button" id="mon-next" aria-label="下月">›</button>
+  <div class="cal-card" id="cal-card">
+    <div class="cal-head">
+      <button type="button" id="cal-prev" aria-label="上月">‹</button>
+      <div class="cal-title" id="cal-title"></div>
+      <button type="button" id="cal-next" aria-label="下月">›</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
   </div>
-  <div class="sum-row">
-    <div class="sum-cell"><div class="k">支出</div><div class="v" id="sum-out">¥0</div></div>
-    <div class="sum-cell"><div class="k">收入</div><div class="v in" id="sum-in">¥0</div></div>
-  </div>
+  <div id="cal-sent"></div>
   <div class="person-row" id="person-row"></div>
+  <div id="feed-top" hidden>︿</div>
   <div id="entry-list"></div>
-  <div class="list-empty" id="list-empty" hidden>这个月还没有账目</div>
+  <div id="feed-more"></div>
+  <div class="list-empty" id="list-empty" hidden>还没有账目</div>
+  <div class="feed-end" id="feed-end" hidden></div>
 </main>
 
 <button type="button" id="fab" aria-label="记一笔">＋</button>
@@ -55,25 +48,26 @@
 <div id="sheet" hidden>
   <div class="grab-zone" id="grab-zone"><div class="grab"></div></div>
   <div class="sheet-head">
-    <button type="button" class="head-btn" id="sheet-close">关闭</button>
-    <h2 id="sheet-title">记一笔</h2>
-    <button type="button" class="head-btn" id="sheet-del" hidden>删除</button>
+    <div class="tabs" id="kind-seg">
+      <button type="button" data-kind="income" class="inc">收入</button>
+      <button type="button" data-kind="expense" class="exp on">支出</button>
+    </div>
+    <div class="head-btns">
+      <button type="button" class="head-btn" id="sheet-del" hidden aria-label="删除"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h2a1.5 1.5 0 0 1 1.5 1.5V7"/><path d="M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/><path d="M10 11v6M14 11v6"/></g></svg></button>
+      <button type="button" class="head-btn" id="sheet-close" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
+    </div>
   </div>
-  <div class="seg" id="kind-seg">
-    <button type="button" data-kind="expense" class="exp on">支出</button>
-    <button type="button" data-kind="income" class="inc">收入</button>
+  <div class="amt-line" id="amt-line">
+    <button type="button" class="amt-cat" id="amt-cat"><span class="amt-ic" id="amt-cat-ic"></span><span class="amt-name empty" id="amt-cat-name">选类别</span></button>
+    <span class="amt-eq" id="amt-eq"></span>
+    <input id="f-amount" type="text" inputmode="none" readonly placeholder="0.00" autocomplete="off">
   </div>
-  <div class="amt-line" id="amt-line"><span class="cur">¥</span><input id="f-amount" type="text" inputmode="none" placeholder="0.00" autocomplete="off"><span class="amt-eq" id="amt-eq"></span></div>
   <div class="cat-tiles" id="cat-tiles"></div>
-  <div class="row2">
-    <div class="field"><span>日期</span><input id="f-date" type="date"></div>
-    <div class="field"><span>时间</span><input id="f-time" type="time"></div>
-    <div class="field"><span>备注</span><input type="text" id="f-note" maxlength="200" placeholder="选填" autocomplete="off"></div>
+  <button type="button" class="note-line" id="note-btn"><span class="note-t empty" id="note-label">输入备注...</span></button>
+  <div class="row2 one">
+    <button type="button" class="field when" id="when-btn"><span class="when-t" id="when-label"></span></button>
+    <button type="button" class="field tags" id="tag-btn"><span class="tag-t empty" id="tag-label">标签</span></button>
   </div>
-  <div class="row2">
-    <div class="field"><span>标签</span><input type="text" id="f-tags" maxlength="80" placeholder="空格分隔, 选填" autocomplete="off"></div>
-  </div>
-  <div class="tag-chips" id="tag-chips" hidden></div>
   <div class="amt-pad" id="amt-pad" role="group" aria-label="金额键盘">
     <button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k op" data-k="/">÷</button>
     <button type="button" class="k util" data-k="back">⌫</button>
@@ -84,15 +78,58 @@
   </div>
 </div>
 
-<script src="/static/menu-user.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-merge.js?v=2"></script>
+<div id="cat-pick" class="pick" hidden>
+  <div class="cp-mask" id="cp-mask"></div>
+  <div class="cp-panel">
+    <div class="cp-head"><span>选类别</span>
+      <button type="button" class="cp-x" id="cp-x" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
+    </div>
+    <div class="cp-list" id="cp-list"></div>
+  </div>
+</div>
+
+<div id="when-pick" class="pick" hidden>
+  <div class="cp-mask" id="wp-mask"></div>
+  <div class="cp-panel">
+    <div class="cp-head"><span>时间</span>
+      <button type="button" class="cp-x" id="wp-x" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
+    </div>
+    <div class="wp-box">
+      <div class="wp-col wp-date"><div class="wp-scroll" id="wp-date"></div></div>
+      <div class="wp-col"><div class="wp-scroll" id="wp-hour"></div></div>
+      <div class="wp-col"><div class="wp-scroll" id="wp-min"></div></div>
+      <div class="wp-band" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tag-pick" class="pick" hidden>
+  <div class="cp-mask" id="tp-mask"></div>
+  <div class="cp-panel">
+    <div class="cp-head"><span>标签</span>
+      <button type="button" class="cp-x" id="tp-x" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
+    </div>
+    <div class="tp-new">
+      <input type="text" id="tp-new" maxlength="60" placeholder="打一个新标签" autocomplete="off">
+      <button type="button" id="tp-add">添加</button>
+    </div>
+    <div class="cp-list" id="tp-list"></div>
+  </div>
+</div>
+
+<div id="note-kb" hidden>
+  <input type="text" id="f-note" maxlength="200" placeholder="输入备注..." autocomplete="off" enterkeyhint="done">
+</div>
+
+<script src="/bookkeeping/static/bookkeeping-viewport.js?v=1"></script>
+<script src="/bookkeeping/static/bookkeeping-merge.js?v=3"></script>
 <script src="/bookkeeping/static/amount-calculator.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-state.js?v=2"></script>
-<script src="/bookkeeping/static/category-icons.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-render.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-sync.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-boot.js?v=1"></script>
+<script src="/bookkeeping/static/bookkeeping-state.js?v=3"></script>
+<script src="/bookkeeping/static/category-icons.js?v=3"></script>
+<script src="/bookkeeping/static/bookkeeping-render.js?v=6"></script>
+<script src="/bookkeeping/static/bookkeeping-sync.js?v=2"></script>
+<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=17"></script>
+<script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=8"></script>
+<script src="/bookkeeping/static/bookkeeping-boot.js?v=3"></script>
 </body>
 </html>
