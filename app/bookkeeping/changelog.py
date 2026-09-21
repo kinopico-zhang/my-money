@@ -9,6 +9,10 @@ from typing import Final
 from ..schemas import ChangelogItem, ChangelogVersion
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.2.0", date="2026-09-21", items=[
+        ChangelogItem(kind="新增", text="记账类别全部配上图标: 160 多个大类小类各有各的 (早餐是面包、夜宵是烧烤、充电是电池、"
+                                       "虾饺是只虾…), 子类不再借用大类的图; 图标全部单色一个颜色, 选中类别时变白, 深色界面更清爽"),
+    ]),
     ChangelogVersion(version="1.1.0", date="2026-09-15", items=[
         ChangelogItem(kind="新增", text="左上角的菜单顶部现在显示当前登录的是谁 (管理员带标记);"
                                        " 三个应用的菜单都一样"),

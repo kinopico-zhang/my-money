@@ -56,7 +56,8 @@ def test_categories_api_requires_login(usersdb):
 def test_bookkeeping_page_has_amount_keyboard():
     """金额键盘 (紧凑): 右列 ⌫/完成 两枚大键, 无再记键, 无独立保存按钮;
     小类直接铺图标格子 (子类行没了); 时间/标签字段; 把手下拉关闭;
-    图标 emoji 单色化; 纯逻辑脚本单独成文件。"""
+    类别图标单色 SVG (IconPark currentColor, 统一色 CSS 掌);
+    纯逻辑脚本单独成文件。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
     html = (base / "bookkeeping.html").read_text(encoding="utf-8")
@@ -78,7 +79,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert 'id="f-time" type="time"' in html       # 记账时刻
     assert 'id="f-tags"' in html and 'id="tag-chips"' in html   # 标签 + 历史胶囊
     assert 'id="grab-zone"' in html and 'touch-action: none' in css  # 把手下拉关闭
-    assert 'filter: grayscale(1)' in css          # 类别图标单色化
+    assert "var(--cat-icon)" in css and "grayscale" not in css   # 图标单色: SVG 统一色, 不再滤镜
     assert 'max-height: 34dvh' in css             # 格子区限高自滚, 弹层一屏放下
     assert 'src="/bookkeeping/static/amount-calculator.js?v=1"' in html
 
@@ -92,8 +93,9 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     # 大脚本按逻辑拆成了 bookkeeping-*.js 多个模块 (结构化重构), 断言按
     # bookkeeping.html 里的加载顺序拼接起来整体查
     modules = ("bookkeeping-merge", "amount-calculator", "bookkeeping-state",
-               "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
-               "bookkeeping-amount-pad", "bookkeeping-boot")
+               "category-icons", "bookkeeping-render", "bookkeeping-sync",
+               "bookkeeping-entry-sheet", "bookkeeping-amount-pad",
+               "bookkeeping-boot")
     js = "".join((base / f"{name}.js").read_text(encoding="utf-8")
                  for name in modules)
     assert "evaluateAmount($(\"#f-amount\").value)" in js
@@ -113,3 +115,5 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     assert 'time: e.time || ""' in js and "tags: e.tags || []" in js  # 同步映射
     assert '$("#grab-zone")' in js and "translateY(${dy}px)" in js    # 把手拖动
     assert "CATEGORY_ICONS" in js and "CATEGORIES" not in js
+    assert 'stroke="currentColor"' in js and '<use href="#ci-' in js   # 单色 SVG sprite
+    assert "catIcon(val)" in js                     # 子类格按全路径取自己的图标
