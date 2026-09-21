@@ -53,12 +53,13 @@
 .cat-tiles .tile { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .cat-tiles .ti {
   width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2);
-  display: flex; align-items: center; justify-content: center; font-size: 21px;
-  filter: grayscale(1) brightness(1.25);   /* emoji 单色化: 灰阶去彩, 提亮防暗色图标沉底 */
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cat-icon);               /* 类别图标统一色 (SVG 描边走 currentColor) */
 }
+.cat-tiles .ti .ci { width: 24px; height: 24px; display: block; }
 .cat-tiles .tile:active .ti { background: var(--surface-3); }
 .cat-tiles .tn { font-size: 11px; color: var(--ink-2); }
-.cat-tiles .tile.on .ti { background: var(--blue); }
+.cat-tiles .tile.on .ti { background: var(--blue); color: #fff; }
 .cat-tiles .tile.on .tn { color: #fff; font-weight: 600; }
 .row2 { display: flex; gap: 10px; margin-bottom: 6px; }
 .field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;

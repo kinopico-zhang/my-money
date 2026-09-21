@@ -3,24 +3,15 @@
 // 拆自 bookkeeping.js (结构化重构: 代码逐字节未动, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
 /* exported $, esc, WEEK, entries, dirty, lastSync, month, person, catTree,
-            persist, saveLS, pad, todayStr, nowTime, parseTags, uuid, catIcon,
+            persist, saveLS, pad, todayStr, nowTime, parseTags, uuid,
             creatorName, fmtMoney */
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-/* 类别图标: 大类名 → emoji。类别数据本身在服务器 (挖财导入的两级树),
-   图标是纯展示映射, 跟着数据走不进库; 没映射到的大类兜底 📝。 */
-const CATEGORY_ICONS = {
-  "餐饮": "🍜", "交通": "🚗", "购物": "🛒", "居家": "🏠", "娱乐": "🎮",
-  "医教": "🎓", "人情": "🎁", "投资": "📈", "旅游": "✈️", "生意": "💼",
-  "房贷": "🏦", "团队管理": "👥", "还钱钱": "💸", "虾饺": "🥟",
-  "工资薪水": "💰", "奖金": "🏆", "兼职外快": "🛠️", "红包": "🧧", "利息": "🪙",
-  "基金": "📊", "股票": "💹", "余额宝": "🐷", "分红": "🎉", "营业收入": "🧾",
-  "工程款": "🏗️", "福利补贴": "🎀", "礼金": "💐", "赔付款": "🛡️", "顺风车": "🚕",
-  "医疗": "💊", "教育": "📚",       // 旧版平铺类别 (老账目还在用)
-};
+/* 类别图标搬去了 category-icons.js (emoji 换成 IconPark 单色 SVG:
+   大类/子类都有图标, 统一色, <use> sprite 复用)。 */
 const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
 
 // ---------- 本地存储 ----------
@@ -79,9 +70,6 @@ function uuid() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-function catIcon(cat) {
-  return CATEGORY_ICONS[String(cat || "").split("/")[0]] || "📝";
-}
 // 记账人: 服务器回声带名字; 本地刚记还没同步的暂时标"我"
 function creatorName(e) { return e.createdByName || "我"; }
 function fmtMoney(n) { return "¥" + Number(n).toFixed(2); }

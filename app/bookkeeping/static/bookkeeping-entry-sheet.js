@@ -28,14 +28,14 @@ function renderTagChips() {
 }
 
 function fillChips() {
-  const tiles = [];                 // [组合名, 显示名, 大类(取图标)]
+  const tiles = [];                 // [组合名, 显示名] (图标按组合名查: 子类有自己的)
   for (const {name: top, children: kids} of treeFor(sheetKind)) {
-    if (kids.length) for (const kid of kids) tiles.push([top + "/" + kid, kid, top]);
-    else tiles.push([top, top, top]);   // 没子类的大类自己就是可选类别
+    if (kids.length) for (const kid of kids) tiles.push([top + "/" + kid, kid]);
+    else tiles.push([top, top]);   // 没子类的大类自己就是可选类别
   }
-  $("#cat-tiles").innerHTML = tiles.map(([val, name, top]) =>
+  $("#cat-tiles").innerHTML = tiles.map(([val, name]) =>
     `<button class="tile${sheetCat === val ? " on" : ""}" data-cat="${esc(val)}">` +
-      `<span class="ti">${catIcon(top)}</span><span class="tn">${esc(name)}</span></button>`).join("");
+      `<span class="ti">${catIcon(val)}</span><span class="tn">${esc(name)}</span></button>`).join("");
 }
 
 function openSheet(entry) {

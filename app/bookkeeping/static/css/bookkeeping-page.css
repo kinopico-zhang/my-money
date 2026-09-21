@@ -13,6 +13,7 @@
   --blue: #3987e5;
   --green: #5fd47f;
   --red: #e5695f;
+  --cat-icon: var(--ink-2);   /* 类别图标统一色 (列表圆点与类别格子共用) */
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
@@ -149,9 +150,9 @@ main {
 .entry .cat-dot {
   flex: none; width: 34px; height: 34px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; background: var(--surface-2);
-  filter: grayscale(1) brightness(1.25);   /* 与类别格子同一副单色面孔 */
+  background: var(--surface-2); color: var(--cat-icon);   /* 与类别格子同一副单色面孔 */
 }
+.entry .cat-dot .ci { width: 20px; height: 20px; display: block; }
 .entry .mid { flex: 1; min-width: 0; }
 .entry .l1 {
   font-size: 15px; font-weight: 600;
