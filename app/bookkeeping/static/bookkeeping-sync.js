@@ -9,6 +9,7 @@
 
 // ---------- 同步 ----------
 let syncing = false;
+let syncFailed = false;      // 上次尝试没连上 (没待传的账时会误显"已同步", 要如实说)
 
 function renderSyncStrip() {
   const strip = $("#sync-strip");
@@ -22,6 +23,9 @@ function renderSyncStrip() {
   } else if (dirty.size > 0) {
     strip.classList.add("pending");
     text.textContent = `${dirty.size} 条待同步`;
+  } else if (syncFailed) {
+    strip.classList.add("pending");
+    text.textContent = "没连上 · 稍后自动重试";
   } else {
     const t = lastSync ? new Date(lastSync) : null;
     text.textContent = t && !isNaN(t)
@@ -54,10 +58,12 @@ async function syncNow() {
     entries = mergeEntries(entries, remote);
     dirty = new Set();        // 服务器收下了, 脏名单清空 (失败不清, 下次重传)
     lastSync = data.server_now;
+    syncFailed = false;       // 这次连上了
     saveLS("bk-last-sync", lastSync);
     persist();
     render();
   } catch (_e) {
+    syncFailed = true;        // 没连上/失败: 如实亮出来 (下个触发点再试)
     renderSyncStrip();        // 离线/失败: 脏名单还在, 下个触发点再试
   } finally {
     syncing = false;

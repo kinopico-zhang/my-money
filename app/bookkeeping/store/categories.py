@@ -2,8 +2,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..default_categories import EXPENSE_CATEGORIES, INCOME_CATEGORIES
-from ..schemas import CategoryGroup, CategoryTree
+from ..default_categories import DEFAULT_TAGS, EXPENSE_CATEGORIES, INCOME_CATEGORIES
+from ..schemas import CategoryGroup, CategoryTree, TagSeed
 from .engine import session_factory
 from .models import Category
 
@@ -26,15 +26,17 @@ def seed_default_categories() -> None:
 
 
 def category_tree(session: Session) -> CategoryTree:
-    """类别树 → 支出/收入各自的大类 + 子类, 按种子的 sort 保序
-    (给前端弹层画两级胶囊用)。"""
+    """类别树 + 标签种子 → 支出/收入各自的大类 + 子类, 按种子的 sort 保序
+    (给前端弹层画两级胶囊用)。标签是挖财迁来的静态历史, 不进库
+    (活标签长在各笔账上, 客户端自己合并)。"""
     rows = session.execute(select(Category).order_by(Category.sort, Category.id)
                            ).scalars().all()
     children: dict[str, list[str]] = {}
     for row in rows:
         if row.parent:
             children.setdefault(row.parent, []).append(row.name)
-    tree = CategoryTree(expense=[], income=[])
+    tree = CategoryTree(expense=[], income=[],
+                        tags=[TagSeed(name=n, created=c) for n, c in DEFAULT_TAGS])
     for row in rows:
         if not row.parent:
             group = CategoryGroup(name=row.name,

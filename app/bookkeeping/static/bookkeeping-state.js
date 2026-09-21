@@ -2,9 +2,9 @@
 // (localStorage 先落, 联网增量同步; 同步纯逻辑在 bookkeeping-merge.js)。
 // 拆自 bookkeeping.js (结构化重构: 代码逐字节未动, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
-/* exported $, esc, WEEK, entries, dirty, lastSync, month, person, catTree,
-            persist, saveLS, pad, todayStr, nowTime, parseTags, uuid,
-            creatorName, fmtMoney */
+/* exported $, esc, WEEK, entries, dirty, lastSync, person, catTree,
+            persist, saveLS, pad, todayStr, curMonth, nowTime, parseTags,
+            uuid, creatorName, fmtMoney */
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
@@ -24,7 +24,6 @@ function saveLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 let entries = loadLS("bk-entries", []);       // 全量账本 (含墓碑)
 let dirty = new Set(loadLS("bk-dirty", []));  // 有本地改动待上行的 id
 let lastSync = loadLS("bk-last-sync", "");    // 上次同步的服务器时间 (游标)
-let month = loadLS("bk-month", "");
 let person = loadLS("bk-person", "");
 let catTree = loadLS("bk-categories-v2", null);  // {expense: [{name,children}...], income: [...]}
 
@@ -57,7 +56,6 @@ function parseTags(raw) {
   }
   return out;
 }
-if (!month) month = curMonth();
 
 // HTTP 非安全上下文没有 crypto.randomUUID (安全上下文限定 API),
 // 手搓 v4 —— crypto.getRandomValues 没有这个限制

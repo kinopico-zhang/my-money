@@ -92,7 +92,8 @@ def bookkeeping_categories(request: Request,
                            users: Session = Depends(database.get_users_db),
                            bk: Session = Depends(store.get_db)
                            ) -> CategoryTree:
-    """类别树 (挖财导入的两级类别): 支出/收入各自的大类 + 子类, 画弹层胶囊用。"""
+    """类别树 + 标签种子 (挖财导入): 支出/收入各自的大类 + 子类 + 历史标签,
+    画弹层胶囊和标签胶囊用。"""
     _require_user(request, users)
     return store.category_tree(bk)
 

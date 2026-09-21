@@ -73,8 +73,17 @@ class CategoryGroup(BaseModel):
     children: list[str]
 
 
+class TagSeed(BaseModel):
+    """一个历史标签: 名字 + 创建日期 (挖财迁来的种子, 按创建时间新→旧)。"""
+
+    name: str
+    created: str = ""
+
+
 class CategoryTree(BaseModel):
-    """类别树: 支出/收入各自的大类列表, 按种子的 sort 保序。"""
+    """类别树 + 标签种子 (选层数据): 支出/收入各自的大类列表按种子的
+    sort 保序; tags 是挖财迁来的历史标签 (静态种子, 客户端与账本用过的合并)。"""
 
     expense: list[CategoryGroup]
     income: list[CategoryGroup]
+    tags: list[TagSeed] = Field(default_factory=list)

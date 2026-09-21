@@ -13,67 +13,248 @@
   border-top: 1px solid var(--hairline);
   z-index: 71; transform: translateY(102%); transition: transform .25s;
   max-width: 560px; margin: 0 auto; padding-left: 18px; padding-right: 18px; padding-top: 8px;
-  max-height: calc(100dvh - 24px); overflow-y: auto;   /* 键盘展开后小屏可滚 */
+  max-height: calc(var(--shell-h, 100dvh) - 24px); overflow-y: auto;   /* 小屏整层滚, 键盘吸底不动 (dvh 赖账时吃 --shell-h 真高) */
   overflow-x: hidden;                 /* overflow-y:auto 会把另一轴隐式变 auto, */
   overscroll-behavior-y: contain;     /* 日期/备注行超宽 7px 就能整层左右拖 */
 }
 #sheet.on { transform: translateY(0); }
+/* 方向配色跟收支走 (标签页点选/左右划都换): 支出柔红 (删除钮同款), 收入柔绿 (主页收入同款),
+   都不是纯红纯绿; 金额大字/激活标签页/选中的类别图标吃 --kind, 选中圆底吃 --kind-tint
+   (柔色底配同色线条, iOS tint 风)。挂 body 上: 弹层外的选层也吃得到 */
+body[data-kind="expense"] { --kind: var(--red); --kind-tint: rgba(229,105,95,.30); }
+body[data-kind="income"] { --kind: var(--green); --kind-tint: rgba(95,212,127,.28); }
+/* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字/标签页/选中圆底), 不生硬跳变 */
+.tabs button, .amt-line input, .amt-cat .amt-ic, .cp-row .cp-ic,
+.cat-tiles .tile .ti { transition: color .3s ease, background-color .3s ease; }
+/* 类别那摊顺着划的方向滑入: 去支出从右进 (左划), 去收入从左进 (右划) */
+.cat-tiles.swap-l { animation: kind-swap-l .3s ease; }
+.cat-tiles.swap-r { animation: kind-swap-r .3s ease; }
+@keyframes kind-swap-l { from { transform: translateX(46px); opacity: 0; } }
+@keyframes kind-swap-r { from { transform: translateX(-46px); opacity: 0; } }
 .grab-zone { padding: 7px 0 3px; margin: 0 0 8px; touch-action: none; cursor: pointer; }
 .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto; }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.sheet-head h2 { flex: 1; text-align: center; font-size: 16px; font-weight: 650; }
-.head-btn { font-size: 13.5px; color: var(--ink-2); padding: 5px 2px; min-width: 42px; }
-#sheet-del { color: var(--red); text-align: right; }
-.seg { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; margin-bottom: 12px; }
-.seg button { flex: 1; padding: 8px 0; border-radius: 8px; font-size: 14px; color: var(--ink-2); }
-.seg button.on.exp { background: #48484a; color: var(--ink-1); }
-.seg button.on.inc { background: rgba(48,209,88,.22); color: var(--green); }
-.amt-line { display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px; }
+/* 头部: 左边收入/支出标签页 (不是按钮, 低占位), 右边删除/关闭圆钮 */
+.sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tabs { flex: 1; display: flex; gap: 22px; min-width: 0; }
+.tabs button { padding: 3px 1px 7px; font-size: 16px; color: var(--ink-3); position: relative; }
+.tabs button.on { color: var(--kind); font-weight: 600; }   /* 方向色: 支出红/收入绿 */
+.tabs button.on::after {            /* 选中标签: 底部一道短线 (跟随文字色) */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2.5px; border-radius: 2px; background: currentcolor;
+}
+.head-btns { display: flex; gap: 8px; }
+.head-btn {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.head-btn svg { width: 14px; height: 14px; display: block; }
+#sheet-del { color: var(--red); }
+/* 金额行: 左边当前类别牌 (深灰圆底图标+名字, 点开弹类别树), 金额大字靠右 */
+.amt-line {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
+}
+.amt-cat { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px;
+  margin-left: max(0px, calc((100% - 16px) / 10 - 26px)); }
+  /* ↑ 圆心对准下面类别格第一列: 格子列宽随屏宽走, 这里用同一道算式 (列距共 16px, 半列 - 半图标) */
+.amt-cat:active .amt-ic { background: var(--surface-3); }
+.amt-ic {                    /* 类别图标: 深灰圆底无描边 (与类别格/选层同尺寸) */
+  flex: none; width: 52px; height: 52px; border-radius: 50%;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cat-icon);
+}
+.amt-ic .ci { width: 27px; height: 27px; display: block; }
+.amt-cat.on .amt-ic { background: var(--kind-tint); color: var(--kind); }   /* 选上类别: 方向色点亮 (支出红/收入绿) */
+.amt-name { font-size: 17px; color: var(--ink-2); white-space: nowrap;   /* 金额左边的类别名: 调大一号, 配 38px 金额 */
+  overflow: hidden; text-overflow: ellipsis; }
+.amt-name.empty { color: var(--ink-3); }
 .amt-line .amt-eq {           /* 四则表达式的实时结果 (= 20.5) */
-  flex: none; font-size: 14px; font-weight: 600; color: var(--ink-3);
+  flex: none; font-size: 13.5px; font-weight: 600; color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .amt-line.shake { animation: amt-shake .3s; }
+.amt-cat.shake { animation: amt-shake .3s; }   /* 支出类别没选到位: 类别牌自己抖 */
 @keyframes amt-shake {
   20% { transform: translateX(-5px); } 40% { transform: translateX(4px); }
   60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
 }
-.amt-line .cur { font-size: 26px; font-weight: 700; color: var(--ink-2); }
 .amt-line input {
-  flex: 1; border: 0; background: none; outline: 0; color: var(--ink-1);
-  font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums;
-  caret-color: var(--blue); min-width: 0;
+  flex: 1 0 90px; min-width: 0; border: 0; background: none; outline: 0;
+  color: var(--kind); text-align: right;   /* 金额大字跟方向走: 支出红/收入绿 */
+  font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
+/* 类别格: 5×3 常见格 (约占屏 2/5), 图标统一深灰圆底 */
 .cat-tiles {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px 4px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 4px;
   margin-bottom: 8px;
-  max-height: 34dvh; overflow-y: auto; overscroll-behavior: contain;
-  padding-right: 2px;                     /* 滚动条位不压格子 */
 }
-.cat-tiles .tile { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cat-tiles .tile { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .cat-tiles .ti {
-  width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2);
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--surface-2);
   display: flex; align-items: center; justify-content: center;
   color: var(--cat-icon);               /* 类别图标统一色 (SVG 描边走 currentColor) */
 }
-.cat-tiles .ti .ci { width: 24px; height: 24px; display: block; }
+.cat-tiles .ti .ci { width: 27px; height: 27px; display: block; }
 .cat-tiles .tile:active .ti { background: var(--surface-3); }
 .cat-tiles .tn { font-size: 11px; color: var(--ink-2); }
-.cat-tiles .tile.on .ti { background: var(--blue); color: #fff; }
+.cat-tiles .tile.on .ti { background: var(--kind-tint); color: var(--kind); }   /* 选中: 方向色点亮 */
 .cat-tiles .tile.on .tn { color: #fff; font-weight: 600; }
+/* 备注: 独占一行的无边框样子 (提示「输入备注...」), 点开弹 rides 系统键盘的浮层输入 */
+.note-line { display: block; width: 100%; text-align: left; padding: 0 2px; margin-bottom: 7px; }
+.note-t {
+  display: block; font-size: 16px; color: var(--ink-1); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.note-t.empty { color: var(--ink-3); }
+/* 时间/标签: iOS 开关风的胶囊牌 (深灰底全圆角, 不描边 — 底色自己分得出), 并一行整体收瘦,
+   名字都缩进提示字里 (点开拨轮/列表) */
 .row2 { display: flex; gap: 10px; margin-bottom: 6px; }
 .field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
-  background: var(--surface-2); border-radius: 10px; padding: 9px 11px; }
-.field span { font-size: 12.5px; color: var(--ink-3); flex: none; }
-.field input { flex: 1; min-width: 0; border: 0; background: none; outline: 0;
-  color: var(--ink-1); font: inherit; caret-color: var(--blue); }
-input[type="date"]::-webkit-date-edit { color: var(--ink-1); }
-input[type="time"]::-webkit-date-edit { color: var(--ink-1); }
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .5; }
-.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 8px; }
-.tag-chips button {
-  font-size: 11.5px; padding: 3px 10px; border-radius: 999px;
-  background: var(--surface-2); color: var(--ink-3); border: 1px solid transparent;
+  background: var(--surface-2); border-radius: 999px; padding: 8px 14px; }
+.row2.one { gap: 8px; }
+.row2.one .field { padding: 5px 11px; font-size: 12px; }
+.row2.one .field.when { flex: 0 1 auto; }    /* 时间牌按内容让位, 标签牌摊余下的 */
+.when-t { font-size: 12.5px; color: var(--ink-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.field.when:active { background: var(--surface-3); }
+.tag-t {                       /* 标签牌: 已选的空格并排, 放不下省略号收尾 */
+  font-size: 12.5px; color: var(--ink-1); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.tag-chips button.on { color: #7db3f0; border-color: rgba(57,135,229,.5); }
+.tag-t.empty { color: var(--ink-3); }
+.field.tags:active { background: var(--surface-3); }
+/* ---------- 底部弹选层 (类别树 / 时间拨轮 / 标签列表共用骨架, 盖在记一笔弹层 71 之上) ---------- */
+.pick { position: fixed; inset: 0; z-index: 80; }
+.pick .cp-mask {
+  position: absolute; inset: 0; background: rgba(0,0,0,.55);
+  opacity: 0; transition: opacity .2s;
+}
+.pick.on .cp-mask { opacity: 1; }
+.pick .cp-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  max-width: 560px; margin: 0 auto;
+  height: calc(var(--shell-h, 100dvh) * .76); display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--hairline);
+  transform: translateY(102%); transition: transform .25s;
+  padding: 8px 18px calc(env(safe-area-inset-bottom) + 10px);
+}
+.pick.on .cp-panel { transform: translateY(0); }
+.cp-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  font-size: 15px; font-weight: 600; color: var(--ink-1);
+  padding: 8px 0 10px; border-bottom: 1px solid var(--hairline);
+}
+.cp-x {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-x svg { width: 14px; height: 14px; display: block; }
+.cp-list {                    /* 手风琴长列表, 只有这层滚 */
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain;
+}
+.cp-group { border-bottom: 1px solid var(--hairline); }
+.cp-group:last-child { border-bottom: 0; }
+.cp-top {                     /* 大类: 点一下才亮出小类 (同时只开一个) */
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 13px 2px; text-align: left;
+  font-size: 15px; font-weight: 600; color: var(--ink-1);
+}
+.cp-top .cp-n { flex: none; font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+.cp-top .cp-chev {
+  flex: none; width: 14px; height: 14px; color: var(--ink-3);
+  transition: transform .18s;
+}
+.cp-group.open .cp-chev { transform: rotate(180deg); }
+.cp-kids { display: none; padding-left: 10px; }   /* 小类缩进一级 */
+.cp-group.open .cp-kids { display: block; }
+.cp-row {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 6px 2px; text-align: left; font-size: 14px; color: var(--ink-1);
+}
+.cp-ic {                      /* 与类别格同一副面孔同一尺寸 (52 圆底配 27 图) */
+  flex: none; width: 52px; height: 52px; border-radius: 50%;
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+  color: var(--cat-icon);
+}
+.cp-ic .ci { width: 27px; height: 27px; display: block; }
+.cp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-check { flex: none; width: 18px; color: var(--blue); font-weight: 700; }
+.cp-row.on .cp-name { font-weight: 600; }
+.cp-row.on .cp-check::before { content: "✓"; }
+.cp-row.on .cp-ic { background: var(--kind-tint); color: var(--kind); }   /* 选中: 方向色点亮 (与格子同款) */
+.cp-row.cp-solo {                 /* 没小类的大类 (房贷这些自建的): 与大类标题同一副面孔, 点一下直选 */
+  padding: 13px 2px; font-size: 15px; font-weight: 600;
+}
+
+/* ---------- 时间滑轮 (iOS 闹钟式: 日期 + 时 + 分, 三列拨轮) ---------- */
+#when-pick .cp-panel { height: auto; }   /* 拨轮层矮一截: 头 + 5 格轮 + 安全区 */
+.wp-box {
+  position: relative; flex: none; height: 220px;   /* 5 格高 (格 40) */
+  display: flex; gap: 6px; padding: 0 18px; margin-top: 6px;
+}
+.wp-col { position: relative; overflow: hidden; flex: 1; min-width: 0; }
+.wp-col.wp-date { flex: 0 0 auto; }      /* 日期列按内容取宽, 窄屏也不挤不出横滚 */
+.wp-scroll {
+  position: relative; height: 100%; overflow-y: scroll;
+  overflow-x: hidden; touch-action: pan-y;   /* 只许上下拨, 横向死锁 */
+  overscroll-behavior: contain; scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  perspective: 620px; scrollbar-width: none;   /* 弯面透视: 项在 JS 里逐格转角 */
+  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+}
+.wp-scroll::-webkit-scrollbar { display: none; }
+.wp-it {
+  height: 40px; display: flex; align-items: center; justify-content: center;
+  scroll-snap-align: center; font-size: 15px; color: var(--ink-1);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.wp-pad { height: 90px; }                /* (220-40)/2: 第一/末格也能滚进中带 */
+.wp-band {                                /* 居中高亮带: 拨到哪格哪格入带 */
+  position: absolute; left: 18px; right: 18px; top: 50%; height: 40px;
+  transform: translateY(-50%); border-radius: 10px; pointer-events: none;
+  background: rgba(255,255,255,.05);
+  border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+}
+
+/* ---------- 标签列表层 (点「标签」弹: 创建时间新→旧, 顶部可打新标签) ---------- */
+.tp-new {
+  flex: none; display: flex; gap: 8px; padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.tp-new input {
+  flex: 1; min-width: 0; border: 0; outline: 0;
+  background: var(--surface-2); border-radius: 999px; padding: 8px 14px;
+  color: var(--ink-1); font: inherit; font-size: 16px; caret-color: var(--blue);   /* 16px: iOS 聚焦不放大 */
+}
+.tp-new input::placeholder { color: var(--ink-3); }
+.tp-new button {
+  flex: none; padding: 0 16px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-1); font-size: 13px;
+}
+.tp-new button:active { background: var(--surface-3); }
+.tp-date { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* ---------- 备注浮层输入 (点备注行弹: 跟着系统键盘上移, 贴键盘正上方; 数字键盘让位) ---------- */
+#note-kb {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 90;
+  max-width: 560px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px;
+  background: var(--surface); border-top: 1px solid var(--hairline);
+  transition: transform .15s ease-out;   /* 键盘落定后贴位时滑过去, 不生跳 */
+}
+#note-kb[hidden] { display: none; }   /* display:flex 会盖掉 hidden, 补回来 */
+#note-kb::after {                     /* 键盘是半透的: 浮层以下整片盖死, 后面的界面不从键盘底下漏出来 */
+  content: ""; position: absolute; top: 100%; left: 0; right: 0; height: var(--shell-h, 100dvh);
+  background: var(--surface);
+}
+#note-kb input {
+  flex: 1; min-width: 0; border: 0; background: none; outline: 0;
+  color: var(--ink-1); font: inherit; font-size: 16px; caret-color: var(--blue);
+}
+#note-kb input::placeholder { color: var(--ink-3); }

@@ -8,8 +8,8 @@ from app.bookkeeping import changelog
 def test_versions_wellformed():
     """独立版本线从 1.0.0 起; 每版字段齐全, 文案是用户视角的一句话。"""
     vs = changelog.entries()
-    assert [v.version for v in vs] == ["1.2.0", "1.1.0", "1.0.1", "1.0.0"]
-    assert vs[0].date == "2026-09-21"
+    assert [v.version for v in vs] == ["1.3.0", "1.2.0", "1.1.0", "1.0.1", "1.0.0"]
+    assert vs[0].date == "2026-09-22"
     kinds = {it.kind for it in vs[0].items}
     assert kinds <= {"新增", "改进", "修复"}   # 合并批次 (单功能批次不硬凑修复)
     for v in vs:
@@ -55,7 +55,5 @@ def test_money_changelog_page_skeleton(auth):
     assert "lastpage.js" not in html    # 上次停留页是 Tesla 应用的概念
 
 
-def test_changelog_link_in_money_menu(auth):
-    """记账主页的品牌菜单里有更新日志入口。"""
-    assert '<a href="/bookkeeping/changelog">更新日志</a>' \
-        in auth.get("/bookkeeping").text
+# (记账主页的品牌菜单 2026-09-22 撤了: 更新日志页只从地址/收藏进, 主页不再有入口 —
+#  test_changelog_link_in_money_menu 随之退役)

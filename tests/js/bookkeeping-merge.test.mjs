@@ -93,15 +93,15 @@ test("entriesToUpload: 脏名单是空 → 不上行任何东西", () => {
   assert.deepEqual(entriesToUpload(entries, []), []);
 });
 
-test("visibleEntries: 过滤墓碑 / 其他月份 / 记账人", () => {
+test("visibleEntries: 过滤墓碑 / 记账人 (瀑布流看全月份, 不按月切)", () => {
   const entries = [
     e("a", "2026-09-01T00:00:01Z"),
     e("b", "2026-09-02T00:00:01Z", { deleted: true }),                 // 墓碑
-    e("c", "2026-08-31T00:00:01Z", { date: "2026-08-31" }),            // 别的月
+    e("c", "2026-08-31T00:00:01Z", { date: "2026-08-31" }),            // 别的月: 照样在瀑布流里
     e("d", "2026-09-03T00:00:01Z", { createdByName: "乙" }),           // 别人
   ];
-  assert.deepEqual(visibleEntries(entries, "2026-09", "").map(x => x.id), ["a", "d"]);
-  assert.deepEqual(visibleEntries(entries, "2026-09", "乙").map(x => x.id), ["d"]);
+  assert.deepEqual(visibleEntries(entries, "").map(x => x.id), ["a", "c", "d"]);
+  assert.deepEqual(visibleEntries(entries, "乙").map(x => x.id), ["d"]);
 });
 
 test("monthTotals: 支出收入分开, 墓碑和别的月不算", () => {
