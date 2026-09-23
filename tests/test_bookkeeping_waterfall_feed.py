@@ -2,7 +2,9 @@
 顶部日历每天标收支、点日子跳位 (窗口挪过去, 往上滚还能接回), 左右划翻月。
 拆自 test_bookkeeping_page_and_categories.py (200 行上限满了);
 1.3.1 瀑布流与日历再各立门户, 末了胶囊里子 (收支配色/宽度自适应) 与左右划
-翻月再拆 (单测语句数上限 60); 月份头横幅 1.3.1 撤了 (气泡一个人报月)。"""
+翻月再拆 (单测语句数上限 60), 胶囊里子后来再立门户
+test_bookkeeping_calendar_bubble.py (200 行又满了);
+月份头横幅 1.3.1 撤了 (气泡一个人报月)。"""
 from pathlib import Path
 
 
@@ -39,6 +41,9 @@ def test_bookkeeping_page_waterfall_feed():
     assert 'visibleEntries(entries)' in render      # 全月份一条流, 不带月份/筛选参数
     assert "shiftMonth" not in render and "renderMonth" not in render
     assert "#feed-more { height: 44px; }" in page_css  # 底部哨兵有高度, 观察器才盯得住
+    # 滚动条全程不画 (my-music 同款): 能滚只是不显示 — 页面/记一笔弹层/拨轮全盖住
+    assert "scrollbar-width: none;" in page_css \
+        and "::-webkit-scrollbar { display: none; }" in page_css
     assert "function visibleEntries(entries) {" in merge
     #    ↑ 只挑未删除: month/person 参数都撤了 (瀑布流全月份, 筛选按钮没了)
     assert "visibleEntries" in render and "function visibleEntries(entries," not in merge
@@ -71,7 +76,7 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert '<button type="button" class="${cls}" data-date="${date}">${inner}</button>' in render \
         and '${inner}</div>' not in render
     assert "grid-template-columns: repeat(7, 1fr);" in page_css
-    assert ".cal-day.today { box-shadow: inset 0 0 0 1px var(--blue); }" in page_css
+    assert ".cal-day.today { box-shadow: inset 0 0 0 1px var(--teal-2); }" in page_css
     # 日历升到落位线被按住: 跟手收拢成顶上一枚磨砂胶囊 (my-music 播放气泡
     # 同款质感), 滚回来一路长回; 落位让开独立模式 iOS 26+ 的系统磨砂带
     # (不进模糊区)
@@ -79,7 +84,7 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'id="cal-sent"' not in html          # 哨兵撤了: 观察器直接盯日历卡
     assert 'observe($("#cal-card"))' in render
     assert 'rootMargin: "-40px 0px 0px 0px"' in render   # 观察器只当开机一脚 (恢复滚位没有 scroll 事件)
-    assert 'window.scrollTo({ top: 0, behavior: "smooth" })' in render
+    assert "calGlideTo(0);" in render   # 点胶囊滚回: 程序滑屏一路长回日历 (calGlideTo)
     assert "top: var(--cal-top);" in page_css   # 落位钉在顶带下限之下
     assert "--top-floor: 96px;" in page_css     # 独立模式系统磨砂带下限 (my-music 同款)
     assert "--cal-top: max(calc(env(safe-area-inset-top, 0px) + 10px)," in page_css \
@@ -114,8 +119,9 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'const CAL_IDLE = 180;' in render
     assert "calSmooth" in render and "t * t * (3 - 2 * t)" in render
     assert 'addEventListener("scroll"' in render and "requestAnimationFrame" in render
-    assert "calTweenTo" not in render and "cancelAnimationFrame" not in render
-    #    ↑ 不留第二条动画轨道: 分身只从实时几何取形, 没有可打架的自演
+    assert "calTweenTo" not in render
+    #    ↑ 分身不留第二条自演轨道: 只从实时几何取形 (calGlide 驾驶的是真滚动, 分身
+    #      照样逐帧取实时形, 不打架; 手一碰 calGlideStop 即停)
     assert "calVel" in render and "calLastY" in render   # 滚动方向记账: 停手朝这头收场
     assert 'calLastY < 0' in render              # 开页恢复滚位不算手: 不代劳收场
     assert 'if (calVel > 0)' in render           # 停手收场认方向: 长回就长到底, 收拢就收到胶囊
@@ -130,42 +136,19 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'card.style.visibility = "";' in render        # 交还: 真身回屏
     assert "const bottom = Math.max(r.bottom, top + CAL_H);" in render   # 下边界跟手, 收到胶囊底为限
     assert "bar.style.top = `${top}px`;" in render        # 上边界钉死在落位线
-    assert 'bar.style.backgroundColor = "rgb(29,29,29)";' in render \
-        and 'bar.style.boxShadow = "none";' in render   # 底色一次写死 (28→31 中点), 影子路上歇着换流畅
+    assert 'bar.style.backgroundColor = "rgb(34,43,49)";' in render \
+        and 'bar.style.boxShadow = "none";' in render   # 底色一次写死 (青池卡面→磨砂底中点), 影子路上歇着换流畅
     assert 'new IntersectionObserver(() => calSync()' in render
     assert "position: absolute; top: 0; left: 50%;" in page_css   # 分身钉在外壳顶上居中 (定格快照随外壳裁形)
     assert "#cal-bar.morph {" in page_css       # 运动期磨砂暂撤 (WebKit 重影对策)
     assert '<span class="cb-in">' in render     # 胶泡文字 (收拢后段从分身内容交叉淡入)
     assert "function calViewMon(" in render and "function calCapHtml(" in render \
-        and "calIn.innerHTML = calCapHtml(mon);" in render
+        and 'mv.innerHTML = calCapHtml(mon);' in render
     #    ↑ 胶泡实时报列表当前月: 认视线线上最靠上的日组 (月份头横幅撤了),
-    #    月份换了才重写一次
+    #    月份换了才重写一次 — 只换中间那层字 (‹ › 常驻不重搭, 见 bubble 测试)
     assert '<span class="e">${s && s.exp > 0 ? calAmt(s.exp) : ""}</span>' in render
     #    ↑ 金额槽位常驻 (没数也占行): 日期/支出/收入各排各的水平线, 整行对得齐
     assert "height: 12px; line-height: 12px;" in page_css
-
-
-def test_bookkeeping_calendar_bubble_content():
-    """胶囊的里子: 收支带方向色 + 宽度跟内容走 + 收到头歇进胶囊位 (auto 宽)。
-    1.3.1 末从 test_bookkeeping_calendar_and_top_bubble 再拆 (单测语句数上限 60)。"""
-    base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
-    page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
-    render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
-    # 胶泡收支带方向色 (支出柔红/收入柔绿 — 日历格子/账目行同一副色, 磨砂里一眼
-    # 分得清); 宽度跟内容走: 撤了 46vw 收口, 平常月份的收支整串都摆得下,
-    # 超宽到屏放不下才省略号兜底
-    assert '<span class="e">支 ${fmtMoney(t.expense)}</span>' in render \
-        and '<span class="i">收 ${fmtMoney(t.income)}</span>' in render
-    assert "#cal-bar .msum .e { color: var(--red); }" in page_css \
-        and "#cal-bar .msum .i { color: var(--green); }" in page_css
-    assert "max-width: 46vw" not in page_css
-    # 收到头歇进胶囊位: 行内几何交还样式表 (居中 + auto 宽) —— 翻月/记账后
-    # 内容变了胶囊自己跟着长, 不吃接管那刻量下的老账宽; 往回滚再重抓行内
-    # 几何接着跟手长回
-    assert "let calDocked = false;" in render and "calDocked = true;" in render \
-        and "calClear(bar);" in render
-    # 运动途中胶泡换了月: 收拢的终点宽跟着新内容重测 (同步布局量完画前恢复)
-    assert "calSlot = bar.getBoundingClientRect();" in render
 
 
 def test_bookkeeping_calendar_swipe_months():
@@ -187,6 +170,11 @@ def test_bookkeeping_calendar_swipe_months():
     assert 'void $("#cal-grid").offsetWidth;' in render
     assert "@keyframes cal-in-r { from { transform: translateX(26px); opacity: 0; } }" in page_css \
         and "@keyframes cal-in-l { from { transform: translateX(-26px); opacity: 0; } }" in page_css
+    # 日历翻了明细联动挪到那个月 (气泡上的 ‹ › 也走这): base = 从哪个月翻起
+    # (气泡翻传胶泡正报着的月 — 翻的是眼前那个月); 先挪明细再画日历,
+    # 接管分支探测到的就是新月, 胶泡不闪旧月
+    assert "const from = base || calMon;" in render and "jumpToMonth(calMon);" in render
+    assert "function jumpToMonth(" in render and "new Date(y, m, 0).getDate()" in render
     # 六行恒高: 天数不够的月份尾部补下月的日子 (灰字不可点), 补足 42 格 —
     # 左右划切月时日历高度不跟着月初星期/月长短变来变去
     assert "for (let d = 1; d <= 42 - first - days; d++)" in render
