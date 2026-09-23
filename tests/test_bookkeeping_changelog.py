@@ -1,6 +1,8 @@
 """My Money 更新日志测试: 独立版本线 (2026-09-14 从 My Tesla 的日志拆出) +
 条目接口 + 页面骨架 + 主页入口。渲染器与 My Tesla 共用 /static/changelog-page.js。
 """
+from pathlib import Path
+
 from app.bookkeeping import changelog
 
 
@@ -8,7 +10,7 @@ from app.bookkeeping import changelog
 def test_versions_wellformed():
     """独立版本线从 1.0.0 起; 每版字段齐全, 文案是用户视角的一句话。"""
     vs = changelog.entries()
-    assert [v.version for v in vs] == ["1.3.1", "1.3.0", "1.2.0", "1.1.0",
+    assert [v.version for v in vs] == ["1.4.0", "1.3.1", "1.3.0", "1.2.0", "1.1.0",
                                        "1.0.1", "1.0.0"]
     assert vs[0].date == "2026-09-23"
     kinds = {it.kind for it in vs[0].items}
@@ -54,6 +56,10 @@ def test_money_changelog_page_skeleton(auth):
     ]:
         assert frag in html, f"更新日志页缺少 {frag}"
     assert "lastpage.js" not in html    # 上次停留页是 Tesla 应用的概念
+    # 滚动条全程不画 (主页/my-music 同款): 能滚只是不显示
+    css = (Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
+           / "css" / "bookkeeping-changelog.css").read_text(encoding="utf-8")
+    assert "scrollbar-width: none;" in css and "::-webkit-scrollbar { display: none; }" in css
 
 
 # (记账主页的品牌菜单 2026-09-22 撤了: 更新日志页只从地址/收藏进, 主页不再有入口 —

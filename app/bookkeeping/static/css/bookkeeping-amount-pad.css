@@ -5,7 +5,7 @@
 .amt-pad {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
   position: sticky; bottom: 0; z-index: 5;
-  background: #000; border-top: 1px solid var(--hairline);
+  background: #10151a; border-top: 1px solid var(--hairline);   /* 键缝底: 比壳再深一档衬出 1px 缝 */
   margin: 10px -18px 0; padding: 0 0 env(safe-area-inset-bottom);
 }
 .amt-pad .k {
@@ -13,9 +13,9 @@
   background: var(--surface-3); font-variant-numeric: tabular-nums;
 }
 .amt-pad .k:active { filter: brightness(.72); }       /* 按下变暗 (iOS 键感) */
-.amt-pad .k.op { background: #ff9f0a; }               /* 运算符 = 计算器橙 */
+.amt-pad .k.op { background: #4aacbc; color: #101a1f; }   /* 运算符 = 中青 (青池色卡二, 深字) */
 .amt-pad .k.util { grid-column: 5; grid-row: 1 / span 2; height: auto;
-  background: #a5a5a5; color: #141416; font-size: 20px; }
+  background: #9fb3bb; color: #101a1f; font-size: 20px; }   /* ⌫ = 青雾灰 */
 .amt-pad .k.done { grid-column: 5; grid-row: 3 / span 2; height: auto;
-  background: var(--blue); color: #fff; font-size: 16px; font-weight: 600; }
+  background: var(--teal); color: #fff; font-size: 16px; font-weight: 600; }   /* 完成 = 深青 */
 .amt-pad .k.zero { grid-column: span 2; }

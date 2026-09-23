@@ -1,18 +1,21 @@
 /* bookkeeping-page — bookkeeping 页样式。拆自 bookkeeping.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 :root {
   color-scheme: dark;
-  --bg: #000;
-  --surface: #1c1c1e;
-  --surface-2: #2c2c2e;
-  --surface-3: #3a3a3c;
-  --ink-1: #f5f5f7;
-  --ink-2: rgba(235,235,245,.62);
-  --ink-3: rgba(235,235,245,.32);
-  --hairline: rgba(255,255,255,.09);
-  --blue: #3987e5;
-  --green: #5fd47f;
-  --red: #e5695f;
-  --cat-icon: #8e8e93;   /* 类别图标统一色: 实色灰 (不用半透明白, 深灰圆底上发虚) */
+  /* 青池色系 (IMG_7616 配色海报): 深色壳带青, 三枚色卡 — 深青 #308099/中青 #4bacbd/
+     薄荷 #a5d4b7 — 是全部点缀的出处; 底子调进同一副冷青里, 暖色只留给支出珊瑚红 */
+  --bg: #14181c;                    /* 壳: 带青的近黑 (海报深壳 #19191f 再压半档衬内容) */
+  --surface: #1e2429;               /* 卡面: 比壳亮一档的青灰 (青雾 #83b3c0 的暗部) */
+  --surface-2: #283139;             /* 圆钮/图标井: 再亮一档 */
+  --surface-3: #333e48;             /* 按下/浮面: 顶档 */
+  --ink-1: #f2f7f8;                 /* 主文字: 青调白 (纯白在青底里太扎眼) */
+  --ink-2: #b7c6ca;                 /* 次文字: 青灰 */
+  --ink-3: #7e8f95;                 /* 弱文字: 「几点·谁记的」这类辅助行 (深底 ≈5:1) */
+  --hairline: rgba(125,190,203,.14);   /* 发丝线: 极淡的青 (不是死灰白) */
+  --teal: #308098;                  /* 深青 (色卡一): 填充面 — 加号/完成键/重试, 白字 4.5:1 */
+  --teal-2: #4aacbc;                /* 中青 (色卡二): 细线与点缀 — 今天一圈/勾选/光标 */
+  --green: #9ed9ba;                 /* 收入: 薄荷提亮 (色卡三 #a5d4b7 同源, 深底上更醒) */
+  --red: #ff6b7a;                   /* 支出: 珊瑚红 — 整片冷调里唯一的暖 (面积只给金额图标) */
+  --cat-icon: #8fadb9;   /* 类别图标统一色: 青雾灰 (实色, 不用半透明白 — 深灰圆底上发虚) */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
@@ -36,11 +39,24 @@
    浏览器 = 安全区+7 (原样), 独立模式取深者 */
 :root { --top-clear: max(calc(env(safe-area-inset-top, 0px) + 7px),
                          var(--top-floor)); }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* app 思路: 全程不画滚动条 (手机本来就不画, 电脑上也干净) —— 能滚, 只是不显示
+   (my-music music-base.css 同款; 记一笔弹层/时间拨轮的内滚条也一并盖住) */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent;
+    scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+/* 壳层装饰光 (海报 mesh 的暗版): 左上一片青雾、右下一角薄荷余温 — 钉死在视口上
+   不跟内容滚 (是环境光, 不是内容)。iOS 不认 body 的 background-attachment:fixed,
+   走固定伪元素; 负 z-index 画在 html 底色之上、一切内容之下 (body 底色让位透明) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(130% 52% at 22% -10%, rgba(48,128,152,.20), transparent 68%),
+    radial-gradient(120% 42% at 85% 108%, rgba(165,213,183,.09), transparent 70%);
+}
 body {
-  background: var(--bg); color: var(--ink-1);
+  background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
                "Helvetica Neue", system-ui, sans-serif;
   font-size: 14px; line-height: 1.45;
@@ -60,7 +76,7 @@ button, a, summary { touch-action: manipulation; }
   display: flex; align-items: center; gap: 6px; justify-content: center;
   font-size: 11.5px; color: var(--ink-3);
   padding: var(--top-clear) 14px 7px;
-  background: rgba(28,28,30,.6); border-bottom: 1px solid var(--hairline);
+  background: rgba(23,30,35,.6); border-bottom: 1px solid var(--hairline);
 }
 .sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
 .sync-strip.pending { color: #d8a35a; }
@@ -75,6 +91,7 @@ main {
 .cal-card {
   background: var(--surface); border: 1px solid var(--hairline);
   border-radius: 14px; padding: 8px 10px 10px; margin-bottom: 12px;
+  box-shadow: 0 12px 32px rgba(9,30,40,.5);   /* 海报色卡的同色彩影: 影子带青不发死黑 */
 }
 .cal-head { display: flex; align-items: center; gap: 4px; }
 .cal-head button {
@@ -102,7 +119,7 @@ main {
 }              /* 槽位行高钉死且常驻 (没数也占行): 日期/支出/收入各排各的水平线 */
 .cal-day .e { color: var(--red); }      /* 每天支出柔红 (与账目行/记一笔同一个调子) */
 .cal-day .i { color: var(--green); }
-.cal-day.today { box-shadow: inset 0 0 0 1px var(--blue); }
+.cal-day.today { box-shadow: inset 0 0 0 1px var(--teal-2); }
 .cal-day.blank { min-height: 0; }       /* 月初补位的空格 */
 /* 月尾补位的下月日子: 灰字不可点只管补足六行恒高; 日期数字与真日子同一道槽
    (顶对齐, 三个槽位让给真日子的水平线) */
@@ -127,24 +144,59 @@ main {
   top: var(--cal-top);
   left: 50%; transform: translateX(-50%);
   display: flex; align-items: center;
-  height: 36px; padding: 0 16px;
-  max-width: calc(100vw - 24px);
+  height: 36px; padding: 3px;              /* ‹ › 与胶囊左/右/上/下各距 3px (三边等距:
+                                              36 = 3+28+3+2 边框, 钉死两端位置恒定) */
+  width: min(calc(100vw - 24px), 528px);   /* 定宽 (不跟内容伸缩忽宽忽窄); 528 = 日历卡
+                                              同一上限 (main 560 - 16×2), 宽屏上不比卡宽 */
   overflow: hidden;
   font-size: 12.5px; font-weight: 700; color: var(--ink-2);
-  background: rgba(44,44,46,.7);      /* 磨砂玻璃: blur(20) 把底下划过的账糊成影子透上来 */
+  background: rgba(43,56,65,.72);    /* 磨砂玻璃: 带青的玻璃底, blur(20) 把底下划过的
+                                        账糊成影子透上来 */
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--hairline); border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  box-shadow: 0 8px 24px rgba(9,30,40,.5);
   visibility: hidden;
 }
-#cal-bar .cb-in {         /* 胶泡文字: 收拢后段从分身内容交叉淡入 (行内逐帧驱动, 跟手);
-                            内容实时跟列表走 — 滚到哪个月就报哪个月和那月的收支
-                            (calViewMon 认吸顶的月份头, 月份换了才重写一次) */
-  display: flex; align-items: center; gap: 8px;
+#cal-bar .cb-in {         /* 胶泡里子: ‹ 月份+收支 › — 收拢后段从分身内容交叉淡入
+                            (行内逐帧驱动, 跟手); 内容实时跟列表走 — 滚到哪个月
+                            就报哪个月和那月的收支 (calViewMon 认视线线上的日组,
+                            月份换了才重写一次); ‹ › 歇在气泡上也能翻月
+                            (明细跟着联动挪过去); flex:1 吃满胶囊 — ‹ › 顶到
+                            两端, 中间窗口恒居中 */
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
   opacity: 0;
 }
+#cal-bar .cb-nav {        /* 气泡上的 ‹ ›: 钉死在胶囊两端 (定宽 — 位置恒定不跟内容
+                            挪), 画成 SVG 线段箭头 (字形的 ‹ 在字形框里光学偏心,
+                            跟旁边文字对不齐; 线段箭头几何居中); 裸箭头不套圈
+                            (胶囊里再嵌灰底圆钮一层套一层太重), 按下点亮当回应 */
+  flex: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+#cal-bar .cb-nav svg { width: 15px; height: 15px; display: block; }
+#cal-bar .cb-nav:active { color: var(--ink-1); }
+#cal-bar .cb-mid {        /* 月份+收支的窗口: ‹ › 钉死两端后这块吃满剩余宽度,
+                            里头那层字恒居中; 换月对滑就在这格演 (窗口裁形) */
+  flex: 1; min-width: 0; position: relative; align-self: stretch;
+}
+#cal-bar .cb-mv {         /* 窗口里那层字: 铺满窗口居中排; 换月对滑时新旧各一层 */
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+/* 换月对滑 (‹ › 翻月才演): 新月顺着翻的方向进 (‹ 从左/› 从右 — 日历格 cal-in
+   同一套方向约定), 旧月被顶到对面出去; 重放式 class + reflow (1.3.0 类别格同款) */
+#cal-bar .cb-mv.cb-mv-in-l { animation: cb-mv-in-l .3s ease; }
+#cal-bar .cb-mv.cb-mv-in-r { animation: cb-mv-in-r .3s ease; }
+#cal-bar .cb-mv.cb-mv-out-l { animation: cb-mv-out-l .3s ease; }
+#cal-bar .cb-mv.cb-mv-out-r { animation: cb-mv-out-r .3s ease; }
+@keyframes cb-mv-in-l { from { transform: translateX(-100%); opacity: 0; } }
+@keyframes cb-mv-in-r { from { transform: translateX(100%); opacity: 0; } }
+@keyframes cb-mv-out-l { to { transform: translateX(-100%); opacity: 0; } }
+@keyframes cb-mv-out-r { to { transform: translateX(100%); opacity: 0; } }
 #cal-bar .cb-card {       /* 日历分身: 接管那刻搬真身内容进来 (挂 .cal-card 拿全套
                             标题/网格样式), 行内把宽高钉死成定格快照 —— 外壳一路
                             收拢只当裁形窗口裁它, 日历网格全程零重排 (帧率就丢在
@@ -154,13 +206,15 @@ main {
   margin: 0;
   background: none; border: 0;
   font-size: 14px; font-weight: 400; color: var(--ink-1);
+  pointer-events: none;   /* 分身只管看: 点穿它落到胶泡自己的 ‹ › / 胶囊身上
+                             (没有这句, 隐身的定格快照永远压在按钮上面吃点击) */
 }
 #cal-bar .msum {
   font-size: 10.5px; font-weight: 400; color: var(--ink-3);
   font-variant-numeric: tabular-nums;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}              /* 宽度不设限: 内容多宽胶囊就多宽 (受 #cal-bar 的 max-width 兜底),
-                  平常月份的收支整串都摆得下, 超宽到屏都放不下了才省略号收尾 */
+}              /* 金额走紧凑写法 (千/万): 中间窗口宽度有限, 长数字缩成 1.2千/1.2万
+                  不硬挤; 真放不下才省略号收尾 */
 #cal-bar .msum .e { color: var(--red); }    /* 支出柔红/收入柔绿: 与日历格子/账目行 */
 #cal-bar .msum .i { color: var(--green); }  /* 同一副方向色, 磨砂里一眼分得清 */
 #cal-bar.morph {          /* 运动期磨砂暂撤 (my-music body.pane-anim 同规矩): 变换层
@@ -220,8 +274,10 @@ main {
   position: fixed; right: 18px;
   bottom: calc(env(safe-area-inset-bottom) + 22px);
   width: 54px; height: 54px; border-radius: 50%;
-  background: var(--blue); color: #fff; font-size: 28px; font-weight: 300;
+  background: linear-gradient(180deg, #3b90a7, #2c7188);   /* 深青光球: 上缘受光下
+                                    沉 (海报里那颗球的手法 — 全应用唯一的一处渐变) */
+  color: #fff; font-size: 28px; font-weight: 300;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(57,135,229,.4); z-index: 60;
+  box-shadow: 0 8px 24px rgba(48,128,152,.5); z-index: 60;   /* 青色光晕垫着球 */
 }
 #fab:active { transform: scale(.94); }
