@@ -12,6 +12,17 @@
   --nav-bg: rgba(10,10,12,.72);
   --blue: #3987e5;
 }
+/* 顶带下限 (bookkeeping-page.css 同款, my-music music-base.css 立的规矩):
+   iOS 26+ 主屏独立模式的系统磨砂带比安全区深一截, 模糊带里不许常驻
+   任何控件 —— 只在中招形态 (独立模式+竖屏+触屏) 生效 */
+:root { --top-floor: 0px; }
+@media (display-mode: standalone) and (orientation: portrait)
+       and (pointer: coarse) {
+  :root { --top-floor: 96px; }
+}
+/* 顶栏 (常驻控件) 的上边界: 浏览器 = 安全区+10 (原样), 独立模式取深者 */
+:root { --top-clear: max(calc(env(safe-area-inset-top, 0px) + 10px),
+                         var(--top-floor)); }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
@@ -27,9 +38,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* 触屏双击控件不再触发整页放大 (manipulation 保留平移/捏合, 只去掉双击缩放) */
 button, a, summary { touch-action: manipulation; }
 
-/* ---------- 顶部导航 (毛玻璃, 与其他页一致) ---------- */
+/* ---------- 顶部导航 (毛玻璃, 与其他页一致; 上沿钉在 --top-clear 之下,
+   独立模式不进系统模糊带) ---------- */
 header {
-  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  padding: var(--top-clear) 14px 10px;
   background: var(--nav-bg);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
