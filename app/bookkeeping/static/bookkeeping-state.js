@@ -2,7 +2,7 @@
 // (localStorage 先落, 联网增量同步; 同步纯逻辑在 bookkeeping-merge.js)。
 // 拆自 bookkeeping.js (结构化重构: 代码逐字节未动, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
-/* exported $, esc, WEEK, entries, dirty, lastSync, person, catTree,
+/* exported $, esc, WEEK, entries, dirty, lastSync, catTree,
             persist, saveLS, pad, todayStr, curMonth, nowTime, parseTags,
             uuid, creatorName, fmtMoney */
 
@@ -24,7 +24,6 @@ function saveLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 let entries = loadLS("bk-entries", []);       // 全量账本 (含墓碑)
 let dirty = new Set(loadLS("bk-dirty", []));  // 有本地改动待上行的 id
 let lastSync = loadLS("bk-last-sync", "");    // 上次同步的服务器时间 (游标)
-let person = loadLS("bk-person", "");
 let catTree = loadLS("bk-categories-v2", null);  // {expense: [{name,children}...], income: [...]}
 
 function persist() {

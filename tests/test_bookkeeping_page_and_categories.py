@@ -100,7 +100,8 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert 'id="cat-pick"' in html and 'id="cp-list"' in html   # 类别树选层 (点「选类别」弹)
     assert 'position: sticky; bottom: 0' in css   # 键盘常驻吸底
     assert 'id="brand-menu"' not in html and "/static/menu-user.js" not in html   # 顶部菜单撤了
-    assert "calc(env(safe-area-inset-top) + 7px) 14px 7px" in css   # 同步条垫高让开状态栏 (顶栏没了它顶头)
+    assert "padding: var(--top-clear) 14px 7px;" in css   # 同步条垫高让开状态栏 (顶栏没了它顶头);
+    #    独立模式钉 --top-clear 之下 — 系统模糊带里不留常驻内容 (my-music 同款)
     assert 'border-radius: 50%' in css            # 类别图标圆形
     assert "border: 1.5px solid var(--ink-3)" not in css   # 圆圈撤描边, 改深灰底
     assert "#8e8e93" in css                       # 图标线条实色灰 (不用半透明白)
