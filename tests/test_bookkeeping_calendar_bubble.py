@@ -1,7 +1,80 @@
 """记账日历顶胶囊里子测试: 收支配色/定宽 (‹ › 钉两端三边等距)/换月对滑/
 金额千·万简写/快速翻月 (明细滑过去)、翻月钉住 (滚动探测让位, 手碰才交还)
-与跳位落点让位。拆自 test_bookkeeping_waterfall_feed.py (200 行上限又满了)。"""
+与跳位落点让位; 点胶囊展开悬浮日历面板 (列表不动/点日子才滑/滑列表才收回)。
+拆自 test_bookkeeping_waterfall_feed.py (200 行上限又满了)。"""
 from pathlib import Path
+
+
+def test_bookkeeping_calendar_float_panel():
+    """点胶囊展开悬浮日历: 列表纹丝不动, 点日子才滑过去, 滑列表才收回。
+    开合走与滑屏同一副临界阻尼弹簧 (统一手感, 铺更多帧换顺滑)。"""
+    base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
+    page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
+    render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
+    # 展开/收回走 p 弹簧 (与滚动收拢同一条 calDraw 形变轨道, 推手从滚动换成弹簧 —
+    # 滑屏那副临界阻尼公式原样搬来推 p, 全应用一副脾气; 原先 240ms 一口气的补间
+    # 大半程挤在前几帧, 稍掉一帧就看见台阶): calP 记最新进度 (calSync 逐帧写),
+    # 半路展开也从眼下的样子长起; 弹簧帧有 calFloatT !== tw 守卫 (半路被停/被换
+    # 就地熄火, harness 的假 rAF 撤不掉也安全)
+    assert "let calP = 1;" in render and "calP = p;" in render
+    assert "const CAL_P_K = 170;" in render \
+        and "const CAL_P_C = 2 * Math.sqrt(CAL_P_K);" in render
+    assert "function calFloatTween(" in render and "calDraw(r, calP);" in render \
+        and "tw.v + (CAL_P_K * (tw.to - calP) - CAL_P_C * tw.v) * dt" in render \
+        and "if (calFloatT !== tw) return;" in render
+    assert "function calFloatStop(" in render
+    # 展开: 只在接管态 (胶囊在屏上才点得着); 手静收场的计时和在途滑屏都掐了
+    # (收场早改走弹簧, 一停就真停 — 不再有掐不断的系统 smooth 滚动要原地一写去
+    # 掐); 面板底 = 卡面实色 (悬浮得盖得住底下列表); 途中影子歇着 (大投影跟着
+    # 尺寸逐帧重画最吃帧率 — 与滚动收拢同一路), 弹簧落位这一下才亮出来;
+    # .float 挂上 (css 开分身的 pointer-events)
+    assert "function calFloatOpen(" in render \
+        and "if (!calHeld || calFloat) return;" in render
+    assert "clearTimeout(calSettleT);" in render and "calGlideStop();" in render
+    assert "window.scrollTo(0, scrollY);" not in render
+    assert 'bar.classList.add("float");' in render \
+        and 'bar.style.backgroundColor = "rgb(34,57,58)";' in render
+    assert 'bar.style.boxShadow = "none";' in render \
+        and "calFloatTween(0, () => {" in render \
+        and 'bar.style.boxShadow = "0 12px 32px rgba(8,32,36,.3)";' in render
+    # 收回: 先摘牌 (弹簧路上 calSync 不再二连收), 落位时亮的那副影子先歇, 再弹
+    # 到 p=1; 缩到头的收尾与滚动收到头同一套 — 真身滚回眼前了直接交还 (不闪双
+    # 日历), 没到就歇进胶囊位 (几何交还样式表)
+    assert "function calFloatClose(" in render and "if (!calFloat) return;" in render
+    assert "calFloatTween(1, () => {" in render \
+        and "calDocked = true;\n      calClear(bar);" in render
+    # 滑列表 = 收起令 (calSync 门口设卡): 真身滚回眼前 (松手就停在日历里) 面板
+    # 让位直接交还; 还没到就顺着原路缩回胶囊 (面板自己的弹簧走, 列表照它自己
+    # 的滚)。弹簧在途的帧几何归弹簧 (滚动事件别抢方向盘)
+    assert "if (calFloat) {" in render and "if (calFloatT) return;" in render
+    assert 'bar.classList.remove("float");' in render
+    # 面板里的点击: 分身没了 id, 全走 #cal-bar 委托 — 点日子先收面板再滑列表
+    # (这就是"去"); ‹ › 认结构 (头一枚是 ‹) 只翻日历的月, 列表不去; 点在面板
+    # 别处不动 (滑列表才收)
+    assert 'e.target.closest("button[data-date]")' in render \
+        and "jumpToDate(day.dataset.date);" in render
+    assert 'e.target.closest(".cal-head button")' in render \
+        and "head.parentElement.firstElementChild === head ? -1 : 1" in render
+    # 悬浮面板里翻月: 明细联动不跟 (列表等点了日子才走), 面板里的标题/格子和
+    # 真身演同一场换月滑入 (分身是刚搬的快照, class 要单独给它挂 — 渲染期够不着
+    # 营在后面的 calTwin, 现查 DOM); 面板开着时渲染刷新不走 calSync (那是滚动
+    # 探测的门, 进去会把面板收掉)
+    assert "if (!calFloat) jumpToMonth(calMon);" in render
+    assert 'const panel = calFloat ? $("#cal-bar .cb-card") : null;' in render \
+        and 'panel.querySelector(".cal-title")' in render
+    assert "if (!calFloat) calSync();" in render
+    # 面板期数据变了重搬分身: 面板亮着/胶泡文字隐着的角色不翻面 (重搬的
+    # opacity 默认按歇着的胶囊给 — 面板开着得反着来, 不然胶泡文字闪一脸)
+    assert "calDocked && !calFloat" in render
+    # 左右划翻月在面板上也能用 (真身日历/悬浮面板各绑一份同一副手势骨架,
+    # 面板那份只在浮着时听使唤 — 胶囊上划不动)
+    assert "function calSwipe(" in render \
+        and 'calSwipe($("#cal-card"), () => true);' in render \
+        and 'calSwipe($("#cal-bar"), () => calFloat);' in render
+    # css: 悬浮面板期分身开 pointer-events (日子格/‹ › 都是它身上的); 平日
+    # 仍是快照 (pointer-events:none, 别挡胶泡自己的 ‹ › 和点击)
+    assert "#cal-bar.float .cb-card {" in page_css \
+        and "pointer-events: auto;" in page_css
 
 
 def test_bookkeeping_calendar_bubble_content():
@@ -79,6 +152,10 @@ def test_bookkeeping_calendar_bubble_content():
     # 邻月目标窗口朝目标扩, 眼前的内容不动 — 滑一路穿的是真内容 (没有"啪"一下换内容)
     assert "function calGlideTo(" in render and "function calGlideStop(" in render \
         and "if (calGlide !== g) return;" in render
+    assert ("y = Math.max(0, Math.min(y,"
+            " document.documentElement.scrollHeight - innerHeight));") in render
+    #    ↑ 滑的落点夹进可滚区间: 收场/跳位算出的目标可能出头 (负/超文档底) —
+    #    夹不进的话弹簧永远差一口到不了终点, 只能等三秒兜底熄火
     assert "const CAL_G_K = 110;" in render \
         and "const CAL_G_C = 2 * Math.sqrt(CAL_G_K);" in render
     assert "const carry = calGlide ? calGlide.v : 0;" in render \

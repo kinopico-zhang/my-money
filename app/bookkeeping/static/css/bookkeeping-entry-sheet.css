@@ -11,7 +11,7 @@
   padding-bottom: 6px;
   background: var(--surface); border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--hairline);
-  box-shadow: 0 -12px 40px rgba(9,30,40,.55);   /* 浮层同色彩影 (青不发死黑) */
+  box-shadow: 0 -12px 40px rgba(8,32,36,.55);   /* 浮层同色彩影 (青不发死黑) */
   z-index: 71; transform: translateY(102%); transition: transform .25s;
   max-width: 560px; margin: 0 auto; padding-left: 18px; padding-right: 18px; padding-top: 8px;
   max-height: calc(var(--shell-h, 100dvh) - 24px); overflow-y: auto;   /* 小屏整层滚, 键盘吸底不动 (dvh 赖账时吃 --shell-h 真高) */
@@ -22,8 +22,8 @@
 /* 方向配色跟收支走 (标签页点选/左右划都换): 支出柔红 (删除钮同款), 收入柔绿 (主页收入同款),
    都不是纯红纯绿; 金额大字/激活标签页/选中的类别图标吃 --kind, 选中圆底吃 --kind-tint
    (柔色底配同色线条, iOS tint 风)。挂 body 上: 弹层外的选层也吃得到 */
-body[data-kind="expense"] { --kind: var(--red); --kind-tint: rgba(255,107,122,.24); }
-body[data-kind="income"] { --kind: var(--green); --kind-tint: rgba(158,217,186,.20); }
+body[data-kind="expense"] { --kind: var(--red); --kind-tint: rgba(255,107,122,.26); }
+body[data-kind="income"] { --kind: var(--green); --kind-tint: rgba(158,217,186,.22); }
 /* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字/标签页/选中圆底), 不生硬跳变 */
 .tabs button, .amt-line input, .amt-cat .amt-ic, .cp-row .cp-ic,
 .cat-tiles .tile .ti { transition: color .3s ease, background-color .3s ease; }
@@ -141,7 +141,7 @@ body[data-kind="income"] { --kind: var(--green); --kind-tint: rgba(158,217,186,.
   border-top: 1px solid var(--hairline);
   transform: translateY(102%); transition: transform .25s;
   padding: 8px 18px calc(env(safe-area-inset-bottom) + 10px);
-  box-shadow: 0 -12px 40px rgba(9,30,40,.55);   /* 浮层同色彩影 */
+  box-shadow: 0 -12px 40px rgba(8,32,36,.55);   /* 浮层同色彩影 */
 }
 .pick.on .cp-panel { transform: translateY(0); }
 .cp-head {

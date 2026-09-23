@@ -104,7 +104,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     #    独立模式钉 --top-clear 之下 — 系统模糊带里不留常驻内容 (my-music 同款)
     assert 'border-radius: 50%' in css            # 类别图标圆形
     assert "border: 1.5px solid var(--ink-3)" not in css   # 圆圈撤描边, 改深灰底
-    assert "#8fadb9" in css                       # 图标线条青雾灰实色 (不用半透明白)
+    assert "#93bbb3" in css                       # 图标线条青雾绿实色 (不用半透明白)
     assert ".note-line {" in css and ".note-t.empty { color: var(--ink-3); }" in css
     #    ↑ 备注行: 无边框样, 空时灰提示
     assert "#note-kb {" in css and "#note-kb[hidden] { display: none; }" in css

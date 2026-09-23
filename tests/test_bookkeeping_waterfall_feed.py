@@ -84,7 +84,7 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'id="cal-sent"' not in html          # 哨兵撤了: 观察器直接盯日历卡
     assert 'observe($("#cal-card"))' in render
     assert 'rootMargin: "-40px 0px 0px 0px"' in render   # 观察器只当开机一脚 (恢复滚位没有 scroll 事件)
-    assert "calGlideTo(0);" in render   # 点胶囊滚回: 程序滑屏一路长回日历 (calGlideTo)
+    assert "calFloatOpen();" in render   # 点胶囊: 就地展开成悬浮日历面板 (列表不动, 不再滚回顶)
     assert "top: var(--cal-top);" in page_css   # 落位钉在顶带下限之下
     assert "--top-floor: 96px;" in page_css     # 独立模式系统磨砂带下限 (my-music 同款)
     assert "--cal-top: max(calc(env(safe-area-inset-top, 0px) + 10px)," in page_css \
@@ -123,9 +123,18 @@ def test_bookkeeping_calendar_and_top_bubble():
     #    ↑ 分身不留第二条自演轨道: 只从实时几何取形 (calGlide 驾驶的是真滚动, 分身
     #      照样逐帧取实时形, 不打架; 手一碰 calGlideStop 即停)
     assert "calVel" in render and "calLastY" in render   # 滚动方向记账: 停手朝这头收场
+    assert "let calBaseY = scrollY;" in render \
+        and "if (calLastY < 0) calVel = y - calBaseY;" in render
+    #    ↑ 头一滚没上一帧可比: 从开机位起算 (开页必在顶 → 头一滚必是往下) — 滚轮单格
+    #      那种一锤子滚动只发一发事件, 不这么记的话 calVel 还是 0, 停手会被当成
+    #      "没方向"反倒滚回顶把日历长回来
     assert 'calLastY < 0' in render              # 开页恢复滚位不算手: 不代劳收场
-    assert 'if (calVel > 0)' in render           # 停手收场认方向: 长回就长到底, 收拢就收到胶囊
-    assert 'top: scrollY - (r.bottom - line - CAL_H)' in render   # 收场走真滚动到底
+    assert 'if (calVel > 0)' in render           # 停手收场认方向: 往下滚 (收拢) 就顺方向收到胶囊
+    assert 'calGlideTo(scrollY + (r.bottom - line - CAL_H));' in render \
+        and 'calGlideTo(0);' in render   # 收场走程序滑屏到底 (收拢滑到下边界贴胶囊底/长回滑到顶
+                                         # 交还真身)。1.3.1 那版方向拧反 — 停在半缩处它反倒一路
+                                         # 滚回顶把日历长回来, 还借的掐不停的系统 smooth
+    assert '"smooth"' not in render      # 系统 smooth 滚动全撤: 全应用的程序动画一副弹簧
     assert 'twin.className = "cal-card cb-card";' in render   # 分身挂 .cal-card 拿全套网格样式
     assert 'twin.innerHTML = $("#cal-card").innerHTML;' in render   # 搬真身内容 (交接像素连续)
     assert 'twin.style.width = `${r.width}px`;' in render \
@@ -136,8 +145,9 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'card.style.visibility = "";' in render        # 交还: 真身回屏
     assert "const bottom = Math.max(r.bottom, top + CAL_H);" in render   # 下边界跟手, 收到胶囊底为限
     assert "bar.style.top = `${top}px`;" in render        # 上边界钉死在落位线
-    assert 'bar.style.backgroundColor = "rgb(34,43,49)";' in render \
-        and 'bar.style.boxShadow = "none";' in render   # 底色一次写死 (青池卡面→磨砂底中点), 影子路上歇着换流畅
+    assert 'bar.style.backgroundColor = "rgb(34,57,58)";' in render \
+        and 'bar.style.boxShadow = "none";' in render   # 底色一次写死 = 卡面实色 (与悬浮面板同款),
+                                                         # 影子路上歇着换流畅
     assert 'new IntersectionObserver(() => calSync()' in render
     assert "position: absolute; top: 0; left: 50%;" in page_css   # 分身钉在外壳顶上居中 (定格快照随外壳裁形)
     assert "#cal-bar.morph {" in page_css       # 运动期磨砂暂撤 (WebKit 重影对策)
