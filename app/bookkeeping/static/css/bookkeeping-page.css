@@ -1,21 +1,28 @@
 /* bookkeeping-page — bookkeeping 页样式。拆自 bookkeeping.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 :root {
   color-scheme: dark;
-  /* 青池色系 (IMG_7616 配色海报): 深色壳带青, 三枚色卡 — 深青 #308099/中青 #4bacbd/
-     薄荷 #a5d4b7 — 是全部点缀的出处; 底子调进同一副冷青里, 暖色只留给支出珊瑚红 */
-  --bg: #14181c;                    /* 壳: 带青的近黑 (海报深壳 #19191f 再压半档衬内容) */
-  --surface: #1e2429;               /* 卡面: 比壳亮一档的青灰 (青雾 #83b3c0 的暗部) */
-  --surface-2: #283139;             /* 圆钮/图标井: 再亮一档 */
-  --surface-3: #333e48;             /* 按下/浮面: 顶档 */
+  /* 青池色系 (IMG_7616 配色海报): 海报本身是浅底 — 顶上青雾、右上白光、脚下
+     薄荷, 三枚深色卡浮在浅底上; 应用照搬这副构图: 壳底 = 海报那片青雾浅底
+     (body::before 铺全幅渐变), 卡面/弹层/键盘是深青浅调, 点缀全出自三枚色卡 —
+     深青 #308099/中青 #4bacbd/薄荷 #a5d4b7; 暖色只留给支出珊瑚红 */
+  --bg: #b9d6dc;                    /* 壳底: 青雾与薄荷中间那档浅底 (渐变的中段 —
+                                       橡皮筋回弹时露出来的底就近取中, 不跳色) */
+  --bg-ink: #436a73;                /* 坐在浅底上的深青字: 同步条/日子行/哨兵/空态
+                                       (卡片上的字还是 ink 系 — 那是深面上的) */
+  --surface: #22393a;               /* 卡面: 青绿浅调 (青雾 #83b3c0 与薄荷 #a5d4b7 的
+                                       中间色压暗 — 小清新那一挂: 青里带绿, 不走浓青) */
+  --surface-2: #2c4a4c;             /* 圆钮/图标井: 再亮一档 (原灰底全换青绿面) */
+  --surface-3: #375e61;             /* 按下/键盘面: 顶档, 整个应用找不出一块死灰 */
   --ink-1: #f2f7f8;                 /* 主文字: 青调白 (纯白在青底里太扎眼) */
   --ink-2: #b7c6ca;                 /* 次文字: 青灰 */
-  --ink-3: #7e8f95;                 /* 弱文字: 「几点·谁记的」这类辅助行 (深底 ≈5:1) */
+  --ink-3: #90a2a8;                 /* 弱文字: 「几点·谁记的」这类辅助行 (浅了一档的
+                                       卡面上仍 ≈4.5:1) */
   --hairline: rgba(125,190,203,.14);   /* 发丝线: 极淡的青 (不是死灰白) */
   --teal: #308098;                  /* 深青 (色卡一): 填充面 — 加号/完成键/重试, 白字 4.5:1 */
   --teal-2: #4aacbc;                /* 中青 (色卡二): 细线与点缀 — 今天一圈/勾选/光标 */
   --green: #9ed9ba;                 /* 收入: 薄荷提亮 (色卡三 #a5d4b7 同源, 深底上更醒) */
   --red: #ff6b7a;                   /* 支出: 珊瑚红 — 整片冷调里唯一的暖 (面积只给金额图标) */
-  --cat-icon: #8fadb9;   /* 类别图标统一色: 青雾灰 (实色, 不用半透明白 — 深灰圆底上发虚) */
+  --cat-icon: #93bbb3;   /* 类别图标统一色: 青雾绿 (青雾+薄荷的中间色; 实色, 不用半透明白 — 圆底上发虚) */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
@@ -46,14 +53,15 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-/* 壳层装饰光 (海报 mesh 的暗版): 左上一片青雾、右下一角薄荷余温 — 钉死在视口上
-   不跟内容滚 (是环境光, 不是内容)。iOS 不认 body 的 background-attachment:fixed,
-   走固定伪元素; 负 z-index 画在 html 底色之上、一切内容之下 (body 底色让位透明) */
+/* 壳层底色 (海报 mesh 的亮版, 照采样铺): 顶上青雾 #8cb8c3、右上贴一层白光、
+   脚下薄荷 #c9e6d4 — 钉死在视口上不跟内容滚 (是环境光, 不是内容)。iOS 不认
+   body 的 background-attachment:fixed, 走固定伪元素; 负 z-index 画在 html 底色
+   之上、一切内容之下 (body 底色让位透明) */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(130% 52% at 22% -10%, rgba(48,128,152,.20), transparent 68%),
-    radial-gradient(120% 42% at 85% 108%, rgba(165,213,183,.09), transparent 70%);
+    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.8), transparent 60%),
+    linear-gradient(180deg, #8cb8c3 0%, #b7d5da 36%, #d4e9e3 68%, #c9e6d4 100%);
 }
 body {
   background: none; color: var(--ink-1);
@@ -71,17 +79,18 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 button, a, summary { touch-action: manipulation; }
 
 /* ---------- 同步状态条 (页面第一行: 顶栏菜单撤了, 这里垫高让开状态栏/刘海;
-   独立模式钉在 --top-clear 之下 —— 模糊带里不留常驻内容) ---------- */
+   独立模式钉在 --top-clear 之下 —— 模糊带里不留常驻内容)。
+   底色翻浅后这行跟浅底走: 白纱底 + 深青字, 小圆点压深一档 (浅底上才醒) ---------- */
 .sync-strip {
   display: flex; align-items: center; gap: 6px; justify-content: center;
-  font-size: 11.5px; color: var(--ink-3);
+  font-size: 11.5px; color: var(--bg-ink);
   padding: var(--top-clear) 14px 7px;
-  background: rgba(23,30,35,.6); border-bottom: 1px solid var(--hairline);
+  background: rgba(255,255,255,.5); border-bottom: 1px solid rgba(67,106,115,.16);
 }
-.sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-.sync-strip.pending { color: #d8a35a; }
-.sync-strip.pending .dot { background: #d8a35a; }
-.sync-strip.off .dot { background: var(--ink-3); }
+.sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: #2f9e77; }
+.sync-strip.pending { color: #9a6a1f; }
+.sync-strip.pending .dot { background: #9a6a1f; }
+.sync-strip.off .dot { background: var(--bg-ink); }
 
 /* ---------- 日历卡 (主页顶: 月份切换 + 每天收支, 点日子跳到瀑布流那天) ---------- */
 main {
@@ -91,7 +100,8 @@ main {
 .cal-card {
   background: var(--surface); border: 1px solid var(--hairline);
   border-radius: 14px; padding: 8px 10px 10px; margin-bottom: 12px;
-  box-shadow: 0 12px 32px rgba(9,30,40,.5);   /* 海报色卡的同色彩影: 影子带青不发死黑 */
+  box-shadow: 0 12px 32px rgba(8,32,36,.3);   /* 海报色卡的同色彩影: 浅底上收一档
+                                                  (原 .5 在浅底太沉), 影子在但轻快 */
 }
 .cal-head { display: flex; align-items: center; gap: 4px; }
 .cal-head button {
@@ -149,13 +159,16 @@ main {
   width: min(calc(100vw - 24px), 528px);   /* 定宽 (不跟内容伸缩忽宽忽窄); 528 = 日历卡
                                               同一上限 (main 560 - 16×2), 宽屏上不比卡宽 */
   overflow: hidden;
+  contain: layout;                  /* 形变期尺寸逐帧变: 布局圈死在自己这棵子树里
+                                        (分身是定格快照本就不重排, 再圈一道, 外面
+                                        一并少脏) — 帧率 */
   font-size: 12.5px; font-weight: 700; color: var(--ink-2);
-  background: rgba(43,56,65,.72);    /* 磨砂玻璃: 带青的玻璃底, blur(20) 把底下划过的
+  background: rgba(47,74,77,.72);    /* 磨砂玻璃: 青绿的玻璃底, blur(20) 把底下划过的
                                         账糊成影子透上来 */
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--hairline); border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(9,30,40,.5);
+  box-shadow: 0 8px 24px rgba(8,32,36,.3);   /* 浅底上收一档 (与卡同一副轻影) */
   visibility: hidden;
 }
 #cal-bar .cb-in {         /* 胶泡里子: ‹ 月份+收支 › — 收拢后段从分身内容交叉淡入
@@ -209,6 +222,11 @@ main {
   pointer-events: none;   /* 分身只管看: 点穿它落到胶泡自己的 ‹ › / 胶囊身上
                              (没有这句, 隐身的定格快照永远压在按钮上面吃点击) */
 }
+#cal-bar.float .cb-card {  /* 悬浮日历面板期: 分身开着点 — 日子格/‹ › 都是它身上的
+                             (分身没了 id, 点击走 #cal-bar 的委托)。面板浮在列表上,
+                             底下列表照滚 — 竖着划面板就是划列表, 滚了面板就收 */
+  pointer-events: auto;
+}
 #cal-bar .msum {
   font-size: 10.5px; font-weight: 400; color: var(--ink-3);
   font-variant-numeric: tabular-nums;
@@ -226,9 +244,9 @@ main {
 
 /* ---------- 账目列表 (按日分组) ---------- */
 .day-group { margin-bottom: 14px; }
-.day-head {
+.day-head {          /* 日子行坐在浅底上 (卡外): 深青字 */
   display: flex; justify-content: space-between;
-  font-size: 12px; color: var(--ink-3); padding: 0 4px 6px;
+  font-size: 12px; color: var(--bg-ink); padding: 0 4px 6px;
 }
 .entries { background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; }
 .entry {
@@ -263,11 +281,11 @@ main {
 #feed-more { height: 44px; }    /* 瀑布流哨兵: 滚进视口就再展开一段 (观察器盯它) */
 #feed-top {
   display: flex; align-items: center; justify-content: center;
-  height: 36px; color: var(--ink-3); font-size: 15px;
+  height: 36px; color: var(--bg-ink); font-size: 15px;
 }                               /* 往上展开的哨兵: 日历跳走后窗口上沿之上还有 (点了也展开) */
 #feed-top[hidden] { display: none; }
-.feed-end { text-align: center; color: var(--ink-3); font-size: 12px; padding: 18px 0 8px; }
-.list-empty { text-align: center; color: var(--ink-3); font-size: 13px; padding: 44px 0; }
+.feed-end { text-align: center; color: var(--bg-ink); font-size: 12px; padding: 18px 0 8px; }
+.list-empty { text-align: center; color: var(--bg-ink); font-size: 13px; padding: 44px 0; }
 
 /* ---------- 记一笔 (悬浮) ---------- */
 #fab {

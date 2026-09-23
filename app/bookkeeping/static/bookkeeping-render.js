@@ -1,7 +1,9 @@
 // bookkeeping-render — My Money 渲染: 日历卡 (每天收支, 点日子跳位 — 没账的
 // 日子也点得动, 落到最近的有账日; 升到顶被按住, 跟手收拢成顶上一枚磨砂
 // 胶囊 — 胶囊定宽, ‹ › 钉死两端, 实时报着列表滚到哪个月、那月收支多少
-// (长数字缩成 1.2千/1.2万), 滚回来一路长回, 点胶囊滚回展开; 胶泡上的
+// (长数字缩成 1.2千/1.2万), 滚回来一路长回; 点胶囊就地展开成悬浮日历面板
+// (列表纹丝不动, 滑列表才收回); 手停半路页面顺着原方向一口气收场
+// (收拢收到胶囊/长回长回顶 — 收场/跳位/面板开合同一副临界阻尼弹簧); 胶泡上的
 // ‹ › 歇着也能翻月, 胶泡里子新旧两层顺着方向对滑, 日历翻月 (箭头/左右划)
 // 明细联动顺着滑到那个月 (不瞬移) — 用户翻的月钉住优先, 滚动探测不抢)
 // + 全月份瀑布流 (所有月份排成一条往下滚的长列表; 滚到哪渲染到哪 —
@@ -178,6 +180,14 @@ let calMon = curMonth();        // 日历看着的月份 (不存本地, 开页�
 let calFeedMon = "";            // 胶泡正报着的月份 (列表当前月; "" = 待探测)
 let calPin = "";                // 翻月钉住的月份 (非空时滚动探测让位 — 用户翻的月
                                 // 说了算; 手一碰页面才交还探测权, 见下方解钉监听)
+let calFloat = false;           // 胶囊点开成悬浮日历面板 (列表纹丝不动; 滑列表才收回)
+                                // — 声明在这片早营: 渲染期的 renderCalendar/shiftCal
+                                // 也读它 (面板开着时刷新/翻月走别的路), 得先于它们
+let calFloatT = null;           // 面板展开/收回的弹簧 {to, v, t0, last, raf} — rAF 驱动
+                                // calDraw 的 p, 与滚动收拢同一条形变轨道 (弹簧常数在
+                                // 下方滑屏那片, 只这片早营的读它)
+let calP = 1;                   // 最近画过的收拢进度 (0 卡原样 ↔ 1 胶囊) — 面板弹簧
+                                // 从这接着走 (半路展开也从眼下的样子长起)
 
 function calAmt(n) {            // 紧凑金额 (日历格子/胶泡里子同一副): 上万缩 1.2万,
                                 // 上千缩 1.2千, 否则至多一位小数 — 中间那块宽度有限,
@@ -288,7 +298,9 @@ function renderCalendar() {
   $("#cal-grid").innerHTML = html;
   if ($("#cal-card").style.visibility === "hidden") {   // 分身接管中: 重搬内容 + 对一遍位 (别演旧戏)
     calRetwin();
-    calSync();
+    if (!calFloat) calSync();   // 悬浮面板开着不叫 calSync: 那是滚动探测的门, 进去就会把
+                                // 面板收掉 (翻月/记账刷新都走这) — 面板几何归面板弹簧管,
+                                // 重搬的分身已经就位, 不用对位
   }
 }
 
@@ -306,15 +318,19 @@ function shiftCal(delta, base) {    // ‹ › 按钮 / 左右划 / 气泡上的
                                     // 翻到没账的月份 (跳位落回眼前) 或跳位被惯性余波压回,
                                     // 随后的滚动事件会让探测把月份又盖回旧月, 看起来就是
                                     // "点了没反应"; 手指真落下 (touchstart/wheel) 才解钉
-  jumpToMonth(calMon);            // 先挪明细再画日历: 接管分支里 calSync 探测到的
-                                   // 就是新月, 胶泡不会先闪一帧旧月
+  if (!calFloat) jumpToMonth(calMon);   // 先挪明细再画日历: 接管分支里 calSync 探测到的
+                                   // 就是新月, 胶泡不会先闪一帧旧月。悬浮面板里翻月不挪 —
+                                   // 面板是就着眼前翻月的, 列表等点了日子才走
   renderCalendar();
   if (oldHtml && from !== calMon)   // 换了月胶泡里子才演对滑 (同月点两下不演; 没接管过
     calSlideCap(oldHtml, delta);    // 没得滑)
   const cls = delta > 0 ? "cal-in-r" : "cal-in-l";   // 下月从右进, 上月从左进
-  [$("#cal-title"), $("#cal-grid")].forEach(el => el.classList.remove("cal-in-r", "cal-in-l"));
+  const panel = calFloat ? $("#cal-bar .cb-card") : null;   // 悬浮面板 (分身): 翻月一回
+  const pans = panel   // 查一次现成的 (calTwin 营在后面, 渲染期够不着) — 面板里的同名
+    ? [panel.querySelector(".cal-title"), panel.querySelector(".cal-grid")] : [];
+  [$("#cal-title"), $("#cal-grid"), ...pans].forEach(el => el.classList.remove("cal-in-r", "cal-in-l"));
   void $("#cal-grid").offsetWidth;                   // 重放式 class + reflow (连划几下每次都重放,
-  [$("#cal-title"), $("#cal-grid")].forEach(el => el.classList.add(cls));   // 1.3.0 类别格同款)
+  [$("#cal-title"), $("#cal-grid"), ...pans].forEach(el => el.classList.add(cls));   // 1.3.0 类别格同款)
 }
 
 // 滚到底/顶附近就再展开一段 (rootMargin 提前量, 一屏没填满的兜底在 drawMore/Less 里)
@@ -330,16 +346,17 @@ $("#cal-next").addEventListener("click", () => shiftCal(1));
 
 // 日历左右划: 快速翻上月/下月 (向左划=下月, 向右划=上月; 记一笔弹层整层手势
 // 同款骨架: 先定轴向定了不反悔, 一划只翻一次 —— 手指没抬也不再触发, 竖着划
-// 让给页面滚动; 划/拽完的那一下点击当场吃掉, 不顺着误触日子格子和 ‹ › 钮)
-(() => {
-  const card = $("#cal-card");
+// 让给页面滚动; 划/拽完的那一下点击当场吃掉, 不顺着误触日子格子和 ‹ › 钮)。
+// 真身日历和悬浮面板 (点开的日历分身) 各绑一份 — 面板那份只在浮着时听使唤
+function calSwipe(el, live) {
   let x0 = null, y0 = 0, axis = "", ate = false;
   const settle = () => { x0 = null; axis = ""; };
-  card.addEventListener("touchstart", e => {
+  el.addEventListener("touchstart", e => {
+    if (!live()) { settle(); return; }              // 面板收起来了: 胶囊上划不动 (没得翻)
     const t = e.touches[0];
     x0 = t.clientX; y0 = t.clientY; axis = "";
   }, { passive: true });
-  card.addEventListener("touchmove", e => {
+  el.addEventListener("touchmove", e => {
     if (x0 == null) return;
     const t = e.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
     if (!axis && Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) + 6) {
@@ -355,14 +372,16 @@ $("#cal-next").addEventListener("click", () => shiftCal(1));
     if (ate) setTimeout(() => { ate = false; }, 350);   // 划完的点击吃掉 (兜底自清)
     settle();
   };
-  card.addEventListener("touchend", end);
-  card.addEventListener("touchcancel", end);
-  card.addEventListener("click", e => {            // 捕获先于格子/‹›: 误触当场吃掉
+  el.addEventListener("touchend", end);
+  el.addEventListener("touchcancel", end);
+  el.addEventListener("click", e => {               // 捕获先于格子/‹›: 误触当场吃掉
     if (!ate) return;
     e.stopPropagation(); e.preventDefault();
     ate = false;
   }, true);
-})();
+}
+calSwipe($("#cal-card"), () => true);
+calSwipe($("#cal-bar"), () => calFloat);
 
 $("#cal-grid").addEventListener("click", e => {
   const btn = e.target.closest("button[data-date]");
@@ -393,7 +412,11 @@ $("#feed-top").addEventListener("click", drawLess);
 // 磨砂照旧运动期暂撤、歇下来恢复 (变换层从磨砂件底下扫过是 WebKit 吐
 // 重影的配方, my-music body.pane-anim 同规矩)。落位卡在 --cal-top
 // (bookkeeping-page.css: 独立模式贴着 iOS 26+ 系统磨砂带的底沿停, 不躲安全线)。
-// 分身 pointer-events:none (css) — 它只是张快照, 别挡胶泡自己的 ‹ › 和点击。
+// 分身 pointer-events:none (css) — 它只是张快照, 别挡胶泡自己的 ‹ › 和点击;
+// 唯独悬浮面板期打开 (.float): 点的分身的日子/‹ › 都是它身上的 — 日子点击
+// 走胶囊的委托 (分身没 id, 认 class/结构), 点了收面板滑列表; ‹ › 和左右划
+// 只翻日历的月, 列表等点了日子才走; 滑列表 = 收回令 (calSync 门口设卡),
+// 面板顺着原路缩回胶囊 (p 弹簧与滚动收拢同一条 calDraw 轨道, 推手不同而已)。
 const CAL_H = 36;                 // 胶囊高 (#cal-bar 样式表同值)
 const CAL_EPS = 0.5;              // 接管/交还的判定余量 (防边界抖)
 const CAL_W_PINCH = 0.45;         // 收拢进度打这起才收窄/长圆/换字 (前半程只收高, 后半程裁形收拢)
@@ -405,15 +428,31 @@ const CAL_G_K = 110;              // 滑屏弹簧劲度 (ω≈10.5): 拉着视�
 const CAL_G_C = 2 * Math.sqrt(CAL_G_K);   // 临界阻尼 (ζ=1): 到位不弹头不哆嗦
 const CAL_G_V0 = 13;              // 距离→起步冲量: 近处轻推、远处甩得快 (小跳带点过冲回落)
 const CAL_G_VMAX = 7000;          // 冲量/速度封顶 (px/s): 大跳也就是顺手一甩那么快
+const CAL_P_K = 170;              // 面板开合弹簧劲度 (ω≈13): 上面滑屏弹簧的近亲 — p 这
+                                  // 条程只有 0↔1, 取硬些: 起步那脚冲量吃得住, 后段慢慢
+                                  // 泄劲。全应用的程序动画就这一副弹簧脾气 (滑屏/收场/
+                                  // 面板开合), 不再各演各的
+const CAL_P_C = 2 * Math.sqrt(CAL_P_K);   // 临界阻尼: 到位不弹头 (与滑屏同一条公式)
+const CAL_P_V0 = 3.2;             // 距离→起步冲量 (p/s): 一整程 ≈3.2/s — 点开利落不装呆,
+                                  // 半路改道按眼下距离比例给
+const CAL_P_VMAX = 6;             // 冲量封顶 (p/s)
+const CAL_P_TMAX = 900;           // 兜底熄火 (真机 60fps 约 650ms 走完; jsdom 假钟 100ms/
+                                  // 帧 + dt 钳 40ms, 第 10 帧就兜底落准)
 let calHeld = false;              // 分身接管中 (真身 visibility:hidden)
 let calDocked = false;            // 收到头歇在胶囊位 (行内几何已交还样式表, 定宽居中)
 let calSlot = null;               // 胶囊静止位 (接管那刻量; 定宽居中 — 内容再换也不变)
 let calFrame = false;             // scroll → rAF 节流闸
 let calSettleT = 0;               // 停手判定的计时器
 let calLastY = -1;                // 上一帧的滚位 (-1 = 还没真滚过; 开页恢复滚位不算手)
-let calVel = 0;                   // 最近的滚动方向 (负 = 收拢, 正 = 长回) — 停手朝这头收场
+let calBaseY = scrollY;           // 开机位 (脚本装载那刻 — 必在顶): 头一滚没上一帧可比,
+                                  // 方向从这起算 (滚轮单格那种一锤子滚动也认得出往下)
+let calVel = 0;                   // 最近的滚动方向 (正 = 往下滚/收拢, 负 = 往上滚/长回) —
+                                  // 停手朝这头收场 (calSettle)。1.3.1 那版注释把两头写反,
+                                  // 收场的分支跟着反 — 停在半缩处它反倒一路滚回顶
 let calTwin = null;               // 分身元素 (接管那刻缓存, 热路径不再查 DOM)
 let calIn = null;                 // 胶泡文字 (同上)
+                                  // (面板三态 calFloat/calFloatT/calP 在前面日历状态那片 —
+                                  // 渲染期的函数也读它们, 只好早营)
 
 const calSmooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);   // 两端缓一拍
 
@@ -446,6 +485,9 @@ function calGlideTo(y) {          // 程序滑屏 (翻月联动/点日子跳位/
          && feedDrawn < feedGroups.length) drawMore();
   // ↑ 目标可能压着文档底 (目标在窗口里但离底不远, 底下哨兵还没带出更多内容):
   //   先把文档画够高再滑 — 不然滑到头被最大滚动钳在离目标差一截的半道
+  y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
+  // ↑ 落点夹进可滚区间 (收场/跳位算出的目标可能出头; 夹不进的话弹簧永远差一口
+  //   到不了终点, 只能等三秒兜底熄火)
   const cur = scrollY;
   const dist = y - cur;
   if (Math.abs(dist) < 2 && Math.abs(carry) < 40) return;   // 本来就在: 不演
@@ -472,6 +514,79 @@ function calGlideTo(y) {          // 程序滑屏 (翻月联动/点日子跳位/
   g.raf = requestAnimationFrame(step);
 }
 
+function calFloatStop() {         // 停在途的面板弹簧 (交还真身/重开先来): 它管的帧全让出来
+  if (calFloatT) {
+    cancelAnimationFrame(calFloatT.raf);
+    calFloatT = null;
+  }
+}
+
+function calFloatTween(to, after) {   // 面板展开/收回: p 从眼下的值弹簧到 to (0 悬浮日历
+                                      // ↔ 1 胶囊) — 上面滑屏那副临界阻尼弹簧原样搬来推 p
+                                      // (统一手感: 全应用的程序动画一副脾气; 原先 240ms
+                                      // 一口气的大半程挤在前几帧, 稍掉一帧就看见台阶),
+                                      // 逐帧喂 calDraw — 与滚动收拢同一条形变轨道, 只是
+                                      // 推手从滚动换成弹簧。r 只取卡的宽高/横位 (竖滚
+                                      // 不动这些), 途中列表照滚也不歪
+  calFloatStop();
+  const r = $("#cal-card").getBoundingClientRect();
+  const t0 = performance.now();
+  const tw = calFloatT = { to, v: (to - calP) * CAL_P_V0, t0, last: t0, raf: 0 };
+  const step = now => {
+    if (calFloatT !== tw) return;             // 半路被停/被换: 旧这一趟就地熄火
+    const dt = Math.min(0.04, Math.max(0.001, (now - tw.last) / 1000));
+    tw.last = now;                            // 卡顿的帧不当长帧算 (弹簧会炸)
+    tw.v = Math.max(-CAL_P_VMAX, Math.min(CAL_P_VMAX,
+             tw.v + (CAL_P_K * (tw.to - calP) - CAL_P_C * tw.v) * dt));
+    calP += tw.v * dt;
+    if ((Math.abs(tw.to - calP) < 0.002 && Math.abs(tw.v) < 0.05)
+        || now - tw.t0 > CAL_P_TMAX) {        // 到位 (半丝内直接落准) / 兜底熄火
+      calP = tw.to;
+      calFloatT = null;
+      calDraw(r, calP);
+      if (after) after();
+      return;
+    }
+    calDraw(r, calP);
+    tw.raf = requestAnimationFrame(step);
+  };
+  tw.raf = requestAnimationFrame(step);
+}
+
+function calFloatOpen() {         // 点胶囊: 就地展开成悬浮日历面板, 浮在列表上 —
+                                  // 列表纹丝不动 (不再滚回顶), 想去哪天点了日子才走
+  const bar = $("#cal-bar");
+  if (!calHeld || calFloat) return;
+  clearTimeout(calSettleT);       // 手静收场别掺和 (这几百毫秒几何归面板弹簧管)
+  calGlideStop();                 // 在途滑屏/收场滑屏也停 (收场早改走弹簧, 一停就真停,
+                                  // 不再有掐不断的系统 smooth 滚动) — 点了面板, 列表定格
+  calFloat = true;
+  bar.classList.add("float");     // css: 分身开 pointer-events — 日子/‹ › 都是它身上的
+  bar.style.transform = "none";   // 展开期不吃样式表的 translateX 居中 (与接管同款)
+  bar.style.backgroundColor = "rgb(34,57,58)";   // 面板底 = 卡面实色 (悬浮得盖得住底下列表)
+  bar.style.boxShadow = "none";   // 途中影子歇着 (与滚动收拢同款 — 大投影跟着尺寸逐帧
+                                  // 重画最吃帧率), 弹簧到位这一下再亮出来
+  calFloatTween(0, () => {        // 展开落位: 面板这张脸浮起来了, 影子这才上 (静止的
+    bar.style.boxShadow = "0 12px 32px rgba(8,32,36,.3)";   // 只画一回, 与日历卡同一副)
+  });
+}
+
+function calFloatClose() {        // 收回: 面板顺着原路缩回胶囊 (p→1), 列表不动/照滚都行
+  if (!calFloat) return;
+  calFloat = false;               // 先摘牌: 弹簧路上 calSync 不再二连收
+  $("#cal-bar").style.boxShadow = "none";   // 落位时亮的那副影子先歇 (途中不逐帧重画)
+  calFloatTween(1, () => {        // 缩到头: 收尾与滚动收到头同一套 (几何交还样式表)
+    const bar = $("#cal-bar");
+    bar.classList.remove("float");
+    if ($("#cal-card").getBoundingClientRect().top > calSlot.top + CAL_EPS) {
+      calRelease();               // 收拢这口气里真身已滚回眼前: 直接交还, 不闪双日历
+    } else {
+      calDocked = true;
+      calClear(bar);
+    }
+  });
+}
+
 function calRetwin() {            // 搬真身内容成分身 (接管时/数据变了重搬)
   if (calTwin) calTwin.remove();  // 旧分身先拆走 (胶囊骨架不再整包重搭, 没人顺手清它了)
   const bar = $("#cal-bar");
@@ -483,13 +598,14 @@ function calRetwin() {            // 搬真身内容成分身 (接管时/数据�
   twin.style.height = `${r.height}px`;    // 只当裁形窗口裁它, 日历网格全程零重排
   for (const el of twin.querySelectorAll("[id]")) el.removeAttribute("id");
   // ↑ 分身去 id: $/querySelector 永远命中真身 (日历样式全走 class, 去了不亏)
-  if (calDocked) {                        // 歇在胶囊位时数据变了 (整包重写过胶泡): 分身接着隐、
+  if (calDocked && !calFloat) {           // 歇在胶囊位时数据变了 (整包重写过胶泡): 分身接着隐、
     twin.style.opacity = "0";             // 胶泡文字接着亮 —— 运动期这两笔 calDraw 逐帧带, 不用管
   }                                       // (胶囊定宽: 运动途中换内容, 终点几何不变, 不用重测)
+                                          // 悬浮面板开着时反着: 面板 (分身) 亮、胶泡文字隐
   bar.appendChild(twin);
   calTwin = twin;                         // 逐帧要碰的引用接管那刻缓存, calDraw 不再查 DOM
   calIn = bar.querySelector(".cb-in");
-  if (calDocked) calIn.style.opacity = "1";   // 新胶泡没走过 calDraw (样式表默认 0), 歇着也得亮着
+  if (calDocked && !calFloat) calIn.style.opacity = "1";   // 新胶泡没走过 calDraw (样式表默认 0), 歇着也得亮着
 }
 
 function calClear(bar) {          // 清行内形变样式, 回样式表世界 (磨砂胶囊)
@@ -535,8 +651,13 @@ function calDraw(r, p) {          // 把分身摆到收拢进度 p (0 卡原样 
   calIn.style.opacity = String(fade);            // 胶泡文字交叉淡入
 }
 
-function calSettle() {             // 手静 ~180ms: 没走完的自己走完 (往哪边滚就朝哪边收场),
-  clearTimeout(calSettleT);        // 不冻在半缩的中间形态 —— 收场走真滚动, 分身从实时几何取形
+function calSettle() {             // 手静 ~180ms: 没走完的自己走完, 不冻在半缩的中间
+  clearTimeout(calSettleT);        // 形态 — 往哪边滚就朝哪边收场: 往下滚就顺着收到胶囊
+                                   // (滑到下边界贴胶囊底), 往上滚就一路长回顶交还真身。
+                                   // 收场走程序滑屏 calGlideTo (与翻月/跳位同一副弹簧,
+                                   // 滚一帧对一帧从实时几何取形; 1.3.1 借系统 smooth 滚动
+                                   // 那版方向拧反了 — 停在半缩处它反倒一路滚回顶把日历
+                                   // 整个长回来, 还掐不停), 触摸一碰即停 (用户随时能夺回)
   if (!calHeld || calLastY < 0) return;   // 没真滚过 (开页恢复滚位): 不代劳
   calSettleT = setTimeout(() => {
     if (!calHeld) return;
@@ -545,11 +666,10 @@ function calSettle() {             // 手静 ~180ms: 没走完的自己走完 (�
     const bottom = Math.max(r.bottom, line + CAL_H);
     const p = (r.height - (bottom - line)) / (r.height - CAL_H);
     if (p <= 0 || p >= 1) return;                        // 本来就走到头了
-    if (calVel > 0) {                                    // 刚才在往回长: 一路长回到顶
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {                                             // 刚才在收拢: 一路收到下边界贴胶囊底
-      window.scrollTo({ top: scrollY - (r.bottom - line - CAL_H),
-                        behavior: "smooth" });
+    if (calVel > 0) {                                    // 刚才往下滚 (收拢): 一路收到胶囊
+      calGlideTo(scrollY + (r.bottom - line - CAL_H));   // (滚到卡的下边界正好贴胶囊底)
+    } else {                                             // 刚才往上滚 (长回): 一路长回顶
+      calGlideTo(0);                                     // (卡顶回到落位线下, 交还真身)
     }
   }, CAL_IDLE);
 }
@@ -576,6 +696,20 @@ function calViewMon() {            // 列表现在看着哪个月: 月份头横�
 function calSync() {               // 滚一帧对一帧: 收拢/长回全跟手
   const bar = $("#cal-bar"), card = $("#cal-card");
   const r = card.getBoundingClientRect();
+  if (calFloat) {                  // 悬浮面板开着: 滑列表就是收起令 — 真身都滚回眼前了
+                                   // (松手就停在日历里) 面板让位直接交还, 还没到就顺着
+                                   // 原路缩回胶囊 (面板自己的弹簧走, 列表照它自己的滚)
+    if (r.top > calSlot.top + CAL_EPS) {
+      calFloatStop();
+      calFloat = false;
+      bar.classList.remove("float");
+      calRelease();
+    } else {
+      calFloatClose();
+    }
+    return;
+  }
+  if (calFloatT) return;           // 面板展开/收回的弹簧在途: 这几帧几何归它 (滚动事件别抢方向盘)
   const slot = calHeld ? calSlot : bar.getBoundingClientRect();  // 隐身仍占位, 自由态量得到
   if (!calHeld) {
     if (r.top > slot.top + CAL_EPS) return;   // 卡顶还在落位线下方: 真身自己走
@@ -584,7 +718,9 @@ function calSync() {               // 滚一帧对一帧: 收拢/长回全跟手
     card.style.visibility = "hidden";
     bar.style.visibility = "visible";
     bar.style.transform = "none";   // 形变期不吃样式表的 translateX 居中 (就写这一回)
-    bar.style.backgroundColor = "rgb(34,43,49)";  // 底色途中一次写死 (卡面 #1e2429 → 磨砂等效 #2b3841·72% 的中点)
+    bar.style.backgroundColor = "rgb(34,57,58)";  // 底色途中一次写死 = 卡面实色 #22393a
+                                                  // (与悬浮面板同一副 — 途中磨砂暂撤, 拿
+                                                  // 卡面顶上, 落位再还磨砂)
     bar.style.boxShadow = "none";                 // 影子路上干脆歇着 (减细节换流畅); 到站都交还样式表
     calHeld = true;
   } else if (r.top > calSlot.top + CAL_EPS) { // 滚回来了: 交还真身 (此刻分身几何 ≡ 真身)
@@ -596,10 +732,11 @@ function calSync() {               // 滚一帧对一帧: 收拢/长回全跟手
   const mon = calViewMon();         // 列表滚到哪个月了 (先读后写: 探测跟几何同一批读, 不多排一遍)
   const p = Math.min(1, Math.max(0,             // 收拢进度: 0 卡原样 → 1 胶囊
     (r.height - (bottom - top)) / (r.height - CAL_H)));
+  calP = p;                                     // 记下最新进度: 面板弹簧从眼下的样子接着走
   if (calDocked && p < 1) {         // 歇在胶囊位又被往回滚: 从胶囊位接着跟手长回 (胶囊定宽,
     calDocked = false;              // 静止位接管那刻量过一直有效, 不用重测)
     bar.style.transform = "none";   // 形变期不吃样式表的 translateX 居中 (换肤同接管那套)
-    bar.style.backgroundColor = "rgb(34,43,49)";
+    bar.style.backgroundColor = "rgb(34,57,58)";
     bar.style.boxShadow = "none";
   }
   if (mon && mon !== calFeedMon && !calPin) {   // 翻进新的月份: 只换中间那层字 (月份换了
@@ -625,7 +762,8 @@ addEventListener("scroll", () => {     // 滚一帧追一帧 (rAF 节流); 滚�
   requestAnimationFrame(() => {
     calFrame = false;
     const y = scrollY;
-    if (calLastY >= 0 && y !== calLastY) calVel = y - calLastY;
+    if (calLastY < 0) calVel = y - calBaseY;        // 头一滚: 没上一帧可比, 从开机位起算
+    else if (y !== calLastY) calVel = y - calLastY; // (开页必在顶 → 头一滚必是往下)
     calLastY = y;
     calSync();
   });
@@ -642,10 +780,22 @@ new IntersectionObserver(() => calSync(),
 for (const ev of ["touchstart", "pointerdown", "wheel"])
   addEventListener(ev, () => { calPin = ""; calGlideStop(); }, { passive: true, capture: true });
 $("#cal-bar").addEventListener("click", e => {
+  if (calFloat) {                 // 悬浮日历开着: 这一下落在面板身上
+    const day = e.target.closest("button[data-date]");
+    if (day) {                    // 点了日子: 面板先收, 列表再顺着滑到那天 (这就是"去")
+      calFloatClose();
+      jumpToDate(day.dataset.date);
+      return;
+    }
+    const head = e.target.closest(".cal-head button");
+    if (head)                     // 面板里的 ‹ ›: 只翻日历的月 (列表不去 — 点了日子才去);
+      shiftCal(head.parentElement.firstElementChild === head ? -1 : 1);   // 头一枚是 ‹ (分身
+    return;                       // 没了 id, 认结构)。点在面板别处: 不动 (滑列表才收)
+  }
   const nav = e.target.closest(".cb-nav");
   if (nav) {                      // 气泡上的 ‹ ›: 从胶泡正报着的月翻起 (明细联动跟着挪)
     shiftCal(+nav.dataset.d, calFeedMon || calMon);
     return;
   }
-  calGlideTo(0);                  // 点胶囊滚回: 一路长回日历跟着滑
+  calFloatOpen();                 // 点胶囊: 日历就地展开成悬浮面板 (列表纹丝不动)
 });
