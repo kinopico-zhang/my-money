@@ -68,9 +68,16 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     assert 'time: e.time || ""' in js and "tags: e.tags || []" in js  # 同步映射
     assert '$("#grab-zone")' in js and "translateY(${dy}px)" in js    # 把手拖动
     assert "CATEGORY_ICONS" in js and "CATEGORIES" not in js
-    assert 'stroke="currentColor"' in js and '<use href="#ci-' in js   # 单色 SVG sprite
-    assert "catIcon(val)" in js                     # 子类格按全路径取自己的图标
-    assert '"charging-pile"' in js and "car-battery" not in js  # 充电换成充电桩图
+    assert 'fill="currentColor"' in js and '<mask' in js and '<use href="#ci-' in js
+    #    ↑ 图形: icon-park-outline 线稿 (1.4.0 末段换过面性, iPhone 上 <use> 影子树
+    #    url 引用不渲染又回退); sprite 注入按形态分流 —— 带 <mask 的本体提升进
+    #    文档级共享 defs 不进影子树 (iOS WebKit 解析不了影子树里的 url(#…) 引用,
+    #    挂它的元素整枚不渲染; 眼下线稿集里没有 mask 体, 机制留着防再栽)
+    assert 'mask="url(#ci-m-${name})"' in js and 'style="display:none"' not in js
+    #    ↑ 分流盖板引文档级 mask (id 注入时重编); sprite 隐身走 0×0 绝对定位
+    #    (display:none 的引用源 Safari 也认不全)
+    assert "catIcon(val, sheetKind)" in js           # 子类格按全路径取自己的图标; 底色跟方向走
+    assert '"bolt-one"' in js and "car-battery" not in js  # 充电: 插头图形
     assert "\"虾饺\": 'cat'" in js and "shrimp" not in js   # 虾饺是只猫 (家里的猫咪)
     assert "COMMON_CATS" in js                      # 常见格清单 (恰填满 5×3)
     assert "#ci-more" not in js and "catAll" not in js   # 「…」全部钮整个撤了
@@ -82,7 +89,7 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     assert '$("#cp-list").addEventListener("click"' in js
     assert "cp-top" in js and "cp-kids" in js and 'classList.add("open")' in js
     assert "cpRow(top, top, true)" in js           # 没子类的大类: 一级行直选
-    assert '<span class="cp-ic">${catIcon(top)}</span>' in js   # 大类标题带图标 (solo 行同款)
+    assert '<span class="cp-ic">${catIcon(top, sheetKind)}</span>' in js   # 大类标题带图标 (solo 行同款)
     # 时间拨轮: whenVal 单一事实源 (开层摆轮位/拨定回写/保存读), 拆回 date/time 进条目
     assert "function whenPicked()" in js and "function fmtWhen(" in js
     assert "= whenPicked()" in js and '$("#when-btn")' in js

@@ -1,10 +1,15 @@
-// category-icons — 类别图标: 大类/子类 → IconPark 单色线性 SVG (icon-park-outline,
-// 48×48 viewBox, stroke=currentColor —— 统一色交给 CSS, 选中态翻白不用换图)。
-// 图标名经 Iconify API 取 body, 页面加载时一次性注入 <symbol> sprite,
-// catIcon 只回 <use> 引用 (列表整页重排也不重复塞 path)。
-// 拆自 bookkeeping-state.js 的 emoji 映射: emoji 换矢量, 单色统一,
-// 不吃各系统 emoji 渲染差异。图标是纯展示映射, 跟着类别数据走不进库;
-// 没映射到的类别兜底 notes。
+// category-icons — 类别图标: 大类/子类 → IconPark 线性 SVG (icon-park-outline,
+// 48×48 viewBox, stroke=currentColor) 坐在跟收支方向走的圆底上 (圆就是 svg 自带
+// 的 <circle>, 颜色行内 --cc 给; 图形恒白且缩一圈居中 —— css 里 .ci { color:#fff }。
+// 底色只有两枚: 支出红/收入绿 (与页面 --red/--green 同源), 大类不再一类一色。
+// 选中态不改图: 样式表在选中的容器上挂 --sel 覆盖 --cc (var(--sel, var(--cc))
+// 的兜底链), 翻成白底彩图形。图标名经 Iconify API 取 body, 页面加载时一次性注入
+// <symbol> sprite, catIcon 只回 <use> 引用 (列表整页重排也不重复塞 path)。
+// 注入口按本体形态分流 (带 <mask 的提升进文档级共享 defs, 不进 <use> 影子树 ——
+// 影子树里的 url(#…) 引用 iOS WebKit 解析不了, 挂它的元素整枚不渲染), 详见文件尾。
+// 拆自 bookkeeping-state.js 的 emoji 映射: emoji 换矢量, 不吃各系统 emoji
+// 渲染差异。图标是纯展示映射, 跟着类别数据走不进库;
+// 没映射到的类别图标兜底 notes、方向没传按支出红兜底 (默认页)。
 "use strict";
 /* exported catIcon */
 
@@ -13,26 +18,26 @@ const CATEGORY_ICONS = {
   "交通": 'car',
   "购物": 'shopping-bag',
   "居家": 'home',
-  "娱乐": 'game-console',
-  "医教": 'stethoscope',
+  "娱乐": 'game-three',
+  "医教": 'medical-box',
   "人情": 'peoples-two',
-  "投资": 'trending-up',
+  "投资": 'trend',
   "旅游": 'airplane',
   "生意": 'briefcase',
   "房贷": 'building-one',
   "团队管理": 'peoples',
-  "还钱钱": 'exchange',
+  "还钱钱": 'exchange-four',
   "虾饺": 'cat',
-  "工资薪水": 'income-one',
+  "工资薪水": 'bill',
   "奖金": 'trophy',
   "兼职外快": 'moon',
-  "红包": 'red-envelopes',
+  "红包": 'mail',
   "利息": 'percentage',
-  "基金": 'funds',
+  "基金": 'trend-two',
   "股票": 'chart-stock',
   "余额宝": 'pig',
   "分红": 'chart-pie',
-  "营业收入": 'income',
+  "营业收入": 'sales-report',
   "工程款": 'engineering-vehicle',
   "福利补贴": 'vip',
   "礼金": 'gift',
@@ -49,9 +54,9 @@ const CATEGORY_ICONS = {
   "餐饮/买菜原料": 'vegetables',
   "餐饮/油盐酱醋": 'cooking-pot',
   "餐饮/餐饮其他": 'more',
-  "交通/充电": 'charging-pile',
+  "交通/充电": 'bolt-one',
   "交通/打车": 'taxi',
-  "交通/公交": 'bus',
+  "交通/公交": 'bus-one',
   "交通/加油": 'petrol',
   "交通/停车费": 'parking',
   "交通/地铁": 'subway',
@@ -69,10 +74,10 @@ const CATEGORY_ICONS = {
   "交通/交通其他": 'more',
   "购物/服饰鞋包": 't-shirt',
   "购物/家居百货": 'lamp',
-  "购物/宝宝用品": 'baby-bottle',
-  "购物/化妆护肤": 'makeups',
+  "购物/宝宝用品": 'baby',
+  "购物/化妆护肤": 'lipstick',
   "购物/烟酒": 'beer',
-  "购物/电子数码": 'computer-one',
+  "购物/电子数码": 'computer',
   "购物/文具玩具": 'pencil',
   "购物/报刊书籍": 'newspaper-folding',
   "购物/珠宝首饰": 'jewelry',
@@ -83,13 +88,13 @@ const CATEGORY_ICONS = {
   "购物/购物其他": 'more',
   "居家/手机电话": 'phone-telephone',
   "居家/水电燃气": 'lightning',
-  "居家/生活费": 'expenses-one',
+  "居家/生活费": 'consume',
   "居家/美发美容": 'scissors',
   "居家/住宿房租": 'homestay',
   "居家/材料建材": 'hammer-and-anvil',
   "居家/房款房贷": 'building-two',
   "居家/快递邮政": 'express-delivery',
-  "居家/电脑宽带": 'wifi',
+  "居家/电脑宽带": 'router',
   "居家/家政服务": 'vacuum-cleaner',
   "居家/物业": 'green-house',
   "居家/税费手续费": 'seal',
@@ -99,22 +104,22 @@ const CATEGORY_ICONS = {
   "居家/漏记款": 'history',
   "居家/生活其他": 'more',
   "娱乐/旅游度假": 'vacation',
-  "娱乐/电影": 'film',
+  "娱乐/电影": 'movie',
   "娱乐/网游电玩": 'game-two',
   "娱乐/麻将棋牌": 'poker',
-  "娱乐/洗浴足浴": 'foot',
-  "娱乐/运动健身": 'dumbbell',
+  "娱乐/洗浴足浴": 'massage-chair',
+  "娱乐/运动健身": 'muscle',
   "娱乐/花鸟宠物": 'bird',
   "娱乐/聚会玩乐": 'party-balloon',
   "娱乐/茶酒咖啡": 'teapot',
   "娱乐/卡拉OK": 'microphone-one',
   "娱乐/歌舞演出": 'theater',
-  "娱乐/电视": 'tv',
+  "娱乐/电视": 'tv-one',
   "娱乐/娱乐其他": 'more',
   "医教/医疗药品": 'medicine-bottle',
   "医教/挂号门诊": 'medical-files',
   "医教/养生保健": 'traditional-chinese-medicine',
-  "医教/住院费": 'hospital-bed',
+  "医教/住院费": 'sickbed',
   "医教/养老院": 'a-cane',
   "医教/学杂教材": 'book',
   "医教/培训考试": 'certificate',
@@ -126,7 +131,7 @@ const CATEGORY_ICONS = {
   "医教/医教其他": 'more',
   "人情/礼金红包": 'red-envelope',
   "人情/物品": 'gift-box',
-  "人情/孝敬": 'heart',
+  "人情/孝敬": 'like',
   "人情/请客": 'chopsticks-fork',
   "人情/给予": 'hand-up',
   "人情/代付款": 'pay-code',
@@ -135,15 +140,15 @@ const CATEGORY_ICONS = {
   "投资/利息支出": 'percentage',
   "投资/保险": 'umbrella',
   "投资/出资": 'wallet',
-  "投资/基金": 'funds',
+  "投资/基金": 'trend-two',
   "投资/股票": 'chart-stock',
   "投资/P2P": 'user-to-user-transmission',
   "投资/余额宝": 'pig',
   "投资/理财产品": 'finance',
   "投资/投资贷款": 'bank-card-one',
   "投资/银行存款": 'bank',
-  "投资/证券期货": 'chart-line',
-  "投资/外汇": 'dollar',
+  "投资/证券期货": 'stock-market',
+  "投资/外汇": 'exchange-one',
   "投资/贵金属": 'gold-medal',
   "投资/收藏品": 'treasure-chest',
   "投资/投资其他": 'more',
@@ -166,7 +171,7 @@ const CATEGORY_ICONS = {
   "生意/人工支出": 'worker',
   "生意/材料辅料": 'box',
   "生意/办公费用": 'workbench',
-  "生意/交通运输": 'truck',
+  "生意/交通运输": 'transporter',
   "生意/工程付款": 'engineering-vehicle',
   "生意/运营费": 'dashboard',
   "生意/会务费": 'online-meeting',
@@ -177,12 +182,15 @@ const CATEGORY_ICONS = {
 };
 const FALLBACK_ICON = "notes";
 
-// icon-park-outline 的 <g> 描边组 (fill=none stroke=currentColor stroke-width=4)
+// 图形本体: icon-park-outline 的 <g> 描边组 (fill=none stroke=currentColor
+// stroke-width=4), 全员 currentColor (恒白)。1.4.0 末段短暂换过 icon-park-solid
+// 面性图形 (实心主体 + mask 镂空), 在 iPhone 上踩了 <use> 影子树 url 引用
+// 不渲染的坑, 图形整体回退这套线稿 (注入的分流机制见文件尾, 防再栽)
 const ICON_BODIES = {
   "a-cane": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M19.558 44.768L33.642 18.28c1.173-2.207 3.811-9.299-3.252-13.055C23.326 1.47 19.157 7.181 17.749 9.83"/>',
   "airplane": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M20.5 10.537C20.5 6.514 22.833 4.503 24 4c1.167.503 3.5 2.514 3.5 6.537v7.543L43 31v4l-16-8v9l5 8l-8-3l-8 3l5-8v-9L5 35v-4l15.5-12.92z"/>',
   "announcement": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><rect width="40" height="26" x="4" y="15" rx="2"/><path stroke-linecap="round" d="m24 7l-8 8h16zM12 24h18m-18 8h8"/></g>',
-  "baby-bottle": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M36 20H12v24h24zM26 36h10m-10-8h10M8 20h32m-28-6h8.4V7.6C20.4 6.398 21.6 4 24 4s3.6 2.398 3.6 3.6V14H36"/>',
+  "baby": '<g fill="none"><path stroke="currentColor" stroke-width="4" d="M24 43.6c8.432 0 15.56-6.68 17.894-14.35C42.418 27.526 46 27.526 46 23.8s-3.616-3.94-4.201-5.752C39.372 10.535 32.32 4 24 4C15.675 4 8.62 10.54 6.197 18.06C5.615 19.87 2 20.01 2 23.8s3.592 3.79 4.135 5.542C8.497 36.964 15.602 43.6 24 43.6Z" clip-rule="evenodd"/><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M41.799 18.048C39.372 10.535 32.32 4 24 4"/><path fill="currentColor" stroke="currentColor" d="M19.1 21.6c0 .826-.224 1.552-.56 2.056c-.339.508-.751.744-1.14.744s-.8-.236-1.14-.744c-.336-.504-.56-1.23-.56-2.056s.224-1.552.56-2.056c.34-.508.752-.744 1.14-.744c.389 0 .801.236 1.14.744c.336.504.56 1.23.56 2.056Zm13.2 0c0 .826-.224 1.552-.56 2.056c-.339.508-.752.744-1.14.744s-.801-.236-1.14-.744c-.336-.504-.56-1.23-.56-2.056s.224-1.552.56-2.056c.339-.508.752-.744 1.14-.744s.801.236 1.14.744c.336.504.56 1.23.56 2.056Z"/><path fill="currentColor" fill-rule="evenodd" d="M18.498 31.75q2.896 1.95 5.511 1.95q2.613 0 5.18-1.945" clip-rule="evenodd"/><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M18.498 31.75q2.896 1.95 5.511 1.95q2.613 0 5.18-1.945M31.728 6.2q.402 2.901-1.769 4.239t-7.055 1.254"/></g>',
   "bank": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M10 17v27h28V17"/><path d="m5 22l5-5L24 4l14 13l5 5"/><path d="m19 19l5 6l5-6M18 31h12m-12-6h12m-6 0v12"/></g>',
   "bank-card": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M4 10a2 2 0 0 1 2-2h36a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path stroke-linecap="square" d="M4 16h40"/><path stroke-linecap="round" d="M27 32h9m8-22v16M4 10v16"/></g>',
   "bank-card-one": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M14 13V9a2 2 0 0 1 2-2h26a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2h-2"/><rect width="30" height="22" x="4" y="19" rx="2"/><path d="M4 28h30m0-5v12M4 23v12m7-1h8m6 0h2"/></g>',
@@ -190,8 +198,10 @@ const ICON_BODIES = {
   "barbecue": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="4"><rect width="8" height="8" x="12" y="4" stroke-linejoin="round" rx="4"/><rect width="8" height="8" x="12" y="22" stroke-linejoin="round" rx="4"/><path d="M16 31v13"/><rect width="8" height="8" x="28" y="4" stroke-linejoin="round" rx="4"/><rect width="8" height="8" x="28" y="22" stroke-linejoin="round" rx="4"/><path d="M32 31v13"/><path stroke-linejoin="round" stroke-miterlimit="2" d="M13 17h6m10 0h6M13 36h6m10 0h6"/><path d="M16 14v6m16-6v6"/></g>',
   "beer": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="4"><path stroke-linejoin="round" d="M25.5 19H33a2 2 0 0 1 2 2v23H13V21a2 2 0 0 1 2-2h2.5"/><path stroke-linejoin="round" d="M17 8h-2.5a5.5 5.5 0 1 0 0 11H19v10.5a2.5 2.5 0 0 0 5 0V19h9.5a5.5 5.5 0 1 0 0-11H29s-1-4-6-4s-6 4-6 4"/><path d="M35 21h5a2 2 0 0 1 2 2v5a4 4 0 0 1-4 4h-3"/></g>',
   "bike": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M10.5 42a8.5 8.5 0 1 0 0-17a8.5 8.5 0 0 0 0 17M37 42a9 9 0 1 0 0-18a9 9 0 0 0 0 18"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M18.997 6h9L37 33"/><path d="m11.057 33l20.625-16.237z" clip-rule="evenodd"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="m11.057 33l20.625-16.237m0-1.763h8.472L42 10M8 15.974h7M15 16l3.273 10.421"/></g>',
+  "bill": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M10 6a2 2 0 0 1 2-2h24a2 2 0 0 1 2 2v38l-7-5l-7 5l-7-5l-7 5zm8 16h12m-12 8h12M18 14h12"/>',
   "bird": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="m9 14l-5 6.07S5.85 27.035 11 32c9.89 9.533 24.334 3.303 30-1c5.357-4.37 2.717-5.332 1-5l-5 1c9.065-14.301 6.575-15.828 4-15l-9 4c-5.769 3.177-8.5 1.5-10 0l-3-3c-4.5-4-8.97-.16-10 1"/><circle cx="14" cy="20" r="2" fill="currentColor"/></g>',
   "blackboard": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M8 7h32v24H8z"/><path stroke-linecap="round" d="M4 7h40M15 41l9-10l9 10M16 13h16m-16 6h12m-12 6h6"/></g>',
+  "bolt-one": '<g fill="none" stroke="currentColor" stroke-width="4"><path d="M12 12.28a.28.28 0 0 1 .28-.28h23.44a.28.28 0 0 1 .28.28V24c0 6.627-5.373 12-12 12s-12-5.373-12-12z"/><path stroke-linecap="round" stroke-linejoin="round" d="M20 12V4m8 8V4m-6 23h4m-2 9v5a3 3 0 0 0 3 3h11"/></g>',
   "book": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M8 40V10c0-3.314 2.865-6 6.4-6H40v32H14.4c-5.038 0-6.4.684-6.4 4Z"/><path stroke-linecap="round" d="M12 44h28v-8H12a4 4 0 0 0 0 8" clip-rule="evenodd"/></g>',
   "bowl": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M32 44s0-3.864.002-3.872a18 18 0 0 0 4.726-3.4A17.94 17.94 0 0 0 42 24H6c0 4.97 2.015 9.47 5.272 12.728a18.1 18.1 0 0 0 4.741 3.407L16 44zm-8-25.992V8m12 10.008V12m-24 6.008V12m28-4a4 4 0 0 0-4 4m-8-8a4 4 0 0 0-4 4m-8 0a4 4 0 0 0-4 4"/>',
   "box": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><rect width="36" height="30" x="6" y="12" rx="2"/><path stroke-linecap="round" d="M17.95 24.008h12M6 13l7-8h22l7 8"/></g>',
@@ -199,38 +209,27 @@ const ICON_BODIES = {
   "briefcase": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M32 16c0-6.075-3.582-12-8-12s-8 5.925-8 12m-7 0h30l1 12H27v-3h-6v3H8zM8 28L6 42h36l-2-14"/><path d="M21 25h6v6h-6z"/></g>',
   "building-one": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M11 14L25 4v40H11z" clip-rule="evenodd"/><path d="m25 13l14 10v21M4 44h40"/></g>',
   "building-two": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="m21 13l-10 7v24"/><path d="m21 4l10 7v13l7 5v15H21z" clip-rule="evenodd"/><path d="M4 44h40"/></g>',
-  "bus": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M6.012 34.005V8.036a2 2 0 0 1 2-2H40a2 2 0 0 1 2 2v25.969a3 3 0 0 1-3 3h-1.995V38a4 4 0 1 1-8 0v-.995h-9.997v.997a3.998 3.998 0 0 1-7.997 0v-.997H9.012a3 3 0 0 1-3-3Z"/><path stroke-linecap="round" d="M42 23H6m28-10H14v10h20zM14 30h2m16 0h2"/></g>',
   "bus-one": '<g fill="none"><rect width="32" height="34" x="8" y="5" stroke="currentColor" stroke-linejoin="round" stroke-width="4" rx="3"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 39v4m20-4v4"/><circle cx="34" cy="33" r="2" fill="currentColor"/><circle cx="14" cy="33" r="2" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M8 23h32M8 21v4m32-4v4M18 13h12"/></g>',
   "car": '<g fill="none"><path fill="currentColor" fill-rule="evenodd" d="M13.5 32a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5m21 0a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5" clip-rule="evenodd"/><path stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M7 37a3 3 0 0 1-3-3v-9.29a6 6 0 0 1 3.319-5.368l.682-.34l2.31-9.91A4 4 0 0 1 14.205 6h19.688a4 4 0 0 1 3.904 3.128l2.205 9.874l.68.34A6 6 0 0 1 44 24.708V34a3 3 0 0 1-3 3h-1.997v1A4.001 4.001 0 0 1 31 38v-1H17v1a4 4 0 1 1-8 0v-1z"/><path stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M14 22h20l-1.652-7.434A2 2 0 0 0 30.396 13H17.604a2 2 0 0 0-1.952 1.566z"/></g>',
-  // 猫: 虾饺 (家里的猫咪) 专用 —— 挖财时代的自定义大类, 图标就该是只猫
   "cat": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M42 26c0 8.837-8.059 16-18 16S6 34.837 6 26m9-13.86c2.648-1.36 5.721-2.14 9-2.14s6.352.78 9 2.14"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 26V8.488c0-1.731 2.05-2.645 3.337-1.487L15 12.093M42 26V8.488c0-1.731-2.05-2.645-3.337-1.487L33 12.093"/><circle cx="30" cy="22" r="2" fill="currentColor"/><circle cx="18" cy="22" r="2" fill="currentColor"/><circle cx="24" cy="28" r="2" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M16 30L4 31m15 4L7 41m25-11l12 1m-15 4l12 6"/></g>',
-  // 充电桩: IconPark 没有这个图形, 唯一一个借自 tabler (24×24 网格 stroke-2,
-  // scale(2) 进 48 网格 —— 相对线宽 1/12 与 IconPark 的 4/48 一模一样, 圆角
-  // 收笔也同款, 混排看不出)
-  "charging-pile": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" transform="scale(2)"><path d="m18 7l-1 1m-3 3h1a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3M4 20V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14"/><path d="M9 11.5L7.5 14h3L9 16.5M3 20h12M4 8h10"/></g>',
   "certificate": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M26 36H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h36a2 2 0 0 1 2 2v26a2 2 0 0 1-2 2h-8M12 14h24m-24 7h6m-6 7h4"/><path d="M30 33a6 6 0 1 0 0-12a6 6 0 0 0 0 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m30 40l4 2V31.472S32.86 33 30 33s-4-1.5-4-1.5V42z"/></g>',
   "charging-treasure": '<g fill="none"><path stroke="currentColor" stroke-width="4" d="M9.975 8.557A3 3 0 0 1 12.942 6h23.036a3 3 0 0 1 2.979 2.646l3.145 26.5a3 3 0 0 1-2.98 3.354H8.983a3 3 0 0 1-2.967-3.443z"/><rect width="36" height="12" x="6" y="30" stroke="currentColor" stroke-width="4" rx="6"/><rect width="4" height="4" x="19" y="34" fill="currentColor" rx="2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M29 36h6M22 12h4"/></g>',
-  "chart-line": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M6 6v36h36"/><path d="m14 34l8-16l10 9L42 6"/></g>',
   "chart-pie": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M44 24c0 11.046-8.954 20-20 20S4 35.046 4 24S12.954 4 24 4v20z"/><path d="M43.084 18H30V4.916A20.05 20.05 0 0 1 43.084 18"/></g>',
   "chart-stock": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M6 16h8v16H6z"/><path stroke-linecap="round" d="M10 6v10m0 16v10"/><path d="M34 16h8v16h-8z"/><path stroke-linecap="round" d="M38 6v10m0 16v10"/><path d="M20 14h8v16h-8z"/><path stroke-linecap="round" d="M24 4v10m0 16v10"/></g>',
   "chopsticks-fork": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 4v40M8 5v10c0 5 6 5 6 5s6 0 6-5V5m17-1l3 40M31 4l-3 40"/>',
   "city-gate": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M15 11h17s5.048 2.966 7 4c1.091.578 5 1 5 1s-1.816.649-3 1c-1.544.458-4 1-4 1H11s-2.456-.542-4-1c-1.184-.351-3-1-3-1s3.909-.422 5-1c1.952-1.034 6-4 6-4Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m17 11l7-7l6 7z"/><path d="M35 18v6m-23-6v6"/><path stroke-linejoin="round" d="m4 44l2-20h36l2 20z"/><path d="M20 38a4 4 0 0 1 8 0v6h-8z"/></g>',
-  "computer-one": '<g fill="none"><path stroke="currentColor" stroke-width="4" d="M10 6a2 2 0 0 1 2-2h24a2 2 0 0 1 2 2v36a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M17 12h14"/><circle cx="17" cy="21" r="2" fill="currentColor"/><circle cx="17" cy="27" r="2" fill="currentColor"/><circle cx="17" cy="33" r="2" fill="currentColor"/><circle cx="24" cy="21" r="2" fill="currentColor"/><circle cx="24" cy="27" r="2" fill="currentColor"/><circle cx="24" cy="33" r="2" fill="currentColor"/><circle cx="31" cy="21" r="2" fill="currentColor"/><circle cx="31" cy="27" r="2" fill="currentColor"/><circle cx="31" cy="33" r="2" fill="currentColor"/></g>',
+  "computer": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M19 32h10v9H19z"/><rect width="38" height="24" x="5" y="8" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 27h4M14 41h20"/></g>',
+  "consume": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M4 14a2 2 0 0 1 2-2h36a2 2 0 0 1 2 2v26a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path stroke-linecap="round" d="m19 19l5 5l5-5m-11 6h12m-12 6h12m-6-6v10M8 6h32"/></g>',
   "cooking-pot": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M10 44h28V20.947C38 14.901 31.732 10 24 10s-14 4.901-14 10.947z" clip-rule="evenodd"/><path d="M38 22.044v-1.097C38 14.901 31.732 10 24 10s-14 4.901-14 10.947v1.093z"/><path stroke-linecap="round" d="M4 22h40M21 4h6"/></g>',
   "dashboard": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="4"><path stroke-linejoin="round" d="M8.444 41.556A21.93 21.93 0 0 1 2 26C2 13.85 11.85 4 24 4s22 9.85 22 22a21.93 21.93 0 0 1-6.444 15.556"/><path d="M14.1 35.9A13.96 13.96 0 0 1 10 26c0-7.732 6.268-14 14-14"/><path stroke-linejoin="round" d="M24 26v-8"/></g>',
-  "dollar": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 2v44M35 6H20a9 9 0 1 0 0 18m-7 18h15a9 9 0 1 0 0-18h-8"/>',
-  "dumbbell": '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M14 13.6c0-1.436-1.343-2.6-3-2.6s-3 1.164-3 2.6v20.8c0 1.436 1.343 2.6 3 2.6s3-1.164 3-2.6zm26 0c0-1.436-1.343-2.6-3-2.6s-3 1.164-3 2.6v20.8c0 1.436 1.343 2.6 3 2.6s3-1.164 3-2.6zM8 18.667C8 17.194 6.657 16 5 16s-3 1.194-3 2.667v10.666C2 30.806 3.343 32 5 32s3-1.194 3-2.667zm38 0C46 17.194 44.657 16 43 16s-3 1.194-3 2.667v10.666C40 30.806 41.343 32 43 32s3-1.194 3-2.667zM14 27h20v-6H14z"/>',
   "engineering-vehicle": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M32 6h6M10 36H6v-8h26v8H18m14 0V12h6.5L44 24v12h-3"/><path stroke-linejoin="round" d="M4 8h22v14H7z"/><circle cx="37" cy="38" r="4"/><circle cx="14" cy="38" r="4"/></g>',
-  "exchange": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 16h5V4l15 15l-15 15V24H18V13L4 28l14 16V32h5"/>',
-  "expenses-one": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="m30 36l5-5l-5-5m8 10l5-5l-5-5"/><path d="M43 22V9a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v30a2 2 0 0 0 2 2h21.47"/><path d="m13 15l5 6l5-6M12 27h12m-12-6h12m-6 0v12"/></g>',
+  "exchange-four": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M39 6H9a3 3 0 0 0-3 3v30a3 3 0 0 0 3 3h30a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3M15 21h18m-18 6h18m0-6l-7-7m-4 20l-7-7"/>',
+  "exchange-one": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 18v24h30V18L24 6zm8 6h14m-14 6h14m0-6l-5-5m-4 16l-5-5"/>',
   "express-delivery": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M8 31v11a2 2 0 0 0 2 2h28a2 2 0 0 0 2-2V31"/><path d="M38 14H10a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h28a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2Z"/><path stroke-linecap="round" d="M16 4v4m8-4v4m8-4v4M16 34h16"/></g>',
   "ferris-wheel": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="m9 44l15-22m15 22L24 22"/><path stroke="currentColor" stroke-width="4" d="M9.132 24A15 15 0 0 1 9 22a14.95 14.95 0 0 1 1.5-6.546m.656 14.299A15.02 15.02 0 0 0 21 36.7m6 0a15.02 15.02 0 0 0 9.911-7.06M38.868 24q.131-.982.132-2a14.94 14.94 0 0 0-1.5-6.546M27 7.3a14.96 14.96 0 0 1 7 3.52M21 7.3a14.96 14.96 0 0 0-7.614 4.101"/><circle cx="10" cy="27" r="3" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="37" r="3" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="7" r="3" stroke="currentColor" stroke-width="4"/><circle cx="12" cy="13" r="3" stroke="currentColor" stroke-width="4"/><circle cx="36" cy="13" r="3" stroke="currentColor" stroke-width="4"/><circle cx="38" cy="27" r="3" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="22" r="4" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 44h8m20 0h8"/></g>',
-  "film": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><rect width="36" height="36" x="6" y="6" rx="3"/><path stroke-linecap="round" d="M16 6v36M32 6v36M6 15h10m16 0h10M6 33h10M6 24h36m-10 9h10"/></g>',
   "finance": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"/><path stroke-linecap="round" d="M18 22h12m-12 6h12m-5.992-6v12M30 15l-6 6l-6-6"/></g>',
-  "foot": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M19 8c1.766 7.879 2.783 24.837-5.693 28.618c-.481.316-2.15.851-5.618.473c-2.006-.219-4.284 2.263-1.123 5.673c.776.838 2.504 1.702 6.741.945h7.705c1.926 0 5.105-2.363 8.186-8.036c1.124-1.576 4.334-4.822 8.187-5.2c2.408-.158 6.838-2.08 5.297-8.51C39.926 15.506 33.54 9.296 32 4"/>',
   "forbid": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20" clip-rule="evenodd"/><path d="m15 15l18 18"/></g>',
-  "funds": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><ellipse cx="14" cy="10" rx="10" ry="5"/><path d="M4 10v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/><path d="M4 17v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/><path d="M4 24v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/><path d="M4 31v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/><ellipse cx="34" cy="24" rx="10" ry="5"/><path d="M24 24v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/><path d="M24 31v7c0 2.761 4.477 5 10 5s10-2.239 10-5v-7"/></g>',
-  "game-console": '<g fill="none"><rect width="28" height="40" x="10" y="4" stroke="currentColor" stroke-width="4" rx="2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M16 34h8m-4-4v8"/><path stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M16 10h16v9H16z"/><circle cx="31" cy="30" r="2" fill="currentColor"/><circle cx="31" cy="38" r="2" fill="currentColor"/></g>',
+  "game-three": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M19 30v3a7 7 0 0 1-7 7v0a7 7 0 0 1-7-7V19m24 11v3a7 7 0 0 0 7 7v0a7 7 0 0 0 7-7V19"/><rect width="38" height="22" x="5" y="8" stroke="currentColor" stroke-width="4" rx="11"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M21 19h-8m4-4v8"/><rect width="4" height="4" x="32" y="15" fill="currentColor" rx="2"/><rect width="4" height="4" x="28" y="20" fill="currentColor" rx="2"/></g>',
   "game-two": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="m20 15l4 4l4-4V4h-8zm0 18l4-4l4 4v11h-8zm13-5l-4-4l4-4h11v8zm-18-8l4 4l-4 4H4v-8z"/>',
   "gift": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M41 44V20H7v24zm-17 0V20m17 24H7"/><path d="M4 12h40v8H4z"/><path stroke-linecap="round" d="m16 4l8 8l8-8"/></g>',
   "gift-box": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M6 9a3 3 0 0 1 3-3h30a3 3 0 0 1 3 3v30a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3zM4 24h40M24 44V4M6 30V18m36 12V18M30 42H18M30 6H18"/><path d="M24 24s7.897-3.546 9.099-4.747a3.077 3.077 0 1 0-4.352-4.352C27.546 16.103 24 24 24 24m0 0s-7.897-3.546-9.099-4.747m9.1 4.747s-3.547-7.897-4.748-9.099M24 24s7.897 3.546 9.099 4.747M24 24s3.546 7.897 4.747 9.099M24 23.999s-7.897 3.547-9.099 4.748a3.077 3.077 0 1 0 4.352 4.352c1.201-1.202 4.747-9.1 4.747-9.1"/></g>',
@@ -239,23 +238,22 @@ const ICON_BODIES = {
   "hammer-and-anvil": '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M6 14C6 4 14 4 14 4v20H6zm8-4h28v6H14zM6 30h36s0 8-6 8h-7l2 6H13l2-6H6z"/>',
   "hand-up": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M41 38H19v6h22z"/><path d="M19 38Q9.221 27.316 7.778 25.616c-1.443-1.7-.837-3.62 2.775-3.62s5.695 5.285 8.447 5.285q.025.006.003-20.277A3 3 0 0 1 22.001 4h.003a3.004 3.004 0 0 1 3.005 3.004v8.01q11.958 1.812 13.003 2C39.057 17.202 41 18.2 41 21.068V38z" clip-rule="evenodd"/></g>',
   "health-products": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M33 12H15l-5 5.843v20.249L15 44h18l5-5.908v-20.25zm-14 8h10m4-8V7a3 3 0 0 0-3-3H18a3 3 0 0 0-3 3v5"/><circle cx="24" cy="32" r="5"/></g>',
-  "heart": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.54 20.019q-2.532-3.113-4.754-1.337C7.563 20.458 6.925 26.65 8.713 32.11s5.267 12.893 12.289 12.893S29.684 37.522 32.548 33c2.865-4.522 4.38-8.885 1.573-14.318"/><path stroke-linecap="round" d="M11 18.037A643 643 0 0 0 7 12c-1.446-2.145 2.251-4.918 4-3.032q1.749 1.887 4.647 5.557"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.024 25.64q-.727-9.096 1.182-11.845c1.91-2.75 5.457-3.792 8.798-3.792q2.983 0 5.448 2.541"/><path d="M41 12.613c.586 2.036-.37 3.897-3.316 4.318s-5.153 1.902-6.745 3.148s-4.44 5.026-5.003 6.923s-3.776.153-4.639-.605c-.863-.757-1.712-2.416 0-4.151s1.341-2.081 1.341-3.84c0-1.76 9.362-7.58 14.635-8.112c1.172-.068 3.142.282 3.727 2.319Z" clip-rule="evenodd"/><path stroke-linecap="round" d="M23.008 4v5.263m-2.701 1.455q-4.527-5.69-7.3-6.35m3.997 2.661l.99-4.067m17.619 7.756q-.483 1.656 0 3.106q.484 1.45 2.071 3.107"/></g>',
   "high-speed-rail": '<g fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 20v10a8 8 0 0 0 8 8h14a8 8 0 0 0 8-8V20m-5 18v4m-20-4v4m6 2h8"/><path stroke-linejoin="round" stroke-width="4" d="M9 16.36C9 13 15 4 24 4s15 9 15 12.36V20H9z"/><path fill="currentColor" d="M20.5 32a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0Zm10 0a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M22 11h4"/></g>',
   "history": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M5.818 6.727V14h7.273"/><path d="M4 24c0 11.046 8.954 20 20 20v0c11.046 0 20-8.954 20-20S35.046 4 24 4c-7.402 0-13.865 4.021-17.323 9.998"/><path d="m24.005 12l-.001 12.009l8.48 8.48"/></g>',
   "home": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18v24h30V18L24 6z"/><path stroke-linejoin="round" d="M19 29v13h10V29z"/><path stroke-linecap="round" d="M9 42h30"/></g>',
   "homestay": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M8 26c2.319.197 10 2 10 5s-4.135 1.989-6 2c-1.601-.136-6 0-6 3s7 5 14 6s18 1 18 1M8 20l6-6m14-8h10l4 4m-12 4l6 6H20l-6-6zm12 8v-6M26 30v-4m6 8v-8"/>',
-  "hospital-bed": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 17v22m36-14v14M26 15h12m-27 7h6M6 28h36M6 34h36M32 9v12"/>',
   "hot-pot": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 11V4m8 7V7m-16 4V7m28 10H4c0 5.586 3.578 10.503 9 13.365C16.156 32.03 19.936 33 24 33s7.844-.97 11-2.635c5.422-2.862 9-7.78 9-13.365M10.467 39h27.066M13 30.365L9 44m26-13.635L39 44M20 25h8"/>',
   "hotel": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h40"/><rect width="32" height="40" x="8" y="4" stroke-linejoin="round" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M20 32h8v12h-8z"/><path stroke-linecap="round" d="M15 12h2m-2 6h2m6-6h2m-2 6h2m6-6h2m-2 6h2"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 44h40M28 32h2c.552 0 1.01-.452.904-.994C30.352 28.166 27.471 26 24 26s-6.352 2.165-6.904 5.006c-.106.542.352.994.904.994h2"/></g>',
-  "income": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M31 34h12m0-8V10a3 3 0 0 0-3-3H8a3 3 0 0 0-3 3v28a3 3 0 0 0 3 3h20.47"/><path d="m36 39l-5-5l5-5M15 15l5 6l5-6M14 27h12m-12-6h12m-6 0v12"/></g>',
-  "income-one": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="m35 38l-5-5l5-5m8 10l-5-5l5-5"/><path d="M43 22V9a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v30a2 2 0 0 0 2 2h21.47"/><path d="m13 15l5 6l5-6M12 27h12m-12-6h12m-6 0v12"/></g>',
   "jewelry": '<g fill="none" stroke="currentColor" stroke-width="4"><circle cx="24" cy="24" r="20"/><path d="M20 24c0-6.364 2.628-8.646 4-9c1.22.177 4 2.212 4 9s-2.78 9-4 9c-1.372-.177-4-2.636-4-9Z"/><path d="M20 23c-1.554-1.538-6.382-1.16-8-1c-.485 1.762.352 5.492 2.293 7.414C16.72 31.817 18.661 33 24 33m4-10c1.436-1.533 5.504-1.16 7-1c.3 1.597.14 5.188-2.372 7.87C30.115 32.555 25.5 33 24 33"/></g>',
   "juice": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 24h18l-1.8 20H16.8z"/><rect width="26" height="6" x="11" y="18" rx="3"/><path d="M24 8c-5.523 0-10 4.477-10 10h20c0-5.523-4.477-10-10-10Z"/><path stroke-linecap="round" d="m28 4l-2 4"/></g>',
   "key": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M22.868 24.298a9.87 9.87 0 0 1 2.63 9.588a9.93 9.93 0 0 1-7.065 7.028a9.99 9.99 0 0 1-9.64-2.615a9.863 9.863 0 0 1 .122-13.878c3.839-3.82 10.046-3.873 13.951-.121z"/><path stroke-linecap="round" d="M23 24L40 7"/><path d="m30.305 16.9l5.429 5.4l6.333-6.3l-5.428-5.4z"/></g>',
   "lamp": '<g fill="none" stroke="currentColor" stroke-width="4"><path d="M14 9.5a3.5 3.5 0 1 1 7 0V21h-7zm13 0a3.5 3.5 0 1 1 7 0V21h-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18 34h12v8H18z"/><path d="M10 22a1 1 0 0 1 1-1h26a1 1 0 0 1 1 1v4a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8z"/></g>',
   "lightning": '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M19 4h18L26 18h15L17 44l5-19H8z"/>',
+  "like": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 8C8.925 8 4 12.925 4 19c0 11 13 21 20 23.326C31 40 44 30 44 19c0-6.075-4.925-11-11-11c-3.72 0-7.01 1.847-9 4.674A10.99 10.99 0 0 0 15 8"/>',
+  "lipstick": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M29 24h12v20H29zM7 24h14v20H7zm3-12.545V24h8V4c-6.5 0-8 5.636-8 7.454M7 32h14"/>',
   "love-and-help": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 7C8.925 7 4 11.925 4 18c0 11 13 21 20 23.326C31 39 44 29 44 18c0-6.075-4.925-11-11-11c-3.72 0-7.01 1.847-9 4.674A10.99 10.99 0 0 0 15 7m3 17h12m-6-6v12"/>',
-  "makeups": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M44 24c0 11.046-8.954 20-20 20S4 35.046 4 24S12.954 4 24 4"/><path d="m37.61 9.472l.255.786h.827l-.669.486l.255.786l-.668-.486l-.669.486l.255-.786l-.668-.486h.826z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 31s2 4 8 4s8-4 8-4"/><circle cx="17" cy="22" r="3"/><circle cx="31" cy="22" r="3"/></g>',
+  "mail": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M4 39h40V9H4z"/><path stroke-linecap="round" d="m4 9l20 15L44 9"/><path stroke-linecap="round" d="M24 9H4v15m40 0V9H24"/></g>',
+  "massage-chair": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><rect width="38" height="38" x="5" y="5" rx="3"/><path d="M18 24v-8.348C18 14.435 19.2 12 24 12s6 2.435 6 3.652V24m-14 0v6h16v-6"/><path d="M12 20v4h24v-4M18 36h12m-6-6v6"/></g>',
   "medical-box": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M41 17H7a2 2 0 0 0-2 2v20a2 2 0 0 0 2 2h34a2 2 0 0 0 2-2V19a2 2 0 0 0-2-2ZM34 7H14v10h20z"/><path stroke-linecap="round" d="M19 29h10m-5-5v10"/></g>',
   "medical-files": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M23 42H9a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h28a2 2 0 0 1 2 2v11.5"/><path stroke-linejoin="round" d="M36.636 27C39.046 27 41 28.88 41 31.2c0 3.02-2.91 5.6-4.364 7Q35.182 39.6 33 41q-2.182-1.4-3.636-2.8C27.909 36.8 25 34.22 25 31.2c0-2.32 1.954-4.2 4.364-4.2c1.517 0 2.854.746 3.636 1.878A4.4 4.4 0 0 1 36.636 27Z"/><path stroke-linecap="round" d="M15 14h16"/></g>',
   "medicine-bottle": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M34 10H14a2 2 0 0 0-2 2v30a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2V12a2 2 0 0 0-2-2Z"/><path stroke-linecap="round" d="M12 18h24"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v6m24-6v6"/><path stroke-linejoin="round" d="M32 4H16v6h16z"/><path stroke-linecap="round" d="M20 31h8m-4-4v8"/></g>',
@@ -263,6 +261,8 @@ const ICON_BODIES = {
   "microphone-one": '<g fill="none" stroke="currentColor" stroke-width="4"><path d="M15 26.314s4.596-.354 7.778-3.536S26.314 15 26.314 15l7.752 12.182a4.986 4.986 0 0 1-6.884 6.884z"/><circle cx="15" cy="15" r="11"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.657 25.456L25.456 5.657M34 33l8 8h-9"/></g>',
   "moon": '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M28.053 4.41c-5.47 1.427-9.507 6.4-9.507 12.317c0 7.03 5.698 12.728 12.727 12.728c5.916 0 10.89-4.038 12.316-9.508A20 20 0 0 1 44 24c0 11.046-8.954 20-20 20S4 35.046 4 24S12.954 4 24 4c1.389 0 2.744.141 4.053.41Z"/>',
   "more": '<circle cx="12" cy="24" r="3" fill="currentColor"/><circle cx="24" cy="24" r="3" fill="currentColor"/><circle cx="36" cy="24" r="3" fill="currentColor"/>',
+  "movie": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"/><path stroke-linejoin="round" d="M24 18a3 3 0 1 0 0-6a3 3 0 0 0 0 6Zm0 18a3 3 0 1 0 0-6a3 3 0 0 0 0 6Zm-9-9a3 3 0 1 0 0-6a3 3 0 0 0 0 6Zm18 0a3 3 0 1 0 0-6a3 3 0 0 0 0 6Z"/><path stroke-linecap="round" d="M24 44h20"/></g>',
+  "muscle": '<g fill="none"><path d="M21.37 36c1.45-5.25 6.52-9 12.36-8.38c5.56.59 9.98 5.28 10.26 10.86c.07 1.47-.13 2.88-.56 4.19c-.26.8-1.04 1.33-1.89 1.33H11.758c-5.048 0-8.834-4.619-7.844-9.569L10 4h12l4 7l-8.57 6.13L15 14"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="2" stroke-width="4" d="M21.37 36c1.45-5.25 6.52-9 12.36-8.38c5.56.59 9.98 5.28 10.26 10.86c.07 1.47-.13 2.88-.56 4.19c-.26.8-1.04 1.33-1.89 1.33H11.758c-5.048 0-8.834-4.619-7.844-9.569L10 4h12l4 7l-8.57 6.13L15 14m2.44 3.13L22 34"/></g>',
   "newspaper-folding": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="m22 44l-1-8m21 8V12H26l1 8l1 8l1 8l-7 8zM28 28h5m-6-8h6"/><path d="M6 4h19l1 8l1 8l1 8l1 8H6zm6 8h7m-7 8h8m-8 8h9"/></g>',
   "noodles": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M4 24c0 11.046 6.667 20 20 20s20-8.954 20-20z" clip-rule="evenodd"/><path d="M16 24V8m8 16V6m8 18V4M8 24V10m-4 3l40-9"/></g>',
   "notes": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M8 6a2 2 0 0 1 2-2h20l10 10v28a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2z"/><path stroke-linecap="round" d="M16 20h16m-16 8h16"/></g>',
@@ -283,10 +283,11 @@ const ICON_BODIES = {
   "preschool": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="4"><path d="M7 35h34a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2Zm7-21v14m20-14v14M24 17v8m-4-4h8"/><path stroke-linejoin="round" d="M4 41h40"/></g>',
   "read-book": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M24 21v23c-3.291-4-13.371-4-18-4V18c9.874 0 16.114 2 18 3m0 0v23c3.291-4 13.371-4 18-4V18c-9.874 0-16.114 2-18 3"/><circle cx="24" cy="12" r="8"/></g>',
   "red-envelope": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M39 4H9v6l15 4l15-4zm0 13v27H9V17"/><path d="m19 19l5 6l5-6M18 31h12m-12-6h12m-6 0v12"/></g>',
-  "red-envelopes": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M40 4H8v40h32z"/><path stroke-linecap="round" d="M40 10c-4 5.762-7.68 9.32-11.68 10.892m-8.583-.114C15.737 19.207 12 15.763 8 10z"/><path d="M24 27a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9Z"/></g>',
   "refrigerator": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><rect width="28" height="36" x="9" y="4" rx="2"/><path stroke-linecap="round" d="M9 22h28M9 20v4m28-4v4m-22 5v4m0-22v4m18 25v4m-20-4v4"/></g>',
   "rice": '<g fill="none" stroke="currentColor" stroke-width="4"><path d="M24 38c9.389 0 17-7.059 17-17H7c0 9.941 7.611 17 17 17Zm6-17c0-5.523-4.253-10-9.5-10S11 15.477 11 21"/><path d="M39 21c0-3.314-2.766-6-6.178-6c-1.443 0-2.77.48-3.822 1.286"/><path stroke-linecap="round" d="m33 15l3-10m2 13l4-7"/><path stroke-linecap="round" stroke-linejoin="round" d="m18 37l-2 6h16l-2-6"/></g>',
   "rings": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-miterlimit="2" stroke-width="4"><path stroke-linecap="round" d="M13 43c4.42 0 8-3.58 8-8s-3.58-8-8-8s-8 3.58-8 8s3.58 8 8 8m22 0c4.42 0 8-3.58 8-8s-3.58-8-8-8s-8 3.58-8 8s3.58 8 8 8M6 5h36"/><path stroke-linecap="square" d="M13 27V5m22 22V5"/><path stroke-linecap="round" d="M9 19h8m14 0h8"/></g>',
+  "router": '<g fill="none"><rect width="40" height="14" x="4" y="28" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" rx="2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 35h8"/><rect width="4" height="4" x="30" y="33" fill="currentColor" rx="2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M12 28V8m24 20V8"/></g>',
+  "sales-report": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M41 14L24 4L7 14v20l17 10l17-10z"/><path stroke-linecap="round" d="M24 22v8m8-12v12m-16-4v4"/></g>',
   "school": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M4 33a2 2 0 0 1 2-2h6v-7l12-8l12 8v7h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4z"/><path stroke-linecap="round" d="M24 6v10"/><path stroke-linecap="round" stroke-linejoin="round" d="M36 12V6s-1.5 3-6 0s-6 0-6 0v6s1.5-3 6 0s6 0 6 0m-8 32V31h-8v13m-2 0h12"/></g>',
   "scissors": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><rect width="38" height="38" x="5" y="5" rx="3"/><path d="M19 19c2 3 2 7 0 10m17-15L21 24l15 10"/><circle cx="16" cy="16" r="4"/><circle cx="16" cy="32" r="4"/></g>',
   "seal": '<g fill="none" stroke="currentColor" stroke-width="4"><path d="M5 37a2 2 0 0 1 2-2h34a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M5 31a2 2 0 0 1 2-2h34a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.763 15.664a1 1 0 0 1 .942-.664h8.59a1 1 0 0 1 .942.664L34 29H14z"/><rect width="18" height="10.8" x="15" y="4" rx="5.4"/></g>',
@@ -294,13 +295,16 @@ const ICON_BODIES = {
   "ship": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M6 20.377L24 14l18 6.377L36.667 34H11.333z" clip-rule="evenodd"/><path d="M13 8h22l-.002 9.896L24 14l-11 3.896z"/><path stroke-linecap="round" d="M24 8V4m0 20v-8M10 40l3.5 4l3.5-4l3.5 4l3.5-4l3.5 4l3.5-4l3.5 4l3.5-4"/></g>',
   "shop": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M4 12h40v8l-1.398.84a7 7 0 0 1-7.203 0L34 20l-1.398.84a7 7 0 0 1-7.203 0L24 20l-1.398.84a7 7 0 0 1-7.203 0L14 20l-1.399.84a7 7 0 0 1-7.202 0L4 20z"/><path d="M8 22.489V44h32V22M8 11.822V4h32v8"/><path d="M19 32h10v12H19z"/></g>',
   "shopping-bag": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 17h38l-4.2 26H9.2zm30 0c0-6.627-4.925-12-11-12s-11 5.373-11 12"/><circle cx="17" cy="26" r="2" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M18 33s2 3 6 3s6-3 6-3"/><circle cx="31" cy="26" r="2" fill="currentColor"/></g>',
+  "sickbed": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="m4 23l36 12"/><circle cx="12" cy="16" r="3"/><path stroke-linejoin="round" d="M29 36v-4.5L19 28v8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18 27.5L23 14l18.374 7a3 3 0 0 1 1.8 3.686L40 35"/></g>',
   "snacks": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M6 14h36V8h-4l-2-4H12l-2 4H6z"/><path stroke-linecap="round" d="m36 44l2-30H10l2 30z"/></g>',
   "sofa": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M12 21H4v14h8zm32 0h-8v14h8z"/><path stroke-linecap="round" d="M36 27H12v8h24zM8 20V8h32v12M8 36v4m32-4v4"/></g>',
   "spanner": '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M30.442 5c1.964 0 3.823.448 5.479 1.246l-3.204 3.18a4.67 4.67 0 0 0 0 6.64a4.753 4.753 0 0 0 6.687 0l2.853-2.832c.48 1.322.743 2.748.743 4.234c0 6.887-5.623 12.469-12.558 12.469c-1.66 0-3.244-.32-4.693-.9L13.07 41.625a4.75 4.75 0 0 1-6.685 0a4.67 4.67 0 0 1 0-6.637L18.952 22.51a12.35 12.35 0 0 1-1.069-5.042C17.883 10.583 23.506 5 30.442 5Z"/>',
   "speed": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M34.023 6.69A19.9 19.9 0 0 0 24 4C12.954 4 4 12.954 4 24s8.954 20 20 20s20-8.954 20-20c0-3.627-.966-7.03-2.654-9.962"/><path d="M31.95 16.05S28.562 25.095 27 26.657A4 4 0 0 1 21.343 21c1.562-1.562 10.607-4.95 10.607-4.95Z"/></g>',
   "stamp": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M5 8.8L8.8 5l3.8 2.85L16.4 5l3.8 2.85L24 5l3.8 2.85L31.6 5l3.8 2.85L39.2 5L43 8.8l-2.85 3.8L43 16.4l-2.85 3.8L43 24l-2.85 3.8L43 31.6l-2.85 3.8L43 39.2L39.2 43l-3.8-2.85L31.6 43l-3.8-2.85L24 43l-3.8-2.85L16.4 43l-3.8-2.85L8.8 43L5 39.2l2.85-3.8L5 31.6l2.85-3.8L5 24l2.85-3.8L5 16.4l2.85-3.8z"/><circle cx="24" cy="24" r="9"/></g>',
-  "steering-wheel": '<defs><path id="SVGOksSeCFU" d="M32 24a8 8 0 1 1-16 0a8 8 0 0 1 16 0"/></defs><g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20m0 0V32M4 24h12m28 0H32"/><use href="#SVGOksSeCFU"/><use href="#SVGOksSeCFU" clip-rule="evenodd"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M32 24a8 8 0 1 1-16 0a8 8 0 0 1 16 0"/></g>',
-  "stethoscope": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M21.947 4v6M10.053 7H4v14c0 5 4 11 12 11s12-6 12-11V7zm0-3v6zM40 23a4 4 0 1 0 0-8a4 4 0 0 0 0 8"/><path d="M16 32c0 6.627 5.373 12 12 12s12-5.373 12-12v-9"/></g>',
+  // 方向盘: 官方 body 里两枚 <use> 引 defs 里的同款圆 — 影子树 url 引用
+  // iOS 不认, 拆平只留两枚显式 path (外圈 + 轮毂环)
+  "steering-wheel": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20m0 0V32M4 24h12m28 0H32"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M32 24a8 8 0 1 1-16 0a8 8 0 0 1 16 0"/></g>',
+  "stock-market": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M6 20h8v14H6zm14-6h8v26h-8z"/><path stroke-linecap="round" d="M24 44v-4"/><path d="M34 12h8v9h-8z"/><path stroke-linecap="round" d="M10 20V10m28 24V21m0-9V4"/></g>',
   "subway": '<g fill="none"><rect width="32" height="26" x="8" y="6" stroke="currentColor" stroke-width="4" rx="2"/><circle cx="14" cy="27" r="2" fill="currentColor"/><circle cx="34" cy="27" r="2" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 12h20v10H14zm18 20l8 9m-23-9l-9 9"/></g>',
   "t-shirt": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="m9 9l9-5h12l9 5l4 15l-8 6v14H13V30l-8-6zm4 22v-7m22 7v-7"/>',
   "taxi": '<g fill="none"><path stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M4 35v-7.29a6 6 0 0 1 3.319-5.368l.682-.34l2.31-7.91A4 4 0 0 1 14.205 11h19.688a4 4 0 0 1 3.904 3.128l2.205 7.874l.68.34A6 6 0 0 1 44 27.708V35a3 3 0 0 1-3 3h-1.997v1a4 4 0 0 1-4 4A4 4 0 0 1 31 39v-1H17v1a4 4 0 1 1-8 0v-1H7a3 3 0 0 1-3-3Z"/><path fill="currentColor" d="M13.5 33a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5m21 0a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M18 11h12l-.991-4.956C28.887 5.434 28.399 5 27.837 5h-7.674c-.563 0-1.05.434-1.172 1.044z" clip-rule="evenodd"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 23h18"/></g>',
@@ -310,11 +314,12 @@ const ICON_BODIES = {
   "toilet": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.999 10h8v12h-8zM17 35l-5 9h24l-5-9"/><path stroke-linecap="round" stroke-linejoin="round" d="M33.999 22V5a1 1 0 0 0-1-1h-18a1 1 0 0 0-1 1v17"/><path d="M6.08 22.364A.3.3 0 0 1 6.372 22h35.254a.3.3 0 0 1 .292.364c-1.224 5.508-4.635 10.452-10 12.2C29.436 35.374 26.656 36 24 36s-5.436-.627-7.92-1.436c-5.365-1.749-8.776-6.692-10-12.2Z"/></g>',
   "tour-bus": '<g fill="none"><path stroke="currentColor" stroke-linejoin="round" stroke-width="4" d="M9 23h30v11a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2zM9 8a2 2 0 0 1 2-2h26a2 2 0 0 1 2 2v15H9z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 42a3 3 0 0 1-3-3v-3h6v3a3 3 0 0 1-3 3m18 0a3 3 0 0 1-3-3v-3h6v3a3 3 0 0 1-3 3"/><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12v4m36-4v4"/><circle cx="15" cy="30" r="2" fill="currentColor"/><circle cx="33" cy="30" r="2" fill="currentColor"/><path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="m31 6l-9 10m16-9l-5 6"/></g>',
   "traditional-chinese-medicine": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linejoin="round" d="M24 43h5.955q.124-4.106 1.204-4.515C38.669 35.635 44 28.434 44 20H4c0 8.251 5.103 15.323 12.357 18.294q1.137.466 1.699 4.706z" clip-rule="evenodd"/><path stroke-linecap="round" d="M14.443 27.023q.54 1.78 1.427 2.942a11.3 11.3 0 0 0 2.14 2.104m7.204-12.043a3301 3301 0 0 0 6.622-13.708c1.05-2.21 3.18-2.742 5.145-1.902s2.76 3.242 1.935 4.917q-.765 1.552-5.19 10.671"/></g>',
+  "transporter": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M42 8H20a2 2 0 0 0-2 2v22a2 2 0 0 0 2 2h22a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2ZM4 34h14V20h-7l-7 6.462z"/><path stroke-linecap="round" d="M18 36a4 4 0 0 1-8 0m30 0a4 4 0 0 1-8 0"/></g>',
   "treasure-chest": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M42 4H6a2 2 0 0 0-2 2v36a2 2 0 0 0 2 2h36a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><path stroke-linecap="round" d="M4 24h13m14 0h13"/><path d="M24 31a7 7 0 1 0 0-14a7 7 0 0 0 0 14Z"/></g>',
-  "trending-up": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M41 27V15H29"/><path d="m6 37l10.339-12.5l9.846 6L41 15"/></g>',
+  "trend": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M39 6H9a3 3 0 0 0-3 3v30a3 3 0 0 0 3 3h30a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3Z"/><path stroke-linecap="round" d="m13.44 29.835l5.657-5.657l4.388 4.377L34 18"/><path stroke-linecap="round" d="M26 18h8v8"/></g>',
+  "trend-two": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path stroke-linecap="round" d="M4 44h40"/><path d="m4 26l8 2v10H4zm16-2l8-4v18h-8zm16-8l8-4v26h-8z"/><path stroke-linecap="round" d="m4 18l8 2L44 4H34"/></g>',
   "trophy": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M24 30c6.627 0 12-5.53 12-12.353V4H12v13.647C12 24.47 17.373 30 24 30Z"/><path stroke-linecap="round" d="M12 21V11H4c0 6.667 4 10 8 10m24 0V11h8c0 6.667-4 10-8 10" clip-rule="evenodd"/><path stroke-linecap="round" d="M24 32v4"/><path d="m15 42l3.69-6h10.353L33 42z"/></g>',
-  "truck": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M12 39a4 4 0 1 0 0-8a4 4 0 0 0 0 8Zm23 0a4 4 0 1 0 0-8a4 4 0 0 0 0 8Z"/><path stroke-linecap="round" d="M8 35H2V11h29v24H16m15 0V18h8.571L46 26.5V35h-6.189"/></g>',
-  "tv": '<g fill="none"><rect width="38" height="28" x="5" y="14" stroke="currentColor" stroke-width="4" rx="2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="m24 14l14-8m-15 8L10 6m25 14v6"/><rect width="4" height="4" x="33" y="32" fill="currentColor" rx="2"/></g>',
+  "tv-one": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M42 12H6a2 2 0 0 0-2 2v26a2 2 0 0 0 2 2h36a2 2 0 0 0 2-2V14a2 2 0 0 0-2-2Z"/><path d="M31 19H11v16h20z"/><path stroke-linecap="round" d="m14 4.5l9.09 7.5L34 2m4 16v1m0 6v1"/></g>',
   "umbrella": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M16.727 27q3.636-3.636 7.273-3.636T31.273 27q4.243-3.636 6.363-3.636q2.122 0 6.364 3.636c0-11.046-8.954-20-20-20S4 15.954 4 27q4.243-3.636 6.364-3.636T16.727 27Z"/><path stroke-linecap="round" d="M24 24v14.554c0 3.014 2.486 5.457 5.5 5.457s5.5-2.443 5.5-5.457M24 3v4"/></g>',
   "umbrella-one": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M44 24c0-11.046-8.954-20-20-20S4 12.954 4 24z"/><path stroke-linecap="round" d="M24 24v14.554c0 3.014 2.486 5.457 5.5 5.457s5.5-2.443 5.5-5.457"/></g>',
   "umbrella-two": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M27 24v13.125C27 39 26.638 44 23 44c-3.429 0-4-4.375-4-5.625M24 4c14.5 0 19.375 13.333 20 20H4c.625-6.667 5.5-20 20-20"/><path d="m19 14l4 4l6-7"/></g>',
@@ -325,21 +330,55 @@ const ICON_BODIES = {
   "vip": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M12 4H4l11 40h8z"/><path stroke-linecap="round" d="M23 44L44 4"/></g>',
   "wallet": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 11.969L31.785 4l4.612 7.989z" clip-rule="evenodd"/><path stroke-linejoin="round" d="M4 14a2 2 0 0 1 2-2h36a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path stroke-linejoin="round" d="M35.25 33H44V23h-8.75c-2.9 0-5.25 2.239-5.25 5s2.35 5 5.25 5Z"/><path stroke-linecap="round" d="M44 16.5v24"/></g>',
   "warehousing": '<g fill="none" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M34 24H18m6-6l-6 6l6 6"/><circle cx="38" cy="24" r="4"/><path stroke-linecap="round" d="M40.706 13A20 20 0 0 0 38 9.717A19.93 19.93 0 0 0 24 4C12.954 4 4 12.954 4 24s8.954 20 20 20c5.45 0 10.392-2.18 14-5.717A20 20 0 0 0 40.706 35"/></g>',
-  "wifi": '<g fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M4 18.965a29 29 0 0 1 1.817-1.586C17.037 8.374 33.382 8.903 44 18.965"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M38 25.799c-7.732-7.732-20.268-7.732-28 0m22 6.515c-4.418-4.419-11.582-4.419-16 0"/><path fill="currentColor" fill-rule="evenodd" d="M24 40a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5" clip-rule="evenodd"/></g>',
   "workbench": '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M12 33H4V7h40v26z"/><path stroke-linecap="round" d="M16 22v4m8 7v6m0-21v8m8-12v12M12 41h24"/></g>',
   "worker": '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M32 16a8 8 0 1 1-16 0m8-8a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8m-12 8h24M24 4v4m0 19c-9.389 0-17 7.163-17 16h34c0-8.837-7.611-16-17-16m-6 7v4m12-4v4"/>',
 };
 
-// 页面级 sprite: <symbol> 一份, 全页 <use> 复用
+
+// 页面级 sprite, 注入时按本体形态分流 (iOS WebKit 解析不了 <use> 影子树里的
+// url(#…) 引用 —— 挂 mask/clipPath 的元素整枚不渲染, 面性那版「新图标全不显示」
+// 栽的就是它):
+//  · 带 <mask 的本体: mask 内容提升进文档级共享 <defs> (id 重编 ci-m-图形名),
+//    catIcon 内联盖板 path 引文档级的 mask —— 文档级引用才家家都认
+//    (眼下线稿集里没有这类本体, 机制留着: 面性图形再进来也不会再栽)
+//  · 线稿 <g> 描边组: 没有 url 引用, <symbol> 一份全页 <use> 复用
+// sprite 一律 0×0 绝对定位隐身 (display:none 的引用源 Safari 也认不全)
+const MASK_BODY = /^(?:<defs>)?<mask id="[^"]+">([\s\S]*)<\/mask>(?:<\/defs>)?<path fill="currentColor" d="M0 0h48v48H0z" mask="url\(#[^"]+\)"\/>$/;
+const MASKED = new Set(Object.entries(ICON_BODIES)
+  .filter(([, body]) => MASK_BODY.test(body)).map(([name]) => name));
+const SPRITE_ATTRS = 'xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true"';
 document.body.insertAdjacentHTML("afterbegin",
-  '<svg xmlns="http://www.w3.org/2000/svg" style="display:none">' +
-  Object.entries(ICON_BODIES).map(([name, body]) =>
-    `<symbol id="ci-${name}" viewBox="0 0 48 48">${body}</symbol>`).join("") +
+  `<svg ${SPRITE_ATTRS}><defs>` +
+  Object.entries(ICON_BODIES).filter(([name]) => MASKED.has(name))
+    .map(([name, body]) => body.replace(MASK_BODY, `<mask id="ci-m-${name}">$1</mask>`))
+    .join("") +
+  `</defs></svg><svg ${SPRITE_ATTRS}>` +
+  Object.entries(ICON_BODIES).filter(([name]) => !MASKED.has(name))
+    .map(([name, body]) => `<symbol id="ci-${name}" viewBox="0 0 48 48">${body}</symbol>`)
+    .join("") +
   "</svg>");
 
-// 全路径 ("大类/子类") → 子类图标; 没有就落大类图标; 再没有兜底
-function catIcon(cat) {
+// 底色跟收支方向走 (支出柔红/收入柔绿 — 图标专用的降饱和档: 高饱和红绿在浅蓝灰
+// 界面里太跳 (用户点名), 数字/文字仍走 --red/--green), 大类不再一类一色;
+// 方向没传按支出兜底 (默认页)
+function catColor(kind) {
+  return kind === "income" ? "var(--icon-green)" : "var(--icon-red)";
+}
+
+// 全路径 ("大类/子类") → 子类图标; 没有就落大类图标; 再没有兜底。
+// kind ("expense"/"income") 定图标色; 圆底是自带的 <circle> (铺满井, 井的 CSS
+// 不再画底色); 填色走行内 style 而非 fill 属性 —— var() 在 presentation
+// attribute 里 iOS 不认。
+// 两态: 平时白圆底 (不描边) 坐同色线稿; 选中 (css 给 --sel) 才换方向色底压白图形。
+// 图形缩一圈居中 (scale .7, 平移 24-24×.7=7.2): 圆里多留边, 图形更秀气
+const GLYPH_INSET = 'transform="translate(7.2 7.2) scale(.7)"';
+function catIcon(cat, kind) {
   const key = String(cat || "");
   const name = CATEGORY_ICONS[key] || CATEGORY_ICONS[key.split("/")[0]] || FALLBACK_ICON;
-  return `<svg class="ci" aria-hidden="true"><use href="#ci-${name}"/></svg>`;
+  return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${catColor(kind)}" aria-hidden="true">` +
+    `<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>` +
+    (MASKED.has(name)
+      ? `<path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ci-m-${name})" ${GLYPH_INSET}/>`
+      : `<use href="#ci-${name}" ${GLYPH_INSET}/>`) +
+    `</svg>`;
 }

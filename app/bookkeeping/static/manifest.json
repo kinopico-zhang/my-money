@@ -7,8 +7,8 @@
   "scope": "/bookkeeping",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#8cb8c3",
-  "theme_color": "#8cb8c3",
+  "background_color": "#d9e6f8",
+  "theme_color": "#bfd7fb",
   "icons": [
     {
       "src": "/bookkeeping/static/icon-192.png",
