@@ -3,7 +3,8 @@
 拆自 test_bookkeeping_page_and_categories.py (200 行上限满了);
 1.3.1 瀑布流与日历再各立门户, 末了胶囊里子 (收支配色/宽度自适应) 与左右划
 翻月再拆 (单测语句数上限 60), 胶囊里子后来再立门户
-test_bookkeeping_calendar_bubble.py (200 行又满了);
+test_bookkeeping_calendar_bubble.py、收拢状态机再立门户
+test_bookkeeping_calendar_collapse.py (200 行又满了);
 月份头横幅 1.3.1 撤了 (气泡一个人报月)。"""
 from pathlib import Path
 
@@ -76,10 +77,13 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert '<button type="button" class="${cls}" data-date="${date}">${inner}</button>' in render \
         and '${inner}</div>' not in render
     assert "grid-template-columns: repeat(7, 1fr);" in page_css
-    assert ".cal-day.today { box-shadow: inset 0 0 0 1px var(--teal-2); }" in page_css
-    # 日历升到落位线被按住: 跟手收拢成顶上一枚磨砂胶囊 (my-music 播放气泡
+    assert ".cal-day.today .d { background: var(--accent); color: var(--accent-ink);" in page_css \
+        and "border-radius: 999px; padding: 0 5px; }" in page_css
+    #    ↑ 今天 = 荧光黄绿胶囊压深橄榄字 (图里 Unpaid 选中章; 细线圈在浅灰蓝卡上立不住)
+    # 日历升到落位线被按住: 收拢成顶上一枚磨砂胶囊 (my-music 播放气泡
     # 同款质感), 滚回来一路长回; 落位让开独立模式 iOS 26+ 的系统磨砂带
-    # (不进模糊区)
+    # (不进模糊区)。收拢状态机 (缩放全程跟手/任意高度稳态/回滚弹回) 拆在
+    # test_bookkeeping_calendar_collapse.py
     assert 'id="cal-bar"' in html
     assert 'id="cal-sent"' not in html          # 哨兵撤了: 观察器直接盯日历卡
     assert 'observe($("#cal-card"))' in render
@@ -101,54 +105,7 @@ def test_bookkeeping_calendar_and_top_bubble():
     # 月份头没了, 让位那套 (cal-mini 类 + top 过渡) 跟着退役
     assert "cal-mini" not in render and "CAL_MINI" not in render \
         and ".cal-mini" not in page_css and "transition: top" not in page_css
-    # 跟手收拢: 日历卡顶一碰到落位线, 分身接管 —— 上边界钉死、下边界跟着滚动
-    # 逐帧收 (rAF 直写行内几何, 不挂过渡, 收拢速度 = 手速), 后段窗口收窄长圆、
-    # 分身内容交叉淡成胶泡文字。流畅治在三处 (帧率就丢在逐帧重排/换肤):
-    # 分身是定格快照 (接管那刻宽高钉死, 外壳一路只当裁形窗口 —— 日历网格
-    # 全程零重排), 底色/影子接管那刻一次写死 (途中不逐帧换肤), 热路径 DOM
-    # 引用接管那刻缓存。停手不冻半路 (动画要么不播, 播就播完): 手静
-    # ~180ms 页面自己把没走完的走完 —— 收场走真滚动 (往哪边滚朝哪边收场),
-    # 分身始终从实时几何取形, 不另演一套 (先前停手后分身自演一遍、演完
-    # 又被真身几何拽回半路, 来回抽搐就抽在这)
-    assert "function calSync(" in render and "function calRetwin(" in render
-    assert "function calDraw(" in render and "function calSettle(" in render
-    assert "function calRelease(" in render and "function calClear(" in render
-    assert "calHeld" in render
-    assert 'const CAL_H = 36;' in render and 'const CAL_W_PINCH = 0.45;' in render
-    assert 'const CAL_FADE = 0.8;' in render   # 换字淡完线: 分身淡到头, 后段只剩外壳裁形
-    assert 'const CAL_IDLE = 180;' in render
-    assert "calSmooth" in render and "t * t * (3 - 2 * t)" in render
-    assert 'addEventListener("scroll"' in render and "requestAnimationFrame" in render
-    assert "calTweenTo" not in render
-    #    ↑ 分身不留第二条自演轨道: 只从实时几何取形 (calGlide 驾驶的是真滚动, 分身
-    #      照样逐帧取实时形, 不打架; 手一碰 calGlideStop 即停)
-    assert "calVel" in render and "calLastY" in render   # 滚动方向记账: 停手朝这头收场
-    assert "let calBaseY = scrollY;" in render \
-        and "if (calLastY < 0) calVel = y - calBaseY;" in render
-    #    ↑ 头一滚没上一帧可比: 从开机位起算 (开页必在顶 → 头一滚必是往下) — 滚轮单格
-    #      那种一锤子滚动只发一发事件, 不这么记的话 calVel 还是 0, 停手会被当成
-    #      "没方向"反倒滚回顶把日历长回来
-    assert 'calLastY < 0' in render              # 开页恢复滚位不算手: 不代劳收场
-    assert 'if (calVel > 0)' in render           # 停手收场认方向: 往下滚 (收拢) 就顺方向收到胶囊
-    assert 'calGlideTo(scrollY + (r.bottom - line - CAL_H));' in render \
-        and 'calGlideTo(0);' in render   # 收场走程序滑屏到底 (收拢滑到下边界贴胶囊底/长回滑到顶
-                                         # 交还真身)。1.3.1 那版方向拧反 — 停在半缩处它反倒一路
-                                         # 滚回顶把日历长回来, 还借的掐不停的系统 smooth
-    assert '"smooth"' not in render      # 系统 smooth 滚动全撤: 全应用的程序动画一副弹簧
-    assert 'twin.className = "cal-card cb-card";' in render   # 分身挂 .cal-card 拿全套网格样式
-    assert 'twin.innerHTML = $("#cal-card").innerHTML;' in render   # 搬真身内容 (交接像素连续)
-    assert 'twin.style.width = `${r.width}px`;' in render \
-        and 'twin.style.height = `${r.height}px`;' in render   # 定格快照: 宽高接管那刻钉死, 之后只被裁
-    assert "calTwin = twin;" in render   # 热路径 DOM 引用接管那刻缓存 (calDraw 不再逐帧查)
-    assert 'removeAttribute("id")' in render    # 分身去 id: $ 永远命中真身 (样式全走 class)
-    assert 'card.style.visibility = "hidden"' in render   # 接管: 真身隐身, 分身全权代表
-    assert 'card.style.visibility = "";' in render        # 交还: 真身回屏
-    assert "const bottom = Math.max(r.bottom, top + CAL_H);" in render   # 下边界跟手, 收到胶囊底为限
-    assert "bar.style.top = `${top}px`;" in render        # 上边界钉死在落位线
-    assert 'bar.style.backgroundColor = "rgb(34,57,58)";' in render \
-        and 'bar.style.boxShadow = "none";' in render   # 底色一次写死 = 卡面实色 (与悬浮面板同款),
-                                                         # 影子路上歇着换流畅
-    assert 'new IntersectionObserver(() => calSync()' in render
+    assert 'new IntersectionObserver(() => calSync(false),' in render   # 开机一脚不带弹簧 (不演收拢)
     assert "position: absolute; top: 0; left: 50%;" in page_css   # 分身钉在外壳顶上居中 (定格快照随外壳裁形)
     assert "#cal-bar.morph {" in page_css       # 运动期磨砂暂撤 (WebKit 重影对策)
     assert '<span class="cb-in">' in render     # 胶泡文字 (收拢后段从分身内容交叉淡入)
@@ -162,15 +119,17 @@ def test_bookkeeping_calendar_and_top_bubble():
 
 
 def test_bookkeeping_calendar_swipe_months():
-    """日历左右划翻月: 向左划下月/向右划上月, 先定轴向一划一次, 误触吃掉;
-    ‹ › 与划共用 shiftCal, 新月份顺着方向滑入 (重放式)。"""
+    """日历左右划翻月 — 跟手拖拽: 月份内容贴指尖平移, 上月/下月候场页垫在两侧,
+    松手弹簧定去留 (细钉在 test_bookkeeping_calendar_nav.py); ‹ › 离散点击仍是
+    canned 滑入 (重放式); 误触吃掉。"""
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
     page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
     render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
-    # 整层手势骨架 (记一笔弹层同款): 先定轴向定了不反悔, 一划只翻一次,
-    # 竖着划让给页面滚动; 划完的那一下点击捕获吃掉 (不误触日子格子/‹›钮)
-    assert 'shiftCal(dx < 0 ? 1 : -1)' in render
-    assert "Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) + 6" in render
+    # 整层手势骨架 (记一笔弹层同款): 先定轴向定了不反悔, 竖着划让给页面滚动;
+    # 划完的那一下点击捕获吃掉 (不误触日子格子/‹›钮)。阈值触发 (划过 30px 立刻
+    # 翻页 + 播 canned) 退役 — 动画跟指尖无关, 就是"不跟手"的根
+    assert "function calXApply(" in render and "function calXFlies(" in render
+    assert "Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) + 4" in render
     assert "touchcancel" in render
     assert "setTimeout(() => { ate = false; }, 350)" in render   # 误触兜底自清
     assert "e.stopPropagation(); e.preventDefault();" in render  # 捕获期吃掉
@@ -190,3 +149,43 @@ def test_bookkeeping_calendar_swipe_months():
     assert "for (let d = 1; d <= 42 - first - days; d++)" in render
     assert '<div class="cal-day after"><span class="d">${d}</span></div>' in render
     assert ".cal-day.after { color: var(--ink-3); justify-content: flex-start; }" in page_css
+
+
+def test_bookkeeping_row_swipe_delete():
+    """主页账目行左滑删除 (1.4.0): 行身 (.sw-body) 垫在删除钮上滑开 (一次只开
+    一行; 竖滚意图还给页面, 横滑 preventDefault 钉住页面), 松手过半开没过半收;
+    点删除钮不直接删 — 先弹 iOS 式警示框 (写着这笔的类别与金额, 取消/点遮罩
+    都收), 点「删除」才真删 (与记一笔里删同一套墓碑同步); 滑开的行点行身/
+    滚列表/点到行外都自己收; 滑完的收尾点击当场吃掉 (不顺着误触点开行)。"""
+    base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
+    html = (base / "bookkeeping.html").read_text(encoding="utf-8")
+    js = (base / "bookkeeping-entry-sheet.js").read_text(encoding="utf-8")
+    render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
+    page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
+    # 行结构: 删除钮垫在行身身后右侧, 行身单独一层滑 (圆角裁住别露角)
+    assert '<button type="button" class="sw-del">删除</button>' in render \
+        and '<div class="sw-body">' in render
+    assert ".sw-del {" in page_css \
+        and "width: 72px;" in page_css.split(".sw-del {")[1].split("}")[0]
+    assert "const SW_W = 72;" in js          # 钮宽 js/css 同一枚数
+    assert ".sw-body {" in page_css and "transition: transform .25s ease;" in page_css
+    assert "overflow: hidden;" in page_css.split(".entries {")[1].split("}")[0]
+    assert ".entry:active" not in page_css   # 按下压暗搬到行身上 (拖动中不糊脸)
+    assert ".entry:not(.dragging) .sw-body:active::after" in page_css
+    #    ↑ 压暗是盖在行身上的 ::after 层 — 行身底色不能换半透明的 (--press 是透的,
+    #    一换就漏出身后的删除钮, 点一下删除就显形了)
+    assert ".sw-body::after {" in page_css and "opacity: 0; pointer-events: none;" in page_css
+    # 手势: 竖滚让给页面 (滑开的行顺手收), 横滑钉住页面; 松手过半开没过半收
+    assert "Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)" in js
+    assert "Math.abs(dx) > 12" in js         # 12 起才当滑 (点按的手指微晃不开门)
+    assert '"touchmove"' in js and "{ passive: false }" in js and "e.preventDefault()" in js
+    assert "sw.cur < -SW_W / 2" in js
+    # 二次确认: 警示框节点 html 里都有, js 全接上 (选择器×html 交叉对账)
+    assert 'id="del-confirm"' in html and 'id="dc-msg"' in html \
+        and 'id="dc-cancel"' in html and 'id="dc-ok"' in html and 'id="dc-mask"' in html
+    assert "function askDelRow(" in js and "function closeDelConfirm()" in js
+    assert '$("#dc-ok").addEventListener("click"' in js \
+        and '$("#dc-mask").addEventListener("click"' in js
+    # 确认删除与记一笔里删同一套墓碑 (js 里恰两处), 滑完的收尾点击吃掉
+    assert js.count("prev.deleted = true;") == 2
+    assert "if (swClick) { swClick = false; return; }" in js

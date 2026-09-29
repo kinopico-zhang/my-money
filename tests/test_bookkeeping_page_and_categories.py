@@ -24,6 +24,16 @@ def test_categories_seeded_from_wacai(usersdb, bkdb):
     assert all(group.children == [] for group in tree.income)
     assert len(tree.tags) == 30 and tree.tags[0].name == "20260718龙南游"   # 历史标签种子
     assert tree.tags == sorted(tree.tags, key=lambda t: t.created, reverse=True)   # 创建时间倒排
+    # 「其他」兜底小类一律沉组尾 (挖财导来的兜底命名不一): 老库里旅游的「其他」
+    # 种在中间 (把它的序号改到最前模拟), 读取口照样把它沉到最后 — 库不用动
+    from sqlalchemy import update  # pylint: disable=import-outside-toplevel
+    bkdb.execute(update(store.Category)
+                 .where(store.Category.parent == "旅游",
+                        store.Category.name == "其他")
+                 .values(sort=-1))
+    for group in store.category_tree(bkdb).expense:
+        others = [n for n in group.children if n.endswith("其他")]
+        assert group.children[len(group.children) - len(others):] == others
 
 
 def test_categories_seeded_only_once(usersdb, bkdb):
@@ -62,7 +72,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框,
     只由键盘写入; 不带人民币符号, 类别牌选上翻白点亮); 类别格 5×3 常见格
     (全部类别点「选类别」弹类别树手风琴选层 (大类标题带图标), 没子类的大类带图标铺成一级行直选),
-    图标深灰圆底无描边; 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
+    图标方向色的圆底 (支出红/收入绿, 白色线稿图形缩一圈居中); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
     从行原位升起、数字键盘让位、页面不动、贴键盘上方垫不透底, 无完成钮 —
     系统键盘回车/点别处收),
     时间/标签并一行收瘦 (胶囊不描边, 底色自分), 时间点开是 iOS 闹钟式拨轮 (日期/时/分),
@@ -71,7 +81,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     顶部 My Money 菜单撤了 (页面从同步状态条起 — 垫高让开状态栏; 更新日志/退出登录留在更新日志页);
     支出红/收入绿 (特意调柔: 标签页/金额大字/选中类别图标跟方向走, 主页汇总与账目行同色路);
     选层类别图标与格子同尺寸、选中同款高亮;
-    类别图标单色 SVG (IconPark currentColor, 统一色 CSS 掌);
+    类别图标圆底 (IconPark 线性 currentColor 白线稿, 圆底在 svg 里自带 — 跟收支方向走);
     金额键盘方正满铺 (无圆角, 键贴屏幕两边);
     视口医生 (tesla 移植) 治底部黑边 (--shell-h 钉真满高); 纯逻辑脚本单独成文件。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
@@ -80,6 +90,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     # 样式拆去了 css/ (结构化重构), 断言拼齐 html + 全部 css 文件
     css = "".join(p.read_text(encoding="utf-8")
                   for p in sorted((base / "css").glob("*.css")))
+    icons = (base / "category-icons.js").read_text(encoding="utf-8")
     assert 'id="f-amount" type="text" inputmode="none" readonly placeholder="0.00"' in html
     assert 'id="amt-pad"' in html and 'id="amt-eq"' in html
     assert 'class="cat-tiles" id="cat-tiles"' in html
@@ -102,9 +113,15 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert 'id="brand-menu"' not in html and "/static/menu-user.js" not in html   # 顶部菜单撤了
     assert "padding: var(--top-clear) 14px 7px;" in css   # 同步条垫高让开状态栏 (顶栏没了它顶头);
     #    独立模式钉 --top-clear 之下 — 系统模糊带里不留常驻内容 (my-music 同款)
-    assert 'border-radius: 50%' in css            # 类别图标圆形
-    assert "border: 1.5px solid var(--ink-3)" not in css   # 圆圈撤描边, 改深灰底
-    assert "#93bbb3" in css                       # 图标线条青雾绿实色 (不用半透明白)
+    assert "border: 1.5px solid var(--ink-3)" not in css   # 圆底自带, 不描边
+    assert ".ci { color: var(--cc); }" in css   # 线稿平时是白圆底上的一层柔色, 选中翻白
+    assert '<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>' in icons \
+        and "translate(7.2 7.2) scale(.7)" in icons   # 圆底平时白井 (--icon-tint), 图形缩一圈居中
+    assert "function catTint(" not in icons and "--icon-red-tint" not in css \
+        and "ci-ring" not in icons   # 未选中: 白圆底不描边 (红/绿淡底撤)
+    assert 'kind === "income" ? "var(--icon-green)" : "var(--icon-red)"' in icons \
+        and "function catColor(" in icons and "#e0554d" not in icons
+    #    ↑ 线稿跟收支方向走 (支出柔红/收入柔绿 — 图标专用降饱和档, 高饱和红绿太跳; 一类一色色板撤了), --sel 兜底链盖 --icon-tint
     assert ".note-line {" in css and ".note-t.empty { color: var(--ink-3); }" in css
     #    ↑ 备注行: 无边框样, 空时灰提示
     assert "#note-kb {" in css and "#note-kb[hidden] { display: none; }" in css
@@ -112,8 +129,12 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert "#note-kb::after" in css and "height: var(--shell-h, 100dvh);" in css
     #    ↑ 键盘半透: 浮层以下垫不透的底 (高度吃 --shell-h, dvh 赖账也不漏)
     assert "padding: 5px 11px" in css                # 胶囊牌整体收瘦 (少占地方)
-    assert ".cp-ic .ci { width: 27px; height: 27px; display: block; }" in css   # 选层图标与格子同尺寸
-    assert ".amt-ic .ci { width: 27px; height: 27px; display: block; }" in css   # 金额行图标同尺寸
+    # 选层图标收小 (34 方 — 主页账目行同尺度, 大井在树里占地方);
+    # 大类→小类明显缩进: 小类图标起头对齐大类名字 (2 边距 + 34 井 + 8 缝)
+    assert ".amt-ic .ci, .cat-tiles .ti .ci, .cp-ic .ci { width: 100%; height: 100%;" \
+           " display: block; }" in css   # 圆铺满各自的井 (井多大圆多大)
+    assert "width: 34px; height: 34px;" in css.split(".cp-ic {")[1].split("}")[0]
+    assert "padding-left: 42px;" in css
     assert ".cp-row.cp-solo {" in css            # 没子类的大类: 铺成一级行直选
     assert "max-height: calc(var(--shell-h, 100dvh) - 24px)" in css   # 弹层高吃真满高
     assert "min-height: var(--shell-h, 100dvh);" in css   # 页高吃 --shell-h (冻矮补偿)
@@ -135,15 +156,16 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert 'id="f-tags"' not in html and 'id="tag-chips"' not in html   # 平摊的标签行撤了
     assert 'id="grab-zone"' in html and 'touch-action: none' in css  # 把手下拉关闭
     assert "touch-action: pan-y" in css           # 全应用禁双指缩放 (body 收口)
-    assert "var(--cat-icon)" in css and "grayscale" not in css   # 图标单色: SVG 统一色, 不再滤镜
+    assert "--cat-icon" not in css and "grayscale" not in css   # 统一色变量退役: 圆底在 svg 里
+    #    ↑ 在 svg 里自带, 不再滤镜
     assert 'src="/bookkeeping/static/amount-calculator.js?v=1"' in html
     assert 'src="/bookkeeping/static/bookkeeping-viewport.js?v=1"' in html   # 视口医生最先加载
 
 
 def test_bookkeeping_sheet_kind_colors_and_pad():
     """方向配色与键盘铺法: 支出柔红/收入柔绿 (特意调的柔和色 — 标签页/金额大字/
-    选中类别图标都跟方向走, 挂 body 上弹层外的选层也吃得到; 主页汇总与账目行
-    同一个色路), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
+    类别图标圆底全程跟方向走, 挂 body 上弹层外的选层也吃得到; 主页汇总与账目行
+    同一个色路; 选中态翻白底彩图形), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
     金额键盘方正满铺 (无圆角, 键贴屏幕两边, 1px 发丝缝)。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
@@ -152,14 +174,15 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
                   for p in sorted((base / "css").glob("*.css")))
     assert 'body[data-kind="expense"]' in css and 'body[data-kind="income"]' in css
     #    ↑ 方向配色变量 (挂 body, 弹层外的选层也吃得到)
-    assert ".tabs button.on { color: var(--kind); font-weight: 600; }" in css
-    assert ".tabs button.on.inc" not in css      # 收入单列绿的撤了 (统一吃 --kind)
-    assert "color: var(--kind); text-align: right;" in css   # 金额大字跟方向走
-    assert ".cp-row.on .cp-ic { background: var(--kind-tint); color: var(--kind); }" in css
-    assert ".amt-cat.on .amt-ic { background: var(--kind-tint); color: var(--kind); }" in css
-    #    ↑ 选中类别图标: 柔色圆底配同色线条 (不是纯红纯绿)
-    assert "margin-left: max(0px, calc((100% - 16px) / 10 - 26px));" in css
-    #    ↑ 类别牌图标圆心对齐下面格子第一列 (列宽随屏宽, 同一道算式)
+    assert ".tabs button.on { color: var(--ink-1); font-weight: 600; }" in css \
+        and ".tabs button.on.inc" not in css and "color: var(--kind); text-align: right;" in css \
+        and "background: var(--accent);" in css.split(".tabs button.on::after")[1].split("}")[0]
+    assert ".cp-row.on .ci { --sel: var(--ic-deep); color: #fff; }" in css \
+        and ".amt-cat.on .ci { --sel: var(--ic-deep); color: #fff; }" in css
+    #    ↑ 选中类别换深一档圆底压白图形 (--ic-deep 深一档, 白线稿压得住; 平时淡色圆底不描边)
+    assert "--icon-tint: #fff;" in css \
+        and ".ci-ring" not in css   # 未选中圆底 = 白井一枚 (红/绿淡底撤), 边框规则整个撤掉
+    assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
     assert ".cal-day .e { color: var(--red); }" in css   # 日历每天支出柔红
     assert "font-weight: 650; font-variant-numeric: tabular-nums;\n  color: var(--red);" in css
     #    ↑ 日历格/账目行支出柔红 (收入 .in/.i 盖绿) — 与记一笔同一个色路
@@ -172,5 +195,6 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert '<body data-kind="expense">' in html  # 方向配色挂 body (默认支出)
     assert ".cat-tiles.swap-l { animation: kind-swap-l .3s ease; }" in css
     #    ↑ 左右切换: 类别格顺着划的方向滑入 (去支出从右进/去收入从左进)
-    assert "transition: color .3s ease, background-color .3s ease;" in css
-    #    ↑ 吃方向色的元素红↔绿渐变过去 (金额大字/标签页/选中圆底), 不生硬跳变
+    assert ".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci" \
+           " { transition: fill .3s ease, color .3s ease; }" in css
+    #    ↑ 吃方向色的元素红↔绿渐变过去 (金额大字/标签页/类别图标圆底; 图形色走 currentColor)

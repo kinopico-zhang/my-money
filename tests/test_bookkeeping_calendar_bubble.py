@@ -11,11 +11,11 @@ def test_bookkeeping_calendar_float_panel():
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
     page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
     render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
-    # 展开/收回走 p 弹簧 (与滚动收拢同一条 calDraw 形变轨道, 推手从滚动换成弹簧 —
-    # 滑屏那副临界阻尼公式原样搬来推 p, 全应用一副脾气; 原先 240ms 一口气的补间
-    # 大半程挤在前几帧, 稍掉一帧就看见台阶): calP 记最新进度 (calSync 逐帧写),
-    # 半路展开也从眼下的样子长起; 弹簧帧有 calFloatT !== tw 守卫 (半路被停/被换
-    # 就地熄火, harness 的假 rAF 撤不掉也安全)
+    # 展开/收回走 p 弹簧 (与跟手收拢同一条 calDraw 形变轨道 — 面板浮在列表上
+    # 没有滚动可跟, 推手只能是弹簧; 滑屏那副临界阻尼公式原样搬来推 p, 全应用
+    # 一副脾气; 原先 240ms 一口气的补间大半程挤在前几帧, 稍掉一帧就看见台阶):
+    # calP 记最新进度 (calSync 逐帧写), 半路展开也从眼下的样子长起; 弹簧帧有
+    # calFloatT !== tw 守卫 (半路被停/被换就地熄火, harness 的假 rAF 撤不掉也安全)
     assert "let calP = 1;" in render and "calP = p;" in render
     assert "const CAL_P_K = 170;" in render \
         and "const CAL_P_C = 2 * Math.sqrt(CAL_P_K);" in render
@@ -25,34 +25,49 @@ def test_bookkeeping_calendar_float_panel():
     assert "function calFloatStop(" in render
     # 展开: 只在接管态 (胶囊在屏上才点得着); 手静收场的计时和在途滑屏都掐了
     # (收场早改走弹簧, 一停就真停 — 不再有掐不断的系统 smooth 滚动要原地一写去
-    # 掐); 面板底 = 卡面实色 (悬浮得盖得住底下列表); 途中影子歇着 (大投影跟着
-    # 尺寸逐帧重画最吃帧率 — 与滚动收拢同一路), 弹簧落位这一下才亮出来;
-    # .float 挂上 (css 开分身的 pointer-events)
+    # 掐); 面板底/圆角/影子全在皮肤层 (.cb-skin — 壳只裁不画, my-music 流体形变
+    # 同款打法); 途中影子歇着 (大投影跟着尺寸逐帧重画最吃帧率 — 与滚动收拢同
+    # 一路), 弹簧落位这一下才亮出来; .float 挂上 (css 开分身的 pointer-events)
     assert "function calFloatOpen(" in render \
         and "if (!calHeld || calFloat) return;" in render
     assert "clearTimeout(calSettleT);" in render and "calGlideStop();" in render
     assert "window.scrollTo(0, scrollY);" not in render
     assert 'bar.classList.add("float");' in render \
-        and 'bar.style.backgroundColor = "rgb(34,57,58)";' in render
-    assert 'bar.style.boxShadow = "none";' in render \
+        and 'bar.classList.add("morph");' in render
+    assert 'calSkin.style.boxShadow = "none";' in render \
         and "calFloatTween(0, () => {" in render \
-        and 'bar.style.boxShadow = "0 12px 32px rgba(8,32,36,.3)";' in render
+        and 'calSkin.style.boxShadow = "0 2px 6px rgba(23,30,42,.08), ' \
+           '0 16px 40px rgba(23,30,42,.16)";' in render
     # 收回: 先摘牌 (弹簧路上 calSync 不再二连收), 落位时亮的那副影子先歇, 再弹
-    # 到 p=1; 缩到头的收尾与滚动收到头同一套 — 真身滚回眼前了直接交还 (不闪双
-    # 日历), 没到就歇进胶囊位 (几何交还样式表)
+    # 到 p=1; 缩到头的收尾 (calDockOrReturn) — 真身滚回眼前了直接交还 (不闪双
+    # 日历), 没到就歇进胶囊位 (几何交还样式表); 滚动收拢不点弹簧 (缩放跟手),
+    # 这副弹簧只剩面板开合
     assert "function calFloatClose(" in render and "if (!calFloat) return;" in render
-    assert "calFloatTween(1, () => {" in render \
-        and "calDocked = true;\n      calClear(bar);" in render
+    assert "calFloatTween(1, calDockOrReturn);" in render \
+        and "calDocked = true;\n    calClear(bar);" in render
     # 滑列表 = 收起令 (calSync 门口设卡): 真身滚回眼前 (松手就停在日历里) 面板
     # 让位直接交还; 还没到就顺着原路缩回胶囊 (面板自己的弹簧走, 列表照它自己
-    # 的滚)。弹簧在途的帧几何归弹簧 (滚动事件别抢方向盘)
-    assert "if (calFloat) {" in render and "if (calFloatT) return;" in render
+    # 的滚)。弹簧在途的帧几何归弹簧 (滚动事件别抢方向盘), 计时照排; 收回半途
+    # 回滚过线 (calFloatT.to===1) 反着弹回长开, 到位交还真身 — 过线一整个胶囊高
+    # (CAL_H) 才算真反悔: 快滚撞底回弹的几像素毛刺拨不动弹簧 (收拢途中发抖那毛病)
+    assert "if (calFloat) {" in render and "if (calFloatT) {" in render \
+        and "calFloatT.to === 1 && r.top > calSlot.top + CAL_H" in render
     assert 'bar.classList.remove("float");' in render
-    # 面板里的点击: 分身没了 id, 全走 #cal-bar 委托 — 点日子先收面板再滑列表
-    # (这就是"去"); ‹ › 认结构 (头一枚是 ‹) 只翻日历的月, 列表不去; 点在面板
-    # 别处不动 (滑列表才收)
+    # 面板里的点击: 分身没了 id, 全走 #cal-bar 委托 — 点日子面板留着 (只有用户
+    # 亲手滑列表才收), 列表顺着滑到那天 (这就是"去", 点击器里不再 calFloatClose);
+    # 自己这趟滑屏/挪窗口的视口补偿发的滚动事件不算用户滚动 (calGlide 在途 +
+    # calJumpT 短窗双保险); 落点让开整张面板 (calGap 面板期按卡高让位, 目标日组
+    # 从面板底下钻出来才看得见); ‹ › 认结构 (头一枚是 ‹) 只翻日历的月, 列表不去;
+    # 点在面板别处不动 (滑列表才收)
     assert 'e.target.closest("button[data-date]")' in render \
         and "jumpToDate(day.dataset.date);" in render
+    day_fn = render.split('$("#cal-bar").addEventListener("click"')[1].split("});")[0]
+    assert "calFloatClose();" not in day_fn \
+        and "calJumpT = performance.now();" in day_fn
+    assert "if (calGlide || performance.now() - calJumpT < 350) return;" in render
+    gap_fn = render.split("function calGap(")[1].split("}")[0]
+    assert "if (calFloat)" in gap_fn \
+        and '$("#cal-card").getBoundingClientRect().height + 8;' in gap_fn
     assert 'e.target.closest(".cal-head button")' in render \
         and "head.parentElement.firstElementChild === head ? -1 : 1" in render
     # 悬浮面板里翻月: 明细联动不跟 (列表等点了日子才走), 面板里的标题/格子和
@@ -62,7 +77,7 @@ def test_bookkeeping_calendar_float_panel():
     assert "if (!calFloat) jumpToMonth(calMon);" in render
     assert 'const panel = calFloat ? $("#cal-bar .cb-card") : null;' in render \
         and 'panel.querySelector(".cal-title")' in render
-    assert "if (!calFloat) calSync();" in render
+    assert "if (!calFloat) calSync(false);" in render
     # 面板期数据变了重搬分身: 面板亮着/胶泡文字隐着的角色不翻面 (重搬的
     # opacity 默认按歇着的胶囊给 — 面板开着得反着来, 不然胶泡文字闪一脸)
     assert "calDocked && !calFloat" in render
@@ -89,7 +104,20 @@ def test_bookkeeping_calendar_bubble_content():
         and '<span class="i">收 ${calAmt(t.income)}</span>' in render
     assert "if (n >= 1000) return" in render and "}千`;" in render
     assert "#cal-bar .msum .e { color: var(--red); }" in page_css \
-        and "#cal-bar .msum .i { color: var(--green); }" in page_css
+        and "#cal-bar .msum .i { color: var(--green);" in page_css
+    # 胶泡文字一副面孔: 月份/收支同一副字号粗细 (.msum 不再自带小一号细一档, 都
+    # 继承 #cal-bar — 大小不一还错着半截那毛病); 内容之间留一样宽的空隙 (.cb-mv
+    # 的 gap + .i 的 margin — 分隔不再往串里拼 " · "); 月份包 .cm (flex:none):
+    # 放不下时收的是收支那头, 且 .msum 加 min-width:0 让省略号真生效 (flex 项默认不缩)
+    cap_fn = render.split("function calCapHtml")[1].split("function")[0]
+    assert 'return `<span class="cm">${y}年${+m}月</span><span class="msum">` +' in cap_fn \
+        and " · " not in cap_fn
+    assert "gap: 9px" in page_css.split("#cal-bar .cb-mv {")[1].split("}")[0]
+    msum_rule = page_css.split("#cal-bar .msum {")[1].split("}")[0]
+    assert "font-size" not in msum_rule and "font-weight" not in msum_rule \
+        and "min-width: 0" in msum_rule
+    assert "margin-left: 9px" in page_css.split("#cal-bar .msum .i {")[1].split("}")[0]
+    assert "#cal-bar .cb-mv .cm { flex: none; }" in page_css
     assert "max-width: 46vw" not in page_css
     # 胶囊定宽: ‹ › 钉死两端位置恒定 (不跟内容伸缩忽宽忽窄); 与胶囊左/右/上/下
     # 各距 3px (36 = 3+28+3+2 边框 — 三边等距); 528 = 日历卡同一上限, 宽屏不比卡宽
@@ -160,8 +188,8 @@ def test_bookkeeping_calendar_bubble_content():
         and "const CAL_G_C = 2 * Math.sqrt(CAL_G_K);" in render
     assert "const carry = calGlide ? calGlide.v : 0;" in render \
         and "g.v += (CAL_G_K * (g.to - g.cur) - CAL_G_C * g.v) * dt;" in render
-    assert "calGlideTo(Math.max(0, el.getBoundingClientRect" in render \
-        and "scrollY - calGap()));" in render
+    assert "const elDoc = el.getBoundingClientRect().top + scrollY;" in render \
+        and "calGlideTo(Math.max(0, elDoc - calGap()), true);" in render
     assert "while (y > document.documentElement.scrollHeight - innerHeight" in render \
         and "&& feedDrawn < feedGroups.length) drawMore();" in render
     assert "calGlide.cur += grew;" in render and "calGlide.to += grew;" in render
