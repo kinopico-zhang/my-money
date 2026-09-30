@@ -3,9 +3,10 @@
 // 退出登录随主页菜单撤了 (住在更新日志页) —— 这里不许再接不存在的元素:
 // 接 null 直接 TypeError, 连后面的 render/首同步全被带崩 (重开应用首页就空了)。
 "use strict";
-/* global render, loadCategories, syncNow */
+/* global render, loadCategories, syncNow, catTree, setCatColors */
 
 /* ---------- 启动 ---------- */
+setCatColors(catTree);          // 缓存树里的自选图标色先灌上 (刷新前也带色)
 render();
 loadCategories();
 syncNow();

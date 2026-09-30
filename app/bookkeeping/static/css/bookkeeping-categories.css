@@ -1,0 +1,185 @@
+/* bookkeeping-categories — 类别管理页样式。chrome 与 settings/stats 同一副;
+ * 行样式认「选类别」弹层的两级树 (大类手风琴 + 小类缩进), 外加每行的
+ * 色点 (点开调色盘) 与删除钮。 */
+:root {
+  color-scheme: light;
+  --bg: #d9e6f8;
+  --bg-ink: #2f3c4e;
+  --surface: #e0e8f2;
+  --surface-2: #f4f8fd;
+  --press: rgba(23,30,42,.08);
+  --ink-1: #1f2226;
+  --ink-2: #4a5866;
+  --ink-3: #8a8f98;
+  --hairline: rgba(31,49,71,.12);
+  --nav-bg: rgba(255,255,255,.7);
+  --accent: #ddfb1e;
+  --accent-ink: #5f6e00;
+  --red: #d64953;
+  --green: #18906a;
+  --icon-red: #c48b8b;      /* 类别图标线稿的方向色 (page.css 同源, 降饱和档) */
+  --icon-green: #65a291;
+  --icon-tint: #fff;
+}
+/* 顶带下限 (bookkeeping-page.css 同款): iOS 26+ 独立模式的系统磨砂带比安全区深
+   一截, 模糊带里不许常驻任何控件 —— 只在中招形态生效 */
+:root { --top-floor: 0px; }
+@media (display-mode: standalone) and (orientation: portrait)
+       and (pointer: coarse) {
+  :root { --top-floor: 96px; }
+}
+:root { --top-clear: max(calc(env(safe-area-inset-top, 0px) + 10px),
+                         var(--top-floor)); }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent;
+    scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+body::before {                    /* 壳层底色 (冰蓝渐变, 钉死视口不跟滚 — page.css 同一副) */
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
+    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
+}
+body {
+  background: none; color: var(--ink-1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+               "Helvetica Neue", system-ui, sans-serif;
+  font-size: 14px; line-height: 1.45;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+button, a, select { touch-action: manipulation; }   /* 双击不放大 (收双击缩放留平移) */
+
+/* ---------- 顶栏 (毛玻璃; 上沿钉 --top-clear, 独立模式不进系统模糊带) ---------- */
+header {
+  padding: var(--top-clear) 14px 10px;
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--hairline);
+  z-index: 50;
+}
+.nav-row { display: flex; align-items: center; gap: 8px;
+           max-width: 640px; width: 100%; margin: 0 auto; }
+.back {                    /* 返回设置页: 白井胶囊 (时间/标签牌同一副) */
+  display: flex; align-items: center; gap: 1px; font-size: 14px;
+  background: var(--surface-2); border-radius: 999px; padding: 5px 12px 5px 8px;
+}
+.back svg { width: 15px; height: 15px; display: block; }
+.back:active { background: var(--press); }
+.page-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+.nav-row::after { content: ""; width: 68px; }   /* 题词真居中: 右边垫回返回钮那格宽 */
+
+/* ---------- 正文 ---------- */
+main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
+       max-width: 640px; width: 100%; margin: 0 auto;
+       display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--hairline);
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13); }
+.state { padding: 40px 20px; text-align: center; color: var(--bg-ink); font-size: 14px; }
+.spin {
+  width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 12px;
+  border: 3px solid rgba(31,49,71,.22); border-top-color: #282a2e;
+  animation: rot .8s linear infinite;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+.retry-btn {
+  margin-top: 14px; padding: 9px 26px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; background: var(--accent); color: var(--accent-ink);
+}
+.msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px;
+       background: rgba(214,73,83,.1); color: var(--red); }
+
+/* 收支两页签 (记一笔的标签页同一副: 选中的墨字 + 荧光黄绿短线) */
+.kind-tabs { display: flex; gap: 22px; padding: 0 4px; }
+.kind-tabs button { position: relative; padding: 3px 1px 7px;
+                    font-size: 16px; color: var(--ink-3); }
+.kind-tabs button.on { color: var(--ink-1); font-weight: 600; }
+.kind-tabs button.on::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2.5px; border-radius: 2px; background: var(--accent);
+}
+
+/* 添加行: 归属 + 名字 + 添加 (黄绿小钮 — 加标签那枚同一副) */
+.add-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.add-bar select, .add-bar input {
+  min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px;
+  background: var(--surface-2); border-radius: 999px; padding: 8px 12px; color: var(--ink-1);
+}
+.add-bar select { flex: 0 1 auto; max-width: 42%; }
+.add-bar input { flex: 1; }
+.add-bar input::placeholder { color: var(--ink-3); }
+.add-bar button {
+  flex: none; padding: 0 16px; border-radius: 999px; align-self: stretch;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 13px; font-weight: 600;
+}
+.add-bar button:active { filter: brightness(.92); }
+
+/* 两级树: 大类手风琴 (选类别弹层同款), 每行带色点与删除。
+ * 头是按钮但色点/删除也是按钮 — 按钮不嵌按钮, 三枚平级排在行里。 */
+.grp-top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; }
+.grp + .grp { border-top: 1px solid var(--hairline); }
+.grp.open .grp-top { background: var(--press); }
+.head {                      /* 头: 图标 + 名字 + 小类数 + 折叠尖 (点开亮小类) */
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+  padding: 3px 4px; text-align: left; border-radius: 8px;
+  font-size: 15px; font-weight: 600; color: var(--ink-1);
+}
+.head:disabled { font-weight: 600; }   /* 没挂小类的: 没得展开, 尖也收掉 */
+.head:disabled .chev { display: none; }
+.grp-top .cnt { flex: none; font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+.grp-top .chev {
+  flex: none; width: 14px; height: 14px; color: var(--ink-3);
+  transition: transform .18s;
+}
+.grp.open .chev { transform: rotate(90deg); }
+.kids { display: none; padding-left: 44px;   /* 小类缩进: 图标起头对齐大类名字 (选层同款) */
+        border-top: 1px solid var(--hairline); }
+.tray + .kids { border-top: 0; }     /* 大类自己的调色盘开着: 盘已描线, 子层不重复描 */
+.grp.open .kids { display: block; }
+.kid { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 2px;
+       font-size: 14px; color: var(--ink-1); }
+.kid:active { background: var(--press); }
+.ic { flex: none; width: 34px; height: 34px; }
+.ic .ci { width: 100%; height: 100%; display: block; color: var(--cc); }
+.nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 色点: 当前的图标色 (自选或方向色) — 点开脚下的调色盘 */
+.dot {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--dot, var(--icon-red));
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.85);   /* 白描一圈: 浅色也看得见 */
+}
+.dot:active { transform: scale(.9); }
+
+/* 删除钮: 平时隐着 (挤在一起容易误点), 按住行才亮 — 点一下变「确认」再点才删 */
+.del {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink-3);
+  font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
+.del:active { background: var(--press); }
+.del.confirm { background: var(--red); color: #fff; font-size: 11px; font-weight: 600; }
+
+/* 调色盘: 点开色点就垫在那一行脚下 (同一时刻只开一盘) */
+.tray {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  padding: 10px 14px 12px 44px; border-top: 1px solid var(--hairline);
+  background: var(--surface-2);
+}
+.tray .sw {                  /* 色票: 圆片, 当前那枚描深圈 */
+  width: 27px; height: 27px; border-radius: 50%; border: 0;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.9);
+}
+.tray .sw.cur { outline: 2.5px solid var(--ink-1); outline-offset: 1.5px; }
+.tray .sw.def {              /* 默认 = 撤掉自选, 跟收支方向走 */
+  background: none; color: var(--ink-3); font-size: 11.5px;
+  box-shadow: none; width: auto; padding: 0 2px;
+}
+.tray .sw.def.cur { color: var(--ink-1); font-weight: 600; }
+.tray .hint { width: 100%; font-size: 11px; color: var(--ink-3); }

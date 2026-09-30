@@ -4,7 +4,7 @@
 "use strict";
 /* global $, entries: writable, dirty: writable, lastSync: writable,
           catTree: writable, persist, saveLS, pad, render, fillChips,
-          mergeEntries, entriesToUpload */
+          mergeEntries, entriesToUpload, setCatColors */
 /* exported renderSyncStrip, syncNow, scheduleSync, loadCategories */
 
 // ---------- 同步 ----------
@@ -93,6 +93,7 @@ async function loadCategories() {   // 类别树: 缓存先用, 联网刷新 (�
     if (tree && Array.isArray(tree.expense) && Array.isArray(tree.income)) {
       catTree = tree;
       saveLS("bk-categories-v2", catTree);
+      setCatColors(tree);            // 自选图标色 (设置页挑的) 跟树一起进来
       fillChips();                  // 弹层正开着也立刻换上
     }
   } catch (_e) { /* 离线/失败: 用缓存树 */ }

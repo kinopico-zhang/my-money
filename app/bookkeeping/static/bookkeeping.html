@@ -13,8 +13,8 @@
 <link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/bookkeeping/static/manifest.json">
   <title>My Money</title>
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=50">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=35">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=51">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=36">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=9">
 </head>
 <body data-kind="expense">
@@ -41,7 +41,11 @@
   <div class="feed-end" id="feed-end" hidden></div>
 </main>
 
-<button type="button" id="fab" aria-label="记一笔">＋</button>
+<div id="fab-stack">
+  <a class="quick-btn" href="/bookkeeping/stats" aria-label="统计"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4.5 19.5h15"/><path d="M7 19.5v-5.5M12 19.5V7.5M17 19.5v-8.5"/></g></svg></a>
+  <a class="quick-btn" href="/bookkeeping/settings" aria-label="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6.5h8.6M17.4 6.5H20M4 12h3.6M12.4 12H20M4 17.5h10.6M19.4 17.5H20"/><circle cx="15" cy="6.5" r="2.4"/><circle cx="10" cy="12" r="2.4"/><circle cx="17" cy="17.5" r="2.4"/></g></svg></a>
+  <button type="button" id="fab" aria-label="记一笔">＋</button>
+</div>
 
 <div id="sheet-mask" hidden></div>
 <div id="sheet" hidden>
@@ -134,11 +138,11 @@
 <script src="/bookkeeping/static/bookkeeping-merge.js?v=4"></script>
 <script src="/bookkeeping/static/amount-calculator.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-state.js?v=4"></script>
-<script src="/bookkeeping/static/category-icons.js?v=14"></script>
+<script src="/bookkeeping/static/category-icons.js?v=15"></script>
 <script src="/bookkeeping/static/bookkeeping-render.js?v=41"></script>
-<script src="/bookkeeping/static/bookkeeping-sync.js?v=2"></script>
+<script src="/bookkeeping/static/bookkeeping-sync.js?v=3"></script>
 <script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=23"></script>
 <script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=8"></script>
-<script src="/bookkeeping/static/bookkeeping-boot.js?v=3"></script>
+<script src="/bookkeeping/static/bookkeeping-boot.js?v=4"></script>
 </body>
 </html>

@@ -1,0 +1,85 @@
+/* bookkeeping-settings — 设置页样式。chrome 与 changelog 页同一副 (冰蓝渐变浅底,
+   毛玻璃顶栏, 浅灰蓝卡 — tokens 同源 bookkeeping-page.css, 子页各带一份)。 */
+:root {
+  color-scheme: light;
+  --bg: #d9e6f8;
+  --bg-ink: #2f3c4e;
+  --surface: #e0e8f2;
+  --surface-2: #f4f8fd;
+  --press: rgba(23,30,42,.08);
+  --ink-1: #1f2226;
+  --ink-2: #4a5866;
+  --ink-3: #8a8f98;
+  --hairline: rgba(31,49,71,.12);
+  --nav-bg: rgba(255,255,255,.7);
+  --red: #d64953;          /* 退出登录: 破坏性操作与支出同一个红 */
+}
+/* 顶带下限 (bookkeeping-page.css 同款): iOS 26+ 独立模式的系统磨砂带比安全区深
+   一截, 模糊带里不许常驻任何控件 —— 只在中招形态生效 */
+:root { --top-floor: 0px; }
+@media (display-mode: standalone) and (orientation: portrait)
+       and (pointer: coarse) {
+  :root { --top-floor: 96px; }
+}
+:root { --top-clear: max(calc(env(safe-area-inset-top, 0px) + 10px),
+                         var(--top-floor)); }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent;
+    scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+body::before {                    /* 壳层底色 (冰蓝渐变, 钉死视口不跟滚 — page.css 同一副) */
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
+    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
+}
+body {
+  background: none; color: var(--ink-1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+               "Helvetica Neue", system-ui, sans-serif;
+  font-size: 14px; line-height: 1.45;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+button, a { touch-action: manipulation; }   /* 双击不放大 (收双击缩放留平移) */
+
+/* ---------- 顶栏 (毛玻璃; 上沿钉 --top-clear, 独立模式不进系统模糊带) ---------- */
+header {
+  padding: var(--top-clear) 14px 10px;
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--hairline);
+  z-index: 50;
+}
+.nav-row { display: flex; align-items: center; gap: 8px;
+           max-width: 640px; width: 100%; margin: 0 auto; }
+.back {                    /* 返回记账页: 白井胶囊 (时间/标签牌同一副) */
+  display: flex; align-items: center; gap: 1px; font-size: 14px;
+  background: var(--surface-2); border-radius: 999px; padding: 5px 12px 5px 8px;
+}
+.back svg { width: 15px; height: 15px; display: block; }
+.back:active { background: var(--press); }
+.page-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+.nav-row::after { content: ""; width: 68px; }   /* 题词真居中: 右边垫回返回钮那格宽 */
+
+/* ---------- 正文: 卡片行 ---------- */
+main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
+       max-width: 640px; width: 100%; margin: 0 auto;
+       display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--hairline);
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13); }
+        /* 与记账页的账目卡同一副两层影 */
+.row { display: flex; align-items: center; gap: 10px;
+       padding: 14px; font-size: 15px; color: var(--ink-1); }
+.row + .row, .row + a.row { border-top: 1px solid var(--hairline); }
+.row:active { background: var(--press); }
+.row .lbl { flex: 1; min-width: 0; }
+.row .val { color: var(--ink-3); font-size: 13.5px; max-width: 55%;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .chev { color: var(--ink-3); font-size: 17px; line-height: 1; }
+.row.danger { justify-content: center; color: var(--red); font-weight: 500; }

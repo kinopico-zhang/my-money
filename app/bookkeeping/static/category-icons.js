@@ -11,7 +11,7 @@
 // 渲染差异。图标是纯展示映射, 跟着类别数据走不进库;
 // 没映射到的类别图标兜底 notes、方向没传按支出红兜底 (默认页)。
 "use strict";
-/* exported catIcon */
+/* exported catIcon, setCatColors */
 
 const CATEGORY_ICONS = {
   "餐饮": 'noodles',
@@ -358,10 +358,23 @@ document.body.insertAdjacentHTML("afterbegin",
     .join("") +
   "</svg>");
 
+// 自选色 (设置页「类别管理」里挑的): 全名/大类名 → #rrggbb。树随接口下发
+// (colors 表), 各页拿到树灌进来 (记账页 sync.js 开局+刷新, 统计页/管理页各自灌);
+// 没挑的走方向色兜底。小类没单挑就落大类的自选色 (与图标解析同一个路数)。
+const CAT_COLORS = new Map();
+function setCatColors(tree) {
+  CAT_COLORS.clear();
+  const colors = (tree && tree.colors) || {};
+  for (const k of Object.keys(colors)) if (colors[k]) CAT_COLORS.set(k, colors[k]);
+}
+
 // 底色跟收支方向走 (支出柔红/收入柔绿 — 图标专用的降饱和档: 高饱和红绿在浅蓝灰
 // 界面里太跳 (用户点名), 数字/文字仍走 --red/--green), 大类不再一类一色;
-// 方向没传按支出兜底 (默认页)
-function catColor(kind) {
+// 方向没传按支出兜底 (默认页); 自选色盖在方向色上 (谁挑了听谁的)
+function catColor(kind, cat) {
+  const key = String(cat || "");
+  const own = CAT_COLORS.get(key) || CAT_COLORS.get(key.split("/")[0]);
+  if (own) return own;
   return kind === "income" ? "var(--icon-green)" : "var(--icon-red)";
 }
 
@@ -375,7 +388,7 @@ const GLYPH_INSET = 'transform="translate(7.2 7.2) scale(.7)"';
 function catIcon(cat, kind) {
   const key = String(cat || "");
   const name = CATEGORY_ICONS[key] || CATEGORY_ICONS[key.split("/")[0]] || FALLBACK_ICON;
-  return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${catColor(kind)}" aria-hidden="true">` +
+  return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${catColor(kind, key)}" aria-hidden="true">` +
     `<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>` +
     (MASKED.has(name)
       ? `<path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ci-m-${name})" ${GLYPH_INSET}/>`

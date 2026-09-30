@@ -56,3 +56,4 @@ class Category(EntryBase):
     kind: Mapped[Literal["expense", "income"]] = mapped_column(String)
     parent: Mapped[str] = mapped_column(String, default="")   # "" = 大类
     sort: Mapped[int] = mapped_column(default=0)          # 同层展示顺序
+    color: Mapped[str | None] = mapped_column(default=None)   # 图标自选色 #rrggbb (空 = 方向色)

@@ -466,14 +466,27 @@ main {
 #dc-ok { color: #b3273a; font-weight: 600; }   /* 删除钮红字压深一档 (浅灰蓝卡上的销毁位) */
 
 /* ---------- 记一笔 (悬浮) ---------- */
-#fab {
+/* 右下角一竖排: 顶上统计/设置两枚白井圆钮 (页面级导航, 纯链接), 底下黄绿加号 */
+#fab-stack {
   position: fixed; right: 18px;
   bottom: calc(env(safe-area-inset-bottom) + 22px);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  z-index: 60;                       /* 压得住列表; 记一笔弹层起 (70) 就让位 */
+}
+.quick-btn {                    /* 统计/设置: 白井圆钮坐深蓝灰图形 (弹层头那排圆钮同一副) */
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface-2); color: #47536b;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(23,30,42,.18);
+}
+.quick-btn:active { transform: scale(.94); }
+.quick-btn svg { width: 22px; height: 22px; display: block; }
+#fab {
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--accent);                   /* 荧光黄绿球压深橄榄加号 (图里 Pay out
                                     now 那枚按钮 — 全图唯一发光的可执行位) */
   color: var(--accent-ink); font-size: 28px; font-weight: 300;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(23,30,42,.32); z-index: 60;   /* 深色光晕垫着球 */
+  box-shadow: 0 8px 24px rgba(23,30,42,.32);   /* 深色光晕垫着球 */
 }
 #fab:active { transform: scale(.94); }

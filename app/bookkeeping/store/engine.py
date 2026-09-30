@@ -85,3 +85,8 @@ def migrate_columns(eng: Engine | None = None) -> None:
         if "tags" not in cols:     # v2.5: 标签 (逗号连接)
             conn.exec_driver_sql(
                 "ALTER TABLE entries ADD COLUMN tags TEXT NOT NULL DEFAULT ''")
+        cat_cols = {r[1] for r in
+                    conn.exec_driver_sql("PRAGMA table_info(categories)")}
+        if cat_cols and "color" not in cat_cols:   # 1.4.0: 图标自选色 (空 = 方向色);
+            # 表还没有的老库不 ALTER (create_all 稍后建表就带 color), 只补已有表
+            conn.exec_driver_sql("ALTER TABLE categories ADD COLUMN color TEXT")
