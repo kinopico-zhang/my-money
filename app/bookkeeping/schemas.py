@@ -1,4 +1,5 @@
 """记账应用的接口模型 (与主应用的 schemas 分开, 各管各的)。"""
+import re
 from datetime import datetime
 from typing import Literal
 
@@ -82,8 +83,44 @@ class TagSeed(BaseModel):
 
 class CategoryTree(BaseModel):
     """类别树 + 标签种子 (选层数据): 支出/收入各自的大类列表按种子的
-    sort 保序; tags 是挖财迁来的历史标签 (静态种子, 客户端与账本用过的合并)。"""
+    sort 保序; tags 是挖财迁来的历史标签 (静态种子, 客户端与账本用过的合并);
+    colors 是自选图标色 (设置页「类别管理」挑的): 全名 → #rrggbb。"""
 
     expense: list[CategoryGroup]
     income: list[CategoryGroup]
+    colors: dict[str, str] = Field(default_factory=dict)
     tags: list[TagSeed] = Field(default_factory=list)
+
+
+class _CategoryTarget(BaseModel):
+    """类别管理的三个写口共用的定位: 收支树 + 大类 (空 = 大类自己) + 名字。"""
+
+    kind: Literal["expense", "income"]
+    parent: str = Field(default="", max_length=20)
+    name: str = Field(min_length=1, max_length=20)
+
+
+class CategoryColorIn(_CategoryTarget):
+    """给一个类别挑图标色 (空串 = 恢复方向色兜底)。"""
+
+    color: str = ""
+
+    @field_validator("color")
+    @classmethod
+    def check_color(cls, value: str) -> str:
+        """自选色只收 #rrggbb (或空 = 撤掉自选), 别的形状一律拒。"""
+        if value and not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+            raise ValueError("颜色要 #rrggbb 形状")
+        return value
+
+
+class CategoryAddIn(BaseModel):
+    """加一个类别: parent 空 = 新建大类; 名字不带 / (组合名是路径分隔)。"""
+
+    kind: Literal["expense", "income"]
+    parent: str = Field(default="", max_length=20)
+    name: str = Field(min_length=1, max_length=10)
+
+
+class CategoryDeleteIn(_CategoryTarget):
+    """删一个类别 (在用/挂着小类会被拒)。"""

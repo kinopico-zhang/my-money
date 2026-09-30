@@ -255,7 +255,9 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
   background: var(--accent); color: var(--accent-ink); font-size: 13px; font-weight: 600;
 }
 .tp-new button:active { filter: brightness(.92); }
-.tp-date { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tp-date { flex: none; font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+#tp-list .cp-row { padding: 13px 2px; font-size: 16px; }   /* 标签行整行松开放大: 无图标纯文字,
+  挨太密点不准 (用户点名); 类别树那排密些没事 — 那边带图标有井衬着 */
 
 /* ---------- 备注浮层输入 (点备注行弹: 跟着系统键盘上移, 贴键盘正上方; 数字键盘让位) ---------- */
 #note-kb {

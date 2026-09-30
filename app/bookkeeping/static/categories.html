@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#bfd7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- 状态栏样式跟浅底走: default = 浅底配深字 (black-translucent 是白字, 深底时代用的) -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" sizes="32x32" href="/bookkeeping/static/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/bookkeeping/static/favicon.svg">
+<link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
+<link rel="manifest" href="/bookkeeping/static/manifest.json">
+<title>类别管理 · My Money</title>
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-categories.css?v=1">
+</head>
+<body>
+
+<header>
+  <div class="nav-row">
+    <a class="back" href="/bookkeeping/settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 7.5 12l7 6.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>返回</a>
+    <div class="page-title">类别管理</div>
+  </div>
+</header>
+
+<main>
+  <div class="kind-tabs" id="kind-tabs">
+    <button type="button" data-kind="expense" class="on">支出</button>
+    <button type="button" data-kind="income">收入</button>
+  </div>
+  <div class="msg" id="msg" hidden></div>
+  <div class="card">
+    <div class="add-bar">
+      <select id="add-parent" aria-label="加在哪"></select>
+      <input type="text" id="add-name" maxlength="10" placeholder="类别名" autocomplete="off">
+      <button type="button" id="add-btn">添加</button>
+    </div>
+  </div>
+  <div class="card" id="cat-list"></div>
+  <div class="state" id="loading"><div class="spin"></div>正在读取类别…</div>
+  <div class="state" id="load-error" hidden>
+    <div>加载失败, 检查网络后重试</div>
+    <button type="button" class="retry-btn" id="retry">重试</button>
+  </div>
+</main>
+
+<script src="/bookkeeping/static/category-icons.js?v=15"></script>
+<script src="/bookkeeping/static/bookkeeping-categories.js?v=1"></script>
+</body>
+</html>

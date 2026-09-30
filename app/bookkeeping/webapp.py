@@ -17,6 +17,7 @@ from .. import account_store, database
 from ..models import User
 from ..schemas import ChangelogVersion
 from . import changelog, store
+from .category_admin import admin as category_admin
 from .schemas import (CategoryTree, EntryOut, SyncRequest, SyncResponse)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -67,6 +68,24 @@ def bookkeeping_login_page() -> FileResponse:
 def bookkeeping_changelog_page() -> FileResponse:
     """更新日志页 (记账应用自己的版本线, 与 My Tesla 的日志各自独立)。"""
     return _page("changelog.html")
+
+
+@bk_app.get("/settings")
+def bookkeeping_settings_page() -> FileResponse:
+    """设置页: 当前账号/版本号, 更新日志入口, 退出登录。"""
+    return _page("settings.html")
+
+
+@bk_app.get("/stats")
+def bookkeeping_stats_page() -> FileResponse:
+    """统计页: 按月聚合本地账本 (分类榜/记账人分摊), 断网也能看。"""
+    return _page("stats.html")
+
+
+@bk_app.get("/categories")
+def bookkeeping_categories_page() -> FileResponse:
+    """类别管理页 (设置页进): 挑图标颜色, 增删类别。"""
+    return _page("categories.html")
 
 
 @bk_app.get("/changelog/api/entries")
@@ -126,4 +145,5 @@ def bookkeeping_sync(body: SyncRequest, request: Request,
 
 
 bk_app.include_router(api)
+bk_app.include_router(category_admin)
 bk_app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

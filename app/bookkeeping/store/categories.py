@@ -35,10 +35,13 @@ def category_tree(session: Session) -> CategoryTree:
     rows = session.execute(select(Category).order_by(Category.sort, Category.id)
                            ).scalars().all()
     children: dict[str, list[str]] = {}
+    colors: dict[str, str] = {}          # 自选图标色: 全名 ("餐饮/早餐" / "餐饮") → #rrggbb
     for row in rows:
         if row.parent:
             children.setdefault(row.parent, []).append(row.name)
-    tree = CategoryTree(expense=[], income=[],
+        if row.color:
+            colors[f"{row.parent}/{row.name}" if row.parent else row.name] = row.color
+    tree = CategoryTree(expense=[], income=[], colors=colors,
                         tags=[TagSeed(name=n, created=c) for n, c in DEFAULT_TAGS])
     for row in rows:
         if not row.parent:

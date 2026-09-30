@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#bfd7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- 状态栏样式跟浅底走: default = 浅底配深字 (black-translucent 是白字, 深底时代用的) -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" sizes="32x32" href="/bookkeeping/static/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/bookkeeping/static/favicon.svg">
+<link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
+<link rel="manifest" href="/bookkeeping/static/manifest.json">
+<title>设置 · My Money</title>
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-settings.css?v=1">
+</head>
+<body>
+
+<header>
+  <div class="nav-row">
+    <a class="back" href="/bookkeeping/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 7.5 12l7 6.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>返回</a>
+    <div class="page-title">设置</div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="row"><span class="lbl">当前账号</span><span class="val" id="me-name">…</span></div>
+    <a class="row link" href="/bookkeeping/categories"><span class="lbl">类别管理</span><span class="chev">›</span></a>
+    <a class="row link" href="/bookkeeping/changelog"><span class="lbl">更新日志</span><span class="chev">›</span></a>
+    <div class="row"><span class="lbl">版本</span><span class="val" id="ver">…</span></div>
+  </div>
+  <div class="card">
+    <button type="button" class="row link danger" id="logout">退出登录</button>
+  </div>
+</main>
+
+<script src="/bookkeeping/static/bookkeeping-settings.js?v=1"></script>
+</body>
+</html>
