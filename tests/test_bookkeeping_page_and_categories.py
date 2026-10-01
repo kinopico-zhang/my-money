@@ -72,7 +72,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框,
     只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 5×3 常见格
     (全部类别点「选类别」弹类别树手风琴选层 (大类标题带图标), 没子类的大类带图标铺成一级行直选),
-    图标圆底恒暗井、线稿未选中灰选中亮本色 (1.5.2 改款); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
+    图标圆底平时暗井, 线稿未选中灰、选中翻本色圆底压白线稿 (1.5.2 改款); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
     从行原位升起、数字键盘让位、页面不动、贴键盘上方垫不透底, 无完成钮 —
     系统键盘回车/点别处收),
     时间/标签并一行收瘦 (胶囊不描边, 底色自分), 时间点开是 iOS 闹钟式拨轮 (日期/时/分),
@@ -156,8 +156,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert 'id="f-tags"' not in html and 'id="tag-chips"' not in html   # 平摊的标签行撤了
     assert 'id="grab-zone"' in html and 'touch-action: none' in css  # 把手下拉关闭
     assert "touch-action: pan-y" in css           # 全应用禁双指缩放 (body 收口)
-    assert "--cat-icon" not in css and "grayscale" not in css   # 统一色变量退役: 圆底在 svg 里
-    #    ↑ 在 svg 里自带, 不再滤镜
+    assert "--cat-icon" not in css and "grayscale" not in css   # 统一色变量退役: 圆底 svg 里自带, 不滤镜
     assert 'src="/bookkeeping/static/amount-calculator.js?v=1"' in html
     assert 'src="/bookkeeping/static/bookkeeping-viewport.js?v=1"' in html   # 视口医生最先加载
 
@@ -165,7 +164,7 @@ def test_bookkeeping_page_has_amount_keyboard():
 def test_bookkeeping_sheet_kind_colors_and_pad():
     """方向配色与键盘铺法: 支出红/收入绿挂 body (标签页/金额大字跟方向走, 弹层外
     的选层也吃得到; 主页汇总与账目行同一个色路; 1.5.2 起类别图标未选中灰线稿、
-    选中亮本色 — 默认本色即方向色, 自选色盖它), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
+    选中翻本色圆底压白线稿 (本色即方向色, 自选色盖它), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
     金额键盘方正满铺 (无圆角, 键贴屏幕两边, 1px 发丝缝)。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
@@ -177,9 +176,10 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert ".tabs button.on { color: var(--ink-1); font-weight: 600; }" in css \
         and ".tabs button.on.inc" not in css and "color: var(--kind); text-align: right;" in css \
         and "background: var(--accent);" in css.split(".tabs button.on::after")[1].split("}")[0]
+    on_ci = " { --sel: color-mix(in srgb, var(--cc) 72%, #000); color: #fff; }"
     for sel in (".cat-tiles .tile.on", ".cp-row.on", ".amt-cat.on"):
-        assert f"{sel} .ci {{ color: var(--cc); }}" in css
-    #    ↑ 选中亮本色线稿 (1.5.2 改款: 未选中一律灰线稿, 井恒暗井, 填色底档 --ic-deep 退役)
+        assert f"{sel} .ci{on_ci}" in css
+    #    ↑ 选中翻本色圆底压白线稿 (1.5.2 续: 底 = 行内 --cc 压深一档, 休眠 --sel 钩子启用)
     assert "--icon-tint: #2c2c2e;" in css \
         and ".ci-ring" not in css   # 未选中圆底 = 暗井一枚 (红/绿淡底撤), 边框规则整个撤掉
     assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
@@ -197,4 +197,4 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     #    ↑ 左右切换: 类别格顺着划的方向滑入 (去支出从右进/去收入从左进)
     assert ".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci" \
            " { transition: color .3s ease; color: var(--ink-2); }" in css
-    #    ↑ 弹层默认脸 = 灰线稿 (选中亮本色的 .on 规则前文已钉; color 过渡让灰↔本色渐变过去)
+    #    ↑ 弹层默认脸 = 灰线稿 (.on 翻彩色圆底压白线稿已在前文钉; 圆底换色另有 circle 过渡)

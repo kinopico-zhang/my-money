@@ -401,7 +401,7 @@ main {
 .entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (拖动中不糊脸) */
 .ci { color: var(--cc); }   /* 类别图标: 暗圆底 (svg 自带, 不描边) 上坐本色线稿
                           (stroke=currentColor); 记一笔弹层里另有收口 — 未选中
-                          灰线稿, 选中才亮本色 (entry-sheet.css) */
+                          灰线稿, 选中翻本色圆底压白线稿 (entry-sheet.css) */
 .entry .cat-dot {      /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
   flex: none; width: 34px; height: 34px;
 }
