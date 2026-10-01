@@ -149,8 +149,24 @@ function chipsHtml(kind, cat) {     // 格子页 html (真页与横划跟手的�
       `<span class="ti">${catIcon(val, kind)}</span><span class="tn">${esc(name)}</span></button>`).join("");
 }
 
+// 影子页元素 (横划跟手的「对面页」): 开局就挂进 sheet 末尾, 平时 hidden 藏着,
+// 内容由 fillChips 跟真页一起预建 (2026-10-02 用户报「左右滑动有抖动, 不跟手」
+// 修法之一: 原先定轴那一刻现 innerHTML 十几枚 SVG, 卡一帧 = 起步一顿),
+// 定轴那刻 JS 按真格子的盒摆位显形 (display:grid 会盖掉 hidden, css 补了
+// .cat-ghost[hidden] 规则)
+const catGhost = document.createElement("div");
+catGhost.className = "cat-tiles cat-ghost";
+catGhost.hidden = true;
+$("#sheet").appendChild(catGhost);
+
 function fillChips() {
   $("#cat-tiles").innerHTML = chipsHtml(sheetKind, sheetCat);
+  // 对面页跟真页同把换好: 换过去大类还在: 类别照带, 不在会清空, 与真页换过
+  // 去的口径一致 (每次 sheetCat/sheetKind 变动都走这里, 选中态永远新鲜)
+  const other = sheetKind === "expense" ? "income" : "expense";
+  const top = sheetCat.split("/")[0];
+  catGhost.innerHTML = chipsHtml(other,
+    treeFor(other).some(x => x.name === top) ? sheetCat : "");
 }
 
 // 金额行左边的类别牌: 当前类别的图标+名字 (没选给占位灰字); 选上了牌底翻白点亮
@@ -422,13 +438,13 @@ function closeSheet() {
   const solid = () => sheet.scrollHeight <= sheet.clientHeight + 1;   // 没超高: 整层拽得动
   const settle = () => { x0 = null; axis = ""; dy = 0; };
 
-  let drag = null;               // 横划拖动中: {target/live/dir/anchorX/lastX/lastT/vx/px/ghost}
-  let flight = null;             // 松手后的滑翔: 两页过渡到位才落状态 (影子撤走)
-  const finishFlight = () => {   // 滑翔没落完又开划: 当场兑现 (状态落地, 影子撤走)
+  let drag = null;               // 横划拖动中: {target/live/dir/anchorX/lastX/lastT/vx/px/tiles/w/ghost}
+  let flight = null;             // 松手后的滑翔: 两页过渡到位才落状态 (影子藏走)
+  const finishFlight = () => {   // 滑翔没落完又开划: 当场兑现 (状态落地, 影子藏走)
     if (!flight) return;
     clearTimeout(flight.t);
     const f = flight; flight = null;
-    if (f.ghost) f.ghost.remove();
+    if (f.ghost) f.ghost.hidden = true;
     f.tiles.style.transition = ""; f.tiles.style.transform = "";
     if (f.kind) switchKind(f.kind, true);
   };
@@ -436,20 +452,21 @@ function closeSheet() {
   const dragStart = (target, t, ts) => {   // 定轴那刻: 摆好「对面页」(盖在真格子上的影子)
     ate = true;
     const live = target !== sheetKind;     // 已在这边还往同边划: 只给橡皮筋的劲道
+    const tiles = $("#cat-tiles");
     drag = { target, live, dir: target === "expense" ? -1 : 1,
-             anchorX: t.clientX, lastX: t.clientX, lastT: ts, vx: 0, px: 0 };
+             anchorX: t.clientX, lastX: t.clientX, lastT: ts, vx: 0, px: 0,
+             tiles, w: tiles.clientWidth || 1, ghost: null };
+    tiles.style.transition = "none";       // 拖动期不吃缓动 (定轴置一次, 不逐帧重写)
     if (live) {
-      const tiles = $("#cat-tiles");
-      const g = document.createElement("div");
-      g.className = "cat-tiles cat-ghost";
-      const top = sheetCat.split("/")[0];  // 换过去大类还在: 类别照带; 不在会清空 — 影子同款
-      g.innerHTML = chipsHtml(target,
-        treeFor(target).some(x => x.name === top) ? sheetCat : "");
-      g.style.top = tiles.offsetTop + "px";
-      g.style.left = tiles.offsetLeft + "px";
-      g.style.width = tiles.clientWidth + "px";
-      sheet.appendChild(g);
-      drag.ghost = g;
+      // 影子内容 fillChips 已预建, 这里只剩摆位: 先把 transform 摆到出屏的
+      // 起点位再显形 (拿着上回的旧 transform 直接亮会闪一下错位)
+      catGhost.style.top = tiles.offsetTop + "px";
+      catGhost.style.left = tiles.offsetLeft + "px";
+      catGhost.style.width = drag.w + "px";
+      catGhost.style.transition = "none";
+      catGhost.style.transform = `translateX(${-drag.dir * drag.w}px)`;
+      catGhost.hidden = false;
+      drag.ghost = catGhost;
     }
     settle();                              // 定轴后 drag 接管, x0 不再用了
   };
@@ -459,36 +476,29 @@ function closeSheet() {
     const t = e.touches[0];
     drag.vx = (t.clientX - drag.lastX) / Math.max(1, e.timeStamp - drag.lastT);
     drag.lastX = t.clientX; drag.lastT = e.timeStamp;
-    const tiles = $("#cat-tiles");
-    const w = tiles.clientWidth || 1;
     const raw = t.clientX - drag.anchorX;
-    drag.px = drag.live ? Math.max(-w, Math.min(w, raw))   // 真划: 1:1 到一整页为止
+    drag.px = drag.live ? Math.max(-drag.w, Math.min(drag.w, raw))   // 真划: 1:1 到一整页为止
                         : Math.max(-72, Math.min(72, raw * .18));   // 没得换: 阻尼一小截
-    tiles.style.transition = "none";
-    tiles.style.transform = `translateX(${drag.px}px)`;
-    if (drag.ghost) {
-      drag.ghost.style.transition = "none";
-      drag.ghost.style.transform = `translateX(${drag.px - drag.dir * w}px)`;
-    }
+    drag.tiles.style.transform = `translateX(${drag.px}px)`;
+    if (drag.ghost)
+      drag.ghost.style.transform = `translateX(${drag.px - drag.dir * drag.w}px)`;
   };
 
   const dragEnd = () => {                  // 松手: 过小半屏或甩得够快 = 换, 否则弹回
     const d = drag; drag = null;
-    const tiles = $("#cat-tiles");
-    const w = tiles.clientWidth || 1;
-    const go = d.live && (Math.abs(d.px) > w * .3 || Math.abs(d.vx) > .5);
+    const go = d.live && (Math.abs(d.px) > d.w * .3 || Math.abs(d.vx) > .5);
     const ease = "transform .26s cubic-bezier(.25,.8,.3,1)";
-    tiles.style.transition = ease;
-    tiles.style.transform = `translateX(${go ? -d.dir * w : 0}px)`;
+    d.tiles.style.transition = ease;
+    d.tiles.style.transform = `translateX(${go ? -d.dir * d.w : 0}px)`;
     if (d.ghost) {
       d.ghost.style.transition = ease;
-      d.ghost.style.transform = `translateX(${go ? 0 : -d.dir * w}px)`;
+      d.ghost.style.transform = `translateX(${go ? 0 : -d.dir * d.w}px)`;
     }
-    flight = { tiles, ghost: d.ghost, kind: go ? d.target : null,
+    flight = { tiles: d.tiles, ghost: d.ghost, kind: go ? d.target : null,
                t: setTimeout(() => {       // 滑翔落定才落状态: 影子页已就位, 无缝交棒
                  flight = null;
-                 if (d.ghost) d.ghost.remove();
-                 tiles.style.transition = ""; tiles.style.transform = "";
+                 if (d.ghost) d.ghost.hidden = true;   // 常驻影子: 藏回 (内容归 fillChips 管)
+                 d.tiles.style.transition = ""; d.tiles.style.transform = "";
                  if (go) switchKind(d.target, true);   // 静默换: 不再重播滑入动画
                }, 270) };
   };
@@ -504,7 +514,9 @@ function closeSheet() {
     if (x0 == null) return;
     const t = e.touches[0], dx = t.clientX - x0;
     dy = t.clientY - y0;
-    if (!axis && Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) + 6) {
+    if (!axis && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) + 6) {
+      // 定轴门槛 10px: 原 30px 死区 = 整程落后手指一指节才起跟 (2026-10-02
+      // 用户报「不跟手」) — 拖拽起点钉在越线处, 收小不产生跳变
       axis = "x";                                   // 先定轴向, 定了不反悔
       dragStart(dx < 0 ? "expense" : "income", t, e.timeStamp);   // 左划支出, 右划收入
     } else if (!axis && dy > 12 && dy > Math.abs(dx)) {

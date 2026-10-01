@@ -115,8 +115,9 @@ def test_bookkeeping_sheet_gestures():
     assert "function switchKind(" in js and "document.body.dataset.kind" in js
     #    ↑ 点标签页/左右划共用换收支; 方向配色 (支出红/收入绿) 挂 body 跟走
     assert 'dx < 0 ? "expense" : "income"' in js      # 左划支出, 右划收入
-    assert "Math.abs(dx) > 30" in js and "scrollHeight <= sheet.clientHeight + 1" in js
-    #    ↑ 横划判定阈值; 层内容超高时下拽让给滚动 (把手仍可拽)
+    assert "Math.abs(dx) > 10" in js and "scrollHeight <= sheet.clientHeight + 1" in js
+    #    ↑ 横划判定阈值 (1.5.1 从 30 收到 10: 死区太大 = 落后手指一指节,
+    #      2026-10-02 用户报「不跟手」); 层内容超高时下拽让给滚动 (把手仍可拽)
     assert '"touchstart"' in js and '"touchcancel"' in js
     assert 'kind === "expense" ? "swap-l" : "swap-r"' in js   # 滑入方向跟切换方向走
     assert 'classList.remove("swap-l", "swap-r")' in js       # 连划几下每次都重放
