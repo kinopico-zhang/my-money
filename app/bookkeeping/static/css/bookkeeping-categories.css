@@ -17,8 +17,8 @@
   --accent-ink: #fff;
   --red: #e5484d;
   --green: #5fd47f;
-  --icon-red: #d18f8f;      /* 类别图标线稿的方向色 (page.css 同源, 暗底提亮档) */
-  --icon-green: #7fb5a3;
+  --icon-red: #e5666a;      /* 类别图标线稿的方向色 (page.css 同源, 暗底亮饱和档) */
+  --icon-green: #5fd47f;
   --icon-tint: #2c2c2e;
 }
 /* 顶带下限 (bookkeeping-page.css 同款): iOS 26+ 独立模式的系统磨砂带比安全区深

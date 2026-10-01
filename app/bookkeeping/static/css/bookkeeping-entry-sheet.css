@@ -99,6 +99,9 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .cat-tiles {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 4px;
   margin-bottom: 8px;
+  will-change: transform;         /* 横划跟手要逐帧 translateX: 提前上合成层,
+  逐帧改 transform 不再走主线程重绘 (2026-10-02 用户报「滑动有抖动」的主源);
+  影子页同用本类, 一处声明两页都吃到 */
 }
 .cat-tiles .tile { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .cat-tiles .ti {              /* 类别井: 只管占位 (44 方) — 圆底在 svg 里 */
@@ -108,10 +111,11 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .cat-tiles .tn { font-size: 11px; font-weight: 500; color: var(--ink-2); }
 .cat-tiles .tile.on .ci { --sel: var(--ic-deep); color: #fff; }   /* 选中: 填色底压白图形 */
 .cat-tiles .tile.on .tn { color: var(--ink-1); font-weight: 600; }   /* 选中格名字点亮白字加粗 */
-.cat-ghost {                     /* 横划跟手的「对面页」: JS 按真格子的盒摆位盖上, 松手即撤 */
+.cat-ghost {                     /* 横划跟手的「对面页」: fillChips 预建常驻 sheet 里, JS 按真格子的盒摆位盖上, 松手藏回 */
   position: absolute; margin: 0; pointer-events: none;   /* 贴真页的网格规则照吃 .cat-tiles,
   margin:0 抵掉底边距 (绝对定位认 sheet 的盒), 出屏那截由弹层 overflow-x:hidden 裁掉 */
 }
+.cat-ghost[hidden] { display: none; }   /* 上面 display:grid 会盖掉 hidden (本仓既有先例 #note-kb), 藏时补回 */
 /* 备注: 独占一行的无边框样子 (提示「输入备注...」), 点开弹 rides 系统键盘的浮层输入 */
 .note-line { display: block; width: 100%; text-align: left; padding: 0 2px; margin-bottom: 7px; }
 .note-t {

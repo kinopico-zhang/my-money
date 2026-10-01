@@ -11,6 +11,16 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.5.1", date="2026-10-02", items=[
+        ChangelogItem(kind="改进", text="类别图标的颜色补上了暗色皮肤的适配: 昨天换皮肤时给图标线稿配的两支偏淡的红和绿, "
+                                       "落在深灰圆底上发灰发闷, 看着像没充满色 — 这回在黑底上各提亮提饱和一档, "
+                                       "主页账目行、记一笔里选类别、类别管理和统计页上的图标都精神了; "
+                                       "类别管理里的 12 色调色盘也整批换成暗底上看得清的亮色 (原先那批是浅色皮肤时代挑的中明度)"),
+        ChangelogItem(kind="修复", text="记一笔里支出和收入两页的左右划修顺了: 原先手指要划出 30 像素页面才肯跟着动 "
+                                       "(整程落后手指一指节, 划得慢就像没反应), 跟上了还一抖一抖 — "
+                                       "现在划出 10 像素就接手跟到哪走到哪, 拖动上了独立图层不再边走边重绘, "
+                                       "对面那页也提前备好、起步不再顿一下; 松手该换就换、不够线照旧弹回"),
+    ]),
     ChangelogVersion(version="1.5.0", date="2026-10-01", items=[
         ChangelogItem(kind="改进", text="整个应用换上了和音乐 app 同一套的暗色皮肤: 底色纯黑, "
                                        "卡片和弹层换成一副沉稳的深灰 — 跟手机夜里那套系统配色一个路子, "
