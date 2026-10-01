@@ -489,7 +489,12 @@ function closeSheet() {
     const go = d.live && (Math.abs(d.px) > d.w * .3 || Math.abs(d.vx) > .5);
     const ease = "transform .26s cubic-bezier(.25,.8,.3,1)";
     d.tiles.style.transition = ease;
-    d.tiles.style.transform = `translateX(${go ? -d.dir * d.w : 0}px)`;
+    // 换页时真页顺着划的方向退出 (dir·w) — 与影子同速同向、全程首尾相接
+    // (拖拽期本来就是这副刚性连排, 松手照旧)。原先飞 -dir·w: 真页反向从
+    // 影子底下倒退扫回, 收尾那截右缘戳进弹层左缘 18px 的 padding 条
+    // (overflow 裁到 padding 盒为止, 条里看得见) — 2026-10-02 用户报
+    // 「收入类别的左边短暂出现部分支出类别」即此
+    d.tiles.style.transform = `translateX(${go ? d.dir * d.w : 0}px)`;
     if (d.ghost) {
       d.ghost.style.transition = ease;
       d.ghost.style.transform = `translateX(${go ? 0 : -d.dir * d.w}px)`;
