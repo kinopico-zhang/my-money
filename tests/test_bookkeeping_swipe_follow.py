@@ -36,8 +36,9 @@ def test_swipe_follows_finger():
 
 def test_category_icon_colors_dark():
     """图标色: 方向线稿色三份 :root 副本 (page/categories/stats) 暗底提亮档
-    (1.5.0); 1.5.2 起弹层里未选中灰线稿、选中亮本色, 圆井底恒暗井, 填色底
-    深档全链退役; 色票盘 12 枚暗底档 (库里自选色列全空, 换值无迁移)。"""
+    (1.5.0); 1.5.2 起弹层里未选中灰线稿、选中翻本色圆底压白线稿 (深档底由
+    color-mix 从 --cc 就地导出, 不再养 token); 色票盘 12 枚暗底档 (库里自选
+    色列全空, 换值无迁移)。"""
     for name in ("bookkeeping-page.css", "bookkeeping-categories.css",
                  "bookkeeping-stats.css"):
         css = (_STATIC / "css" / name).read_text(encoding="utf-8")
@@ -47,11 +48,14 @@ def test_category_icon_colors_dark():
         assert "--icon-green: #7fb5a3;" not in css, name
     page_css = (_STATIC / "css" / "bookkeeping-page.css").read_text(
         encoding="utf-8")
-    # 1.5.2 选中改亮本色线稿: 填色底深档 (page.css 的 --icon-*-deep) 与弹层的
-    # --ic-deep 全链零消费退役 (本仓不留死 token); 弹层默认脸 = 灰线稿, .on 才亮
+    # 1.5.2 续 (用户点名「被选中的图标要有颜色」): 选中翻本色圆底压白线稿 —
+    # svg 里休眠的 --sel 钩子启用, 底 = 行内 --cc 经 color-mix 压深一档 (旧填色底
+    # 深档 token --icon-*-deep/--ic-deep 退役, 深档现由 mix 就地导出, 自选色全适用)
     assert "--icon-red-deep" not in page_css and "--icon-green-deep" not in page_css
     assert "--ic-deep" not in _SHEET_CSS
     assert "transition: color .3s ease; color: var(--ink-2); }" in _SHEET_CSS
+    assert _SHEET_CSS.count("--sel: color-mix(in srgb, var(--cc) 72%, #000)") == 3
+    assert " { transition: fill .3s ease; }" in _SHEET_CSS   # 圆底换色同步渐变
     assert "--icon-tint: #2c2c2e;" in page_css       # 圆井底: 控件静止档不换
     cats_js = (_STATIC / "bookkeeping-categories.js").read_text(encoding="utf-8")
     for hexc in ("#e5696e", "#e88a55", "#d9b04c", "#b3bd5a", "#4dbf90",
