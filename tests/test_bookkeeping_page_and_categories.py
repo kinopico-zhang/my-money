@@ -70,9 +70,9 @@ def test_categories_api_requires_login(usersdb):
 def test_bookkeeping_page_has_amount_keyboard():
     """金额键盘 (常驻吸底 iOS 扁平风): 右列 ⌫/完成 两枚大键, 完成就是保存
     (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框,
-    只由键盘写入; 不带人民币符号, 类别牌选上翻白点亮); 类别格 5×3 常见格
+    只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 5×3 常见格
     (全部类别点「选类别」弹类别树手风琴选层 (大类标题带图标), 没子类的大类带图标铺成一级行直选),
-    图标方向色的圆底 (支出红/收入绿, 白色线稿图形缩一圈居中); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
+    图标圆底恒暗井、线稿未选中灰选中亮本色 (1.5.2 改款); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
     从行原位升起、数字键盘让位、页面不动、贴键盘上方垫不透底, 无完成钮 —
     系统键盘回车/点别处收),
     时间/标签并一行收瘦 (胶囊不描边, 底色自分), 时间点开是 iOS 闹钟式拨轮 (日期/时/分),
@@ -81,7 +81,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     顶部 My Money 菜单撤了 (页面从同步状态条起 — 垫高让开状态栏; 更新日志/退出登录留在更新日志页);
     支出红/收入绿 (特意调柔: 标签页/金额大字/选中类别图标跟方向走, 主页汇总与账目行同色路);
     选层类别图标与格子同尺寸、选中同款高亮;
-    类别图标圆底 (IconPark 线性 currentColor 白线稿, 圆底在 svg 里自带 — 跟收支方向走);
+    类别图标圆底在 svg 里自带 (恒暗井 --icon-tint); IconPark 线性 currentColor 线稿;
     金额键盘方正满铺 (无圆角, 键贴屏幕两边);
     视口医生 (tesla 移植) 治底部黑边 (--shell-h 钉真满高); 纯逻辑脚本单独成文件。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
@@ -114,7 +114,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert "padding: var(--top-clear) 14px 7px;" in css   # 同步条垫高让开状态栏 (顶栏没了它顶头);
     #    独立模式钉 --top-clear 之下 — 系统模糊带里不留常驻内容 (my-music 同款)
     assert "border: 1.5px solid var(--ink-3)" not in css   # 圆底自带, 不描边
-    assert ".ci { color: var(--cc); }" in css   # 线稿平时是白圆底上的一层柔色, 选中翻白
+    assert ".ci { color: var(--cc); }" in css   # 本色线稿 (page.css 全局脸; 弹层里另有灰/亮收口)
     assert '<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>' in icons \
         and "translate(7.2 7.2) scale(.7)" in icons   # 圆底平时白井 (--icon-tint), 图形缩一圈居中
     assert "function catTint(" not in icons and "--icon-red-tint" not in css \
@@ -163,9 +163,9 @@ def test_bookkeeping_page_has_amount_keyboard():
 
 
 def test_bookkeeping_sheet_kind_colors_and_pad():
-    """方向配色与键盘铺法: 支出柔红/收入柔绿 (特意调的柔和色 — 标签页/金额大字/
-    类别图标圆底全程跟方向走, 挂 body 上弹层外的选层也吃得到; 主页汇总与账目行
-    同一个色路; 选中态翻白底彩图形), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
+    """方向配色与键盘铺法: 支出红/收入绿挂 body (标签页/金额大字跟方向走, 弹层外
+    的选层也吃得到; 主页汇总与账目行同一个色路; 1.5.2 起类别图标未选中灰线稿、
+    选中亮本色 — 默认本色即方向色, 自选色盖它), 类别牌图标圆心对齐类别格第一列, 胶囊牌不描边 (底色自分),
     金额键盘方正满铺 (无圆角, 键贴屏幕两边, 1px 发丝缝)。"""
     from pathlib import Path  # pylint: disable=import-outside-toplevel
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
@@ -177,9 +177,9 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert ".tabs button.on { color: var(--ink-1); font-weight: 600; }" in css \
         and ".tabs button.on.inc" not in css and "color: var(--kind); text-align: right;" in css \
         and "background: var(--accent);" in css.split(".tabs button.on::after")[1].split("}")[0]
-    assert ".cp-row.on .ci { --sel: var(--ic-deep); color: #fff; }" in css \
-        and ".amt-cat.on .ci { --sel: var(--ic-deep); color: #fff; }" in css
-    #    ↑ 选中类别换深一档圆底压白图形 (--ic-deep 深一档, 白线稿压得住; 平时淡色圆底不描边)
+    for sel in (".cat-tiles .tile.on", ".cp-row.on", ".amt-cat.on"):
+        assert f"{sel} .ci {{ color: var(--cc); }}" in css
+    #    ↑ 选中亮本色线稿 (1.5.2 改款: 未选中一律灰线稿, 井恒暗井, 填色底档 --ic-deep 退役)
     assert "--icon-tint: #2c2c2e;" in css \
         and ".ci-ring" not in css   # 未选中圆底 = 暗井一枚 (红/绿淡底撤), 边框规则整个撤掉
     assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
@@ -196,5 +196,5 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert ".cat-tiles.swap-l { animation: kind-swap-l .3s ease; }" in css
     #    ↑ 左右切换: 类别格顺着划的方向滑入 (去支出从右进/去收入从左进)
     assert ".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci" \
-           " { transition: fill .3s ease, color .3s ease; }" in css
-    #    ↑ 吃方向色的元素红↔绿渐变过去 (金额大字/标签页/类别图标圆底; 图形色走 currentColor)
+           " { transition: color .3s ease; color: var(--ink-2); }" in css
+    #    ↑ 弹层默认脸 = 灰线稿 (选中亮本色的 .on 规则前文已钉; color 过渡让灰↔本色渐变过去)

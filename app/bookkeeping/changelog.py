@@ -11,6 +11,13 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.5.2", date="2026-10-02", items=[
+        ChangelogItem(kind="改进", text="记一笔里选类别的图标换了副面孔: 没选中的格子一律是安静的灰色线稿, "
+                                       "一整排看起来不再红红绿绿地吵; 点中哪一个, 哪一个才亮出它本来的颜色 "
+                                       "(支出红、收入绿, 或你在类别管理里给类别挑的颜色) — "
+                                       "选类别树里的列表行、金额行左边的类别牌同一副规矩: "
+                                       "没选的时候是灰的占位, 选上了才上色"),
+    ]),
     ChangelogVersion(version="1.5.1", date="2026-10-02", items=[
         ChangelogItem(kind="改进", text="类别图标的颜色补上了暗色皮肤的适配: 昨天换皮肤时给图标线稿配的两支偏淡的红和绿, "
                                        "落在深灰圆底上发灰发闷, 看着像没充满色 — 这回在黑底上各提亮提饱和一档, "
