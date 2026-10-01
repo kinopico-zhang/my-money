@@ -32,8 +32,6 @@
   的粉彩档 #d18f8f 坐 #2c2c2e 发灰 — 2026-10-02 用户点名「图标颜色没适配暗黑」) */
   --icon-green: #5fd47f;           /* 方向绿 (= 主页收入绿, 同上) */
   --icon-tint: #2c2c2e;            /* 未选中圆底: 暗井 (控件静止档; 白井在黑底上太炸) */
-  --icon-red-deep: #b87474;        /* 淡红深一档: 选中填色底用 (白线稿压得住) */
-  --icon-green-deep: #4f9482;      /* 淡绿深一档 (选中填色底) */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
@@ -401,8 +399,9 @@ main {
   opacity: 0; pointer-events: none;
 }
 .entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (拖动中不糊脸) */
-.ci { color: var(--cc); }   /* 类别图标: 平时暗圆底 (svg 自带, 不描边) 上坐同系提亮线稿,
-                          选中才翻白坐方向色块上 (stroke=currentColor); 颜色 svg 自带 */
+.ci { color: var(--cc); }   /* 类别图标: 暗圆底 (svg 自带, 不描边) 上坐本色线稿
+                          (stroke=currentColor); 记一笔弹层里另有收口 — 未选中
+                          灰线稿, 选中才亮本色 (entry-sheet.css) */
 .entry .cat-dot {      /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
   flex: none; width: 34px; height: 34px;
 }

@@ -24,14 +24,18 @@
    不再就地改值), 键盘数字键跟着页面 --surface-3 走,
    选层 (.pick .cp-panel) / 备注浮层 (#note-kb) 同一副身 */
 /* 方向配色跟收支走 (标签页点选/左右划都换): 支出红 (删除钮同款), 收入绿 (主页收入同款),
-   金额大字吃 --kind (挂 body 上), 类别图标线稿走行内 --cc (catColor
-   给的提亮档), 未选中圆底是暗井 (--icon-tint), 选中填色底走 --ic-deep (深一档, 白线稿压得住) */
-body[data-kind="expense"] { --kind: var(--red); --ic-deep: var(--icon-red-deep); }
-body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-deep); }
-/* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字/类别图标圆底 —
-   svg 的 fill 吃得动 transition; 图形颜色走 currentColor, color 也带上), 不生硬跳变 */
+   金额大字吃 --kind (挂 body 上)。类别图标 (1.5.2, 2026-10-02 用户点名「未选中
+   灰色线条款, 选中再显本色」): 圆底恒暗井 (--icon-tint, 不再填色), 弹层里线稿
+   默认灰 (--ink-2), 选中的容器上才亮行内 --cc 本色 (catColor 给的方向色/自选色);
+   主页/统计/类别管理没有选中态, 那边 .ci 仍走 page.css 的本色 */
+body[data-kind="expense"] { --kind: var(--red); }
+body[data-kind="income"] { --kind: var(--green); }
+/* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字; 图形颜色走
+   currentColor — color 带上过渡, 灰↔本色也吃它), 不生硬跳变 */
 .tabs button, .amt-line input { transition: color .3s ease; }
-.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: fill .3s ease, color .3s ease; }
+.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; color: var(--ink-2); }
+                              /* ↑ 弹层内的默认脸: 灰线稿 (各自的 .on 规则亮本色,
+                              特异度多一级压得住; 井不换 — 选中靠颜色现身) */
 /* 类别那摊顺着划的方向滑入: 去支出从右进 (左划), 去收入从左进 (右划) */
 .cat-tiles.swap-l { animation: kind-swap-l .3s ease; }
 .cat-tiles.swap-r { animation: kind-swap-r .3s ease; }
@@ -68,14 +72,13 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
        半列 - 半图标 44/2); 井的左右衬 14px 让 % 基准比格子坐标系窄了 28px, +12px 补回 */
 .amt-cat:active .ci { filter: brightness(.82); }   /* 按下: 色块压暗一档 (牌自己没底色, 反馈靠图标) */
 .amt-ic {                    /* 类别井: 只管占位 (44 方, 与类别格同尺寸) —
-                                圆底在 svg 里 (跟收支方向走: 支出红/收入绿) */
+                                圆底在 svg 里 (恒暗井, 不跟方向走) */
   flex: none; width: 44px; height: 44px;
 }
 .amt-ic .ci, .cat-tiles .ti .ci, .cp-ic .ci { width: 100%; height: 100%; display: block; }
                               /* 圆铺满各自的井 (井多大圆多大, 图形随 viewBox 等比) */
-.amt-cat.on .ci { --sel: var(--ic-deep); color: #fff; }
-                              /* 选上类别: 换方向色圆底压白图形 (平时白圆底不描边 —
-                              底色一换即选中, 不再靠边框的隐现说话) */
+.amt-cat.on .ci { color: var(--cc); }
+                              /* 选上类别: 灰线稿亮出本色; 没选时灰线稿配灰字占位 */
 .amt-name { font-size: 17px; color: var(--ink-1); white-space: nowrap;   /* 金额左边的类别名: 调大一号, 配 38px 金额 (暗井白字) */
   overflow: hidden; text-overflow: ellipsis; }
 .amt-name.empty { color: var(--ink-3); }
@@ -109,7 +112,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 }
 .cat-tiles .tile:active .ci { filter: brightness(.82); }   /* 按下: 色块压暗 */
 .cat-tiles .tn { font-size: 11px; font-weight: 500; color: var(--ink-2); }
-.cat-tiles .tile.on .ci { --sel: var(--ic-deep); color: #fff; }   /* 选中: 填色底压白图形 */
+.cat-tiles .tile.on .ci { color: var(--cc); }   /* 选中: 灰线稿亮出本色 (井不换, 颜色即选中) */
 .cat-tiles .tile.on .tn { color: var(--ink-1); font-weight: 600; }   /* 选中格名字点亮白字加粗 */
 .cat-ghost {                     /* 横划跟手的「对面页」: fillChips 预建常驻 sheet 里, JS 按真格子的盒摆位盖上, 松手藏回 */
   position: absolute; margin: 0; pointer-events: none;   /* 贴真页的网格规则照吃 .cat-tiles,
@@ -193,14 +196,14 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 }
 .cp-ic {                      /* 收小一号: 34 方 (主页账目行同一副小面孔 — 列表里
                                 信息密, 大井占地方; 记一笔那排格子才用 52 大井);
-                                圆底在 svg 里 (跟收支方向走) */
+                                圆底在 svg 里 (恒暗井) */
   flex: none; width: 34px; height: 34px;
 }
 .cp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cp-check { flex: none; width: 18px; color: var(--accent); font-weight: 700; }   /* 勾选 = 蓝 (暗底上蓝立得住, 直接用强调色本体) */
 .cp-row.on .cp-name { font-weight: 600; }
 .cp-row.on .cp-check::before { content: "✓"; }
-.cp-row.on .ci { --sel: var(--ic-deep); color: #fff; }   /* 选中: 填色底压白图形 (与格子同款) */
+.cp-row.on .ci { color: var(--cc); }   /* 选中: 灰线稿亮出本色 (与格子同款) */
 .cp-row.cp-solo {                 /* 没小类的大类 (房贷这些自建的): 与大类标题同一副面孔, 点一下直选 */
   padding: 13px 2px; font-size: 15px; font-weight: 600;
 }
