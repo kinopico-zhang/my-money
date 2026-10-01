@@ -1,38 +1,38 @@
 /* bookkeeping-page — bookkeeping 页样式。拆自 bookkeeping.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 :root {
-  color-scheme: light;
-  /* IMG_7694「清新版工作台」的读法 (子代理逐像素实测版): 冰蓝渐变的浅底,
-     卡片是那张带 overdue 字样的统计大卡的浅灰蓝 — 记一笔弹层/选层/备注浮层
-     也是这同一个灰 (用户点名的主色调), 墨字白井, 键盘数字键翻白;
-     全图唯一的强调色 = 荧光黄绿, 只给「选中/可执行」, 压深橄榄字。
-     支出红/收入绿是记账自己的语义色, 压深一档融进冷灰调; 图标圆底另配降饱和的柔档 */
-  --bg: #d9e6f8;                    /* 壳底: 冰蓝渐变的中段 (橡皮筋回弹时露出来的
-                                       底就近取中, 不跳色) */
-  --bg-ink: #2f3c4e;                /* 坐在浅底上的深蓝灰字: 同步条/日子行/哨兵/空态
-                                       (卡片上的字是 ink 系 — 那是灰蓝卡上的墨黑) */
-  --surface: #e0e8f2;               /* 卡面: 浅灰蓝卡 (图里 overdue 那张统计卡的底,
-                                       坐在冰蓝渐变上) */
-  --surface-2: #f4f8fd;             /* 圆钮/图标井: 白胶囊井 (图里白筛选胶囊一族) */
-  --surface-3: #fff;               /* 白面: 键盘数字键 (图里白胶囊一族) */
-  --press: rgba(23,30,42,.08);      /* 按下 = 压暗一层: 浅面上的自然反应 (iOS 键感) */
-  --ink-1: #1f2226;                 /* 主文字: 冷调墨黑 */
-  --ink-2: #4a5866;                 /* 次文字: 蓝灰 */
-  --ink-3: #8a8f98;                 /* 弱文字: 「几点·谁记的」这类辅助行 */
-  --hairline: rgba(31,49,71,.12);   /* 发丝线: 极淡的蓝灰 (不是死灰) */
-  --accent: #ddfb1e;                /* 荧光黄绿 (实测核心值): 今天的胶囊/完成键/
-                                       加号/新增徽标 — 只给「选中/可执行」 */
-  --accent-ink: #5f6e00;            /* 压在荧光黄绿上的深橄榄字 (图里 Pay out now);
-                                       浅底上的勾选/光标也用它 (荧光黄绿看不清) */
-  --dark: #282a2e;                  /* 炭黑: 更新日志选中项/版本徽标/新增徽标的底 */
-  --steel-2: #97afc0;               /* 图里瓷砖那档灰蓝 — 键盘运算键 (浅底键盘里沉一档) */
-  --steel-3: #9bb0bf;               /* 图里页脚带那档 — 键盘 ⌫ 键 (比运算键亮半档) */
-  --green: #18906a;                 /* 收入: 冷调绿压深一档 (浅底上小字也读得清) */
-  --red: #d64953;                   /* 支出: 冷调红 (浅底上小字也读得清) */
-  --icon-red: #c48b8b;              /* 类别图标的淡红: 线稿用 (白圆底上的一层柔色) */
-  --icon-green: #65a291;            /* 类别图标的淡绿 (线稿, 同上) */
-  --icon-tint: #fff;                /* 未选中圆底: 白井 (键盘数字键同档; 红/绿淡底嫌丑, 用户点名) */
-  --icon-red-deep: #b87474;         /* 淡红深一档: 选中填色底用 (白线稿压得住) */
-  --icon-green-deep: #4f9482;       /* 淡绿深一档 (选中填色底) */
+  color-scheme: dark;
+  /* 换装 my-music 同款暗色 (1.5.0, 用户令「配色参考 my music」): 纯黑壳 +
+     iOS 三层灰面 (卡 #1c1c1e / 控件静止 #2c2c2e / 按下·选中 #3a3a3c — 没有东西
+     常驻最亮那档), 白墨三档, 发丝线白 9%。主强调色用户拍板蓝 #3987e5
+     (my-music home 的主按钮/链接/选中色; 不跟 my-music 的红 — 记账里红=支出,
+     界面强调色得让开语义色)。平贴黑底的卡不投影只描边, 浮层才投黑影;
+     按压一律提亮不变暗 (my-music 全仓规矩)。收支红绿在黑底上各提亮一档
+     (my-music 暗底上的销毁红/成功绿), 图标线稿同理; 深档填色底黑白通吃不动 */
+  --bg: #000;                      /* 壳底: 纯黑 (my-music 同款; 橡皮筋回弹也露黑) */
+  --bg-ink: rgba(235,235,245,.85); /* 坐在黑壳上的字: 同步条/日子行/哨兵/空态
+                                       (卡片上的字是 ink 系; 黑壳上比卡片亮半档,
+                                       日历日子数字这类主内容要够亮) */
+  --surface: #1c1c1e;              /* 卡面: iOS 深色抬升灰 (黑底上的卡) */
+  --surface-2: #2c2c2e;            /* 圆钮/图标井: 控件静止档 */
+  --surface-3: #3a3a3c;            /* 按下·选中·嵌套输入档 (键盘数字键也在这档) */
+  --press: rgba(255,255,255,.06);  /* 按下 = 提亮一层: 深面上的自然反应 (iOS 键感) */
+  --ink-1: #f5f5f7;                /* 主文字: Apple 偏白 (不是死白) */
+  --ink-2: rgba(235,235,245,.62);  /* 次文字 */
+  --ink-3: rgba(235,235,245,.32);  /* 弱文字: 「几点·谁记的」这类辅助行 */
+  --hairline: rgba(255,255,255,.09);   /* 发丝线: 行分隔 + 黑底卡的描边 */
+  --accent: #3987e5;               /* 蓝 (my-music home 主行动色): 今天的胶囊/完成键/
+                                       加号/选中态 — 只给「选中/可执行」 */
+  --accent-ink: #fff;              /* 压在蓝上的白字 (my-music 登录钮同款);
+                                       黑底上的光标/勾选不再借它 — 直接用 --accent */
+  --steel-2: #1c1c1e;              /* 键盘运算键 (暗键盘里比数字键沉一档) */
+  --steel-3: #232326;              /* 键盘 ⌫ 键 (沉档与静止档之间的半档) */
+  --green: #5fd47f;                /* 收入: my-music 暗底成功绿 (黑底上小字也读得清) */
+  --red: #e5484d;                  /* 支出: my-music 暗底销毁红 (兼做白字按钮底) */
+  --icon-red: #d18f8f;             /* 类别图标的淡红: 线稿用 (暗圆底上提亮一档) */
+  --icon-green: #7fb5a3;           /* 类别图标的淡绿 (线稿, 同上) */
+  --icon-tint: #2c2c2e;            /* 未选中圆底: 暗井 (控件静止档; 白井在黑底上太炸) */
+  --icon-red-deep: #b87474;        /* 淡红深一档: 选中填色底用 (白线稿压得住) */
+  --icon-green-deep: #4f9482;      /* 淡绿深一档 (选中填色底) */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
@@ -63,16 +63,8 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-/* 壳层底色 (图里那片冰蓝渐变): 顶上最饱和的冰蓝, 往下垂直褪成近白 — 钉死在
-   视口上不跟内容滚 (是环境光, 不是内容)。iOS 不认 body 的
-   background-attachment:fixed, 走固定伪元素; 负 z-index 画在 html 底色
-   之上、一切内容之下 (body 底色让位透明) */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
-    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
-}
+/* 壳就是纯平黑 (my-music 同款): 1.4.0 那层钉在视口上的冰蓝渐变环境光随换装
+   撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
 body {
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
@@ -90,16 +82,16 @@ button, a, summary { touch-action: manipulation; }
 
 /* ---------- 同步状态条 (页面第一行: 顶栏菜单撤了, 这里垫高让开状态栏/刘海;
    独立模式钉在 --top-clear 之下 —— 模糊带里不留常驻内容)。
-   底色是冰蓝渐变, 这行跟浅底走: 白纱底 + 深蓝灰字, 小圆点压深一档 (浅底上才醒) ---------- */
+   这行坐在黑壳上: 磨砂深底 + 白字, 小圆点收绿 (暗底上亮色点才醒) ---------- */
 .sync-strip {
   display: flex; align-items: center; gap: 6px; justify-content: center;
   font-size: 11.5px; color: var(--bg-ink);
   padding: var(--top-clear) 14px 7px;
-  background: rgba(255,255,255,.5); border-bottom: 1px solid rgba(31,49,71,.14);
+  background: rgba(10,10,12,.72); border-bottom: 1px solid rgba(255,255,255,.12);
 }
 .sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-.sync-strip.pending { color: #9a6a1f; }
-.sync-strip.pending .dot { background: #9a6a1f; }
+.sync-strip.pending { color: #f0b13d; }
+.sync-strip.pending .dot { background: #f0b13d; }
 .sync-strip.off .dot { background: var(--bg-ink); }
 
 /* ---------- 日历卡 (主页顶: 月份切换 + 每天收支, 点日子跳到瀑布流那天) ---------- */
@@ -110,10 +102,8 @@ main {
 .cal-card {
   background: var(--surface); border: 1px solid var(--hairline);
   border-radius: 18px; padding: 8px 10px 10px; margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(23,30,42,.08), 0 16px 40px rgba(23,30,42,.16);   /* 近远两层影:
-                                                  近影贴身定形, 远影大而软 — 灰蓝卡
-                                                  越素越靠影子浮起来 (影里带蓝不发死黑) */
-}
+}              /* 平贴黑底的卡不投影 (my-music 全仓规矩): 层次交给发丝线描边 +
+                   比黑壳亮一档的卡面; 影子只留给真浮层 (磨砂胶囊/菜单/浮面板) */
 .cal-head { display: flex; align-items: center; gap: 4px; }
 .cal-head button {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
@@ -141,9 +131,9 @@ main {
 .cal-day .e { color: var(--red); }      /* 每天支出柔红 (与账目行/记一笔同一个调子) */
 .cal-day .i { color: var(--green); }
 .cal-day.today .d { background: var(--accent); color: var(--accent-ink);
-  border-radius: 999px; padding: 0 5px; }   /* 今天 = 荧光黄绿胶囊压深橄榄字 (图里
-                                   Unpaid 那枚选中章 — 全图唯一强调色只给「选中」;
-                                   白描一圈的细线在灰蓝卡上立不住, 胶囊才立得住) */
+  border-radius: 999px; padding: 0 5px; }   /* 今天 = 蓝胶囊压白字 (my-music home
+                                   的选中章同款 — 强调色只给「选中」; 白描一圈的
+                                   细线在深卡上立不住, 胶囊才立得住) */
 .cal-day.blank { min-height: 0; }       /* 月初补位的空格 */
 /* 月尾补位的下月日子: 灰字不可点只管补足六行恒高; 日期数字与真日子同一道槽
    (顶对齐, 三个槽位让给真日子的水平线) */
@@ -191,13 +181,15 @@ main {
                                         (分身是定格快照本就不重排, 再圈一道, 外面
                                         一并少脏) — 帧率 */
   font-size: 12.5px; font-weight: 700; color: var(--ink-1);   /* 磨砂底随卡面淡, 月份/收支提到主文字色 (玻璃上仍读得清) */
-  background: rgba(232,238,245,.8);     /* 磨砂玻璃: 浅灰蓝卡的玻璃底, blur(20) 把底下
-                                        划过的账糊成蓝影透上来; 色值跟卡面同源 — 歇着的
-                                        胶囊与展开的日历同一副材料, 收拢落位不换脸 */
+  background: rgba(44,44,46,.7);     /* 磨砂玻璃: 控件静止档的玻璃底 (my-music 浮动
+                                        件同款色), blur(20) 把底下划过的账糊成深影
+                                        透上来; 色值跟控件档同源 — 歇着的胶囊与
+                                        展开的日历同一副材料, 收拢落位不换脸 */
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--hairline); border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(23,30,42,.08), 0 8px 24px rgba(23,30,42,.15);   /* 与卡同一副两层影 (胶囊小一号, 各层收一档) */
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);   /* 浮层档黑影 (my-music 浮钮/迷你条同款):
+                                        胶囊浮在内容上, 这才轮得到影子说话 */
   visibility: hidden;
 }
 #cal-bar .cb-in {         /* 胶泡里子: ‹ 月份+收支 › — 收拢后段从分身内容交叉淡入
@@ -378,13 +370,12 @@ main {
 
 /* ---------- 账目列表 (按日分组) ---------- */
 .day-group { margin-bottom: 14px; }
-.day-head {          /* 日子行坐在浅底上 (卡外): 深蓝灰字 */
+.day-head {          /* 日子行坐在黑壳上 (卡外): 亮白字 */
   display: flex; justify-content: space-between;
   font-size: 12px; color: var(--bg-ink); padding: 0 4px 6px;
 }
-.entries {                /* 账目卡: 与日历卡同一副两层影 (轻一档 — 铺满一列各自收着点) */
+.entries {                /* 账目卡: 平贴黑底不投影, 发丝线描边 (与日历卡同规矩) */
   background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px;
-  box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13);
   overflow: hidden;       /* 圆角裁住滑出的行身/删除钮 (钮在行内右侧, 不许露角) */
 }
 .entry {                  /* 左滑删除: 行只是裁剪框, 行身 (.sw-body) 与身后的删除钮分层 */
@@ -409,7 +400,7 @@ main {
   opacity: 0; pointer-events: none;
 }
 .entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (拖动中不糊脸) */
-.ci { color: var(--cc); }   /* 类别图标: 平时白圆底 (svg 自带, 不描边) 上坐同系柔色线稿,
+.ci { color: var(--cc); }   /* 类别图标: 平时暗圆底 (svg 自带, 不描边) 上坐同系提亮线稿,
                           选中才翻白坐方向色块上 (stroke=currentColor); 颜色 svg 自带 */
 .entry .cat-dot {      /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
   flex: none; width: 34px; height: 34px;
@@ -445,15 +436,15 @@ main {
    标题+这笔是啥, 取消在上删除在下 (红字), 发丝线隔开; 点遮罩也是取消 ---------- */
 #del-confirm { position: fixed; inset: 0; z-index: 85; }
 #del-confirm[hidden] { display: none; }
-.dc-mask { position: absolute; inset: 0; background: rgba(15,21,32,.45);
+.dc-mask { position: absolute; inset: 0; background: rgba(0,0,0,.5);
   opacity: 0; transition: opacity .2s ease; }
 #del-confirm.on .dc-mask { opacity: 1; }
 .dc-card {
   position: absolute; left: 50%; top: 42%;      /* 比正中高一线 (iOS 警示框的落位) */
   transform: translate(-50%, -50%) scale(1.05);
   width: 272px; background: var(--surface); border-radius: 18px; overflow: hidden;
-  box-shadow: 0 12px 44px rgba(15,21,32,.3);    /* 与主页卡同一副浅灰蓝 (深字压浅卡,
-                                   删除的红字在浅底上才红得起来 — 灰蓝底上红字发闷) */
+  box-shadow: 0 12px 32px rgba(0,0,0,.5);    /* 弹层浮在一切之上 — 菜单档黑影
+                                   (my-music 同款); 卡面发丝线描边收形 */
   opacity: 0; transition: opacity .2s ease, transform .2s ease;
 }
 #del-confirm.on .dc-card { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -463,30 +454,31 @@ main {
 .dc-btn { display: block; width: 100%; padding: 13px 0; font-size: 16px;
   text-align: center; border-top: 1px solid var(--hairline); }
 .dc-btn:active { background: var(--press); }
-#dc-ok { color: #b3273a; font-weight: 600; }   /* 删除钮红字压深一档 (浅灰蓝卡上的销毁位) */
+#dc-ok { color: #ff6961; font-weight: 600; }   /* 删除钮红字提亮一档 (暗卡上的销毁位,
+                                   my-music 暗底错误红同款 — 深红在深面上发闷) */
 
 /* ---------- 记一笔 (悬浮) ---------- */
-/* 右下角一竖排: 顶上统计/设置两枚白井圆钮 (页面级导航, 纯链接), 底下黄绿加号 */
+/* 右下角一竖排: 顶上统计/设置两枚暗井圆钮 (页面级导航, 纯链接), 底下蓝加号 */
 #fab-stack {
   position: fixed; right: 18px;
   bottom: calc(env(safe-area-inset-bottom) + 22px);
   display: flex; flex-direction: column; align-items: center; gap: 14px;
   z-index: 60;                       /* 压得住列表; 记一笔弹层起 (70) 就让位 */
 }
-.quick-btn {                    /* 统计/设置: 白井圆钮坐深蓝灰图形 (弹层头那排圆钮同一副) */
+.quick-btn {                    /* 统计/设置: 暗井圆钮坐次级白图形 (弹层头那排圆钮同一副) */
   width: 46px; height: 46px; border-radius: 50%;
-  background: var(--surface-2); color: #47536b;
+  background: var(--surface-2); color: var(--ink-2);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 18px rgba(23,30,42,.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);   /* 浮钮档黑影 (my-music 底部坞键同款) */
 }
 .quick-btn:active { transform: scale(.94); }
 .quick-btn svg { width: 22px; height: 22px; display: block; }
 #fab {
   width: 54px; height: 54px; border-radius: 50%;
-  background: var(--accent);                   /* 荧光黄绿球压深橄榄加号 (图里 Pay out
-                                    now 那枚按钮 — 全图唯一发光的可执行位) */
+  background: var(--accent);                   /* 蓝球压白加号 (my-music 登录钮
+                                    同一支蓝 — 全页唯一发光的可执行位) */
   color: var(--accent-ink); font-size: 28px; font-weight: 300;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(23,30,42,.32);   /* 深色光晕垫着球 */
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);   /* 黑色光晕垫着球 */
 }
 #fab:active { transform: scale(.94); }

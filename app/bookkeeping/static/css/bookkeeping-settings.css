@@ -1,18 +1,19 @@
-/* bookkeeping-settings — 设置页样式。chrome 与 changelog 页同一副 (冰蓝渐变浅底,
-   毛玻璃顶栏, 浅灰蓝卡 — tokens 同源 bookkeeping-page.css, 子页各带一份)。 */
+/* bookkeeping-settings — 设置页样式。chrome 与 changelog 页同一副 (纯黑壳,
+   毛玻璃顶栏, 深灰卡 — tokens 同源 bookkeeping-page.css, 子页各带一份)。 */
 :root {
-  color-scheme: light;
-  --bg: #d9e6f8;
-  --bg-ink: #2f3c4e;
-  --surface: #e0e8f2;
-  --surface-2: #f4f8fd;
-  --press: rgba(23,30,42,.08);
-  --ink-1: #1f2226;
-  --ink-2: #4a5866;
-  --ink-3: #8a8f98;
-  --hairline: rgba(31,49,71,.12);
-  --nav-bg: rgba(255,255,255,.7);
-  --red: #d64953;          /* 退出登录: 破坏性操作与支出同一个红 */
+  color-scheme: dark;
+  --bg: #000;
+  --bg-ink: rgba(235,235,245,.85);
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --press: rgba(255,255,255,.06);   /* 按下提亮 (page.css 同款) */
+  --ink-1: #f5f5f7;
+  --ink-2: rgba(235,235,245,.62);
+  --ink-3: rgba(235,235,245,.32);
+  --hairline: rgba(255,255,255,.09);
+  --nav-bg: rgba(10,10,12,.72);
+  --accent: #3987e5;      /* 主题身份位 (五份副本同步携带, 本页暂无消费) */
+  --red: #e5484d;          /* 退出登录: 破坏性操作与支出同一个红 */
 }
 /* 顶带下限 (bookkeeping-page.css 同款): iOS 26+ 独立模式的系统磨砂带比安全区深
    一截, 模糊带里不许常驻任何控件 —— 只在中招形态生效 */
@@ -28,12 +29,8 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-body::before {                    /* 壳层底色 (冰蓝渐变, 钉死视口不跟滚 — page.css 同一副) */
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
-    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
-}
+/* 壳就是纯平黑 (my-music 同款, page.css 同一副): 1.4.0 那层钉在视口上的冰蓝渐变
+   环境光随换装撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
 body {
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
@@ -57,7 +54,7 @@ header {
 }
 .nav-row { display: flex; align-items: center; gap: 8px;
            max-width: 640px; width: 100%; margin: 0 auto; }
-.back {                    /* 返回记账页: 白井胶囊 (时间/标签牌同一副) */
+.back {                    /* 返回记账页: 暗井胶囊 (时间/标签牌同一副) */
   display: flex; align-items: center; gap: 1px; font-size: 14px;
   background: var(--surface-2); border-radius: 999px; padding: 5px 12px 5px 8px;
 }
@@ -71,9 +68,8 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
        max-width: 640px; width: 100%; margin: 0 auto;
        display: flex; flex-direction: column; gap: 14px; }
 .card { background: var(--surface); border: 1px solid var(--hairline);
-        border-radius: 14px; overflow: hidden;
-        box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13); }
-        /* 与记账页的账目卡同一副两层影 */
+        border-radius: 14px; overflow: hidden; }
+        /* 平贴黑底的卡不投影, 发丝线描边 (my-music 全仓规矩) */
 .row { display: flex; align-items: center; gap: 10px;
        padding: 14px; font-size: 15px; color: var(--ink-1); }
 .row + .row, .row + a.row { border-top: 1px solid var(--hairline); }

@@ -2,24 +2,24 @@
  * 行样式认「选类别」弹层的两级树 (大类手风琴 + 小类缩进), 外加每行的
  * 色点 (点开调色盘) 与删除钮。 */
 :root {
-  color-scheme: light;
-  --bg: #d9e6f8;
-  --bg-ink: #2f3c4e;
-  --surface: #e0e8f2;
-  --surface-2: #f4f8fd;
-  --press: rgba(23,30,42,.08);
-  --ink-1: #1f2226;
-  --ink-2: #4a5866;
-  --ink-3: #8a8f98;
-  --hairline: rgba(31,49,71,.12);
-  --nav-bg: rgba(255,255,255,.7);
-  --accent: #ddfb1e;
-  --accent-ink: #5f6e00;
-  --red: #d64953;
-  --green: #18906a;
-  --icon-red: #c48b8b;      /* 类别图标线稿的方向色 (page.css 同源, 降饱和档) */
-  --icon-green: #65a291;
-  --icon-tint: #fff;
+  color-scheme: dark;
+  --bg: #000;
+  --bg-ink: rgba(235,235,245,.85);
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --press: rgba(255,255,255,.06);   /* 按下提亮 (page.css 同款) */
+  --ink-1: #f5f5f7;
+  --ink-2: rgba(235,235,245,.62);
+  --ink-3: rgba(235,235,245,.32);
+  --hairline: rgba(255,255,255,.09);
+  --nav-bg: rgba(10,10,12,.72);
+  --accent: #3987e5;
+  --accent-ink: #fff;
+  --red: #e5484d;
+  --green: #5fd47f;
+  --icon-red: #d18f8f;      /* 类别图标线稿的方向色 (page.css 同源, 暗底提亮档) */
+  --icon-green: #7fb5a3;
+  --icon-tint: #2c2c2e;
 }
 /* 顶带下限 (bookkeeping-page.css 同款): iOS 26+ 独立模式的系统磨砂带比安全区深
    一截, 模糊带里不许常驻任何控件 —— 只在中招形态生效 */
@@ -35,12 +35,8 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-body::before {                    /* 壳层底色 (冰蓝渐变, 钉死视口不跟滚 — page.css 同一副) */
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
-    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
-}
+/* 壳就是纯平黑 (my-music 同款, page.css 同一副): 1.4.0 那层钉在视口上的冰蓝渐变
+   环境光随换装撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
 body {
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
@@ -64,7 +60,7 @@ header {
 }
 .nav-row { display: flex; align-items: center; gap: 8px;
            max-width: 640px; width: 100%; margin: 0 auto; }
-.back {                    /* 返回设置页: 白井胶囊 (时间/标签牌同一副) */
+.back {                    /* 返回设置页: 暗井胶囊 (时间/标签牌同一副) */
   display: flex; align-items: center; gap: 1px; font-size: 14px;
   background: var(--surface-2); border-radius: 999px; padding: 5px 12px 5px 8px;
 }
@@ -78,12 +74,12 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
        max-width: 640px; width: 100%; margin: 0 auto;
        display: flex; flex-direction: column; gap: 14px; }
 .card { background: var(--surface); border: 1px solid var(--hairline);
-        border-radius: 14px; overflow: hidden;
-        box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13); }
+        border-radius: 14px; overflow: hidden; }
+        /* 平贴黑底的卡不投影, 发丝线描边 (my-music 全仓规矩) */
 .state { padding: 40px 20px; text-align: center; color: var(--bg-ink); font-size: 14px; }
 .spin {
   width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 12px;
-  border: 3px solid rgba(31,49,71,.22); border-top-color: #282a2e;
+  border: 3px solid rgba(255,255,255,.18); border-top-color: var(--accent);   /* 旋转头 = 蓝 (my-music 同款) */
   animation: rot .8s linear infinite;
 }
 @keyframes rot { to { transform: rotate(360deg); } }
@@ -92,9 +88,9 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
   font-size: 14px; font-weight: 600; background: var(--accent); color: var(--accent-ink);
 }
 .msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px;
-       background: rgba(214,73,83,.1); color: var(--red); }
+       background: rgba(229,72,77,.12); color: var(--red); }
 
-/* 收支两页签 (记一笔的标签页同一副: 选中的墨字 + 荧光黄绿短线) */
+/* 收支两页签 (记一笔的标签页同一副: 选中的白字 + 蓝短线) */
 .kind-tabs { display: flex; gap: 22px; padding: 0 4px; }
 .kind-tabs button { position: relative; padding: 3px 1px 7px;
                     font-size: 16px; color: var(--ink-3); }
@@ -104,7 +100,7 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
   height: 2.5px; border-radius: 2px; background: var(--accent);
 }
 
-/* 添加行: 归属 + 名字 + 添加 (黄绿小钮 — 加标签那枚同一副) */
+/* 添加行: 归属 + 名字 + 添加 (蓝小钮 — 加标签那枚同一副) */
 .add-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
 .add-bar select, .add-bar input {
   min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px;
@@ -153,7 +149,7 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
 .dot {
   flex: none; width: 22px; height: 22px; border-radius: 50%;
   background: var(--dot, var(--icon-red));
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.85);   /* 白描一圈: 浅色也看得见 */
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.85);   /* 白描一圈: 暗盘上深色票也看得见 */
 }
 .dot:active { transform: scale(.9); }
 
