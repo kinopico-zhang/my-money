@@ -1,24 +1,23 @@
 /* bookkeeping-changelog — changelog 页样式。拆自 changelog.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 :root {
-  color-scheme: light;
-  /* IMG_7694「清新版工作台」同一副 (bookkeeping-page.css 同源, 子代理逐像素实测):
-     冰蓝渐变的浅底, 浅灰蓝卡 (overdue 统计卡), 白胶囊井; 强调只有荧光黄绿一处 */
-  --bg: #d9e6f8;
-  --bg-ink: #2f3c4e;        /* 坐在浅底上的深蓝灰字 (加载/出错态) */
-  --surface: #e0e8f2;        /* 与 page.css 同一副: 浅灰蓝卡 */
-  --surface-2: #f4f8fd;      /* 白胶囊井 */
-  --surface-3: #fff;      /* (page.css 同款) */
-  --press: rgba(23,30,42,.08);   /* 按下压暗 (page.css 同款) */
-  --ink-1: #1f2226;
-  --ink-2: #4a5866;
-  --ink-3: #8a8f98;          /* 与 page.css 同步 */
-  --hairline: rgba(31,49,71,.12);
-  --nav-bg: rgba(255,255,255,.7);
-  --accent: #ddfb1e;         /* 荧光黄绿 (k-add 徽标的字) */
-  --accent-ink: #5f6e00;     /* 压在荧光黄绿上的深橄榄字 (重试钮) */
-  --dark: #282a2e;           /* 炭黑 (选中菜单项/版本号 — k-add 徽标的底) */
-  --green: #18906a;          /* 修复徽标: 与 page.css 收入同一个冷调绿 */
-  --red: #d64953;          /* 退出登录: 破坏性操作与支出同一个红 */
+  color-scheme: dark;
+  /* my-music changelog-page.css 同一副暗色 (逐字对齐): 纯黑壳, 深灰卡, 白墨字;
+     版本徽标/当前页菜单项 = 浅蓝 #7db3f0 (蓝压暗底时小字的提亮档) */
+  --bg: #000;
+  --bg-ink: rgba(235,235,245,.85);   /* 坐在黑壳上的白字 (加载/出错态) */
+  --surface: #1c1c1e;        /* 与 page.css 同一副: 深灰卡 */
+  --surface-2: #2c2c2e;      /* 控件静止档 (胶囊井) */
+  --surface-3: #3a3a3c;      /* 按下/选中档 (菜单项按压) */
+  --press: rgba(255,255,255,.06);   /* 按下提亮 (page.css 同款) */
+  --ink-1: #f5f5f7;
+  --ink-2: rgba(235,235,245,.62);
+  --ink-3: rgba(235,235,245,.32);   /* 与 page.css 同步 */
+  --hairline: rgba(255,255,255,.09);
+  --nav-bg: rgba(10,10,12,.72);
+  --accent: #3987e5;         /* 蓝 (重试钮/旋转头 — my-music 主按钮同款) */
+  --accent-ink: #fff;        /* 压在蓝上的白字 (重试钮) */
+  --green: #5fd47f;          /* 收入同一个绿 (k-fix 徽标文字用提亮档) */
+  --red: #e5484d;          /* 退出登录: 破坏性操作与支出同一个红 */
 }
 /* 顶带下限 (bookkeeping-page.css 同款, my-music music-base.css 立的规矩):
    iOS 26+ 主屏独立模式的系统磨砂带比安全区深一截, 模糊带里不许常驻
@@ -38,14 +37,8 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-/* 壳层底色 (bookkeeping-page.css 同一副: 冰蓝渐变, 顶上那截最蓝, 往下渐白),
-   钉死视口不跟滚 */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(95% 50% at 86% -12%, rgba(255,255,255,.6), transparent 60%),
-    linear-gradient(180deg, #bfd7fb 0%, #d3e4fd 34%, #e9f2fe 66%, #fbfcfe 100%);
-}
+/* 壳就是纯平黑 (my-music 同款, page.css 同一副): 1.4.0 那层钉在视口上的冰蓝渐变
+   环境光随换装撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
 body {
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
@@ -80,24 +73,24 @@ header {
 }
 .nav-menu summary::-webkit-details-marker { display: none; }
 .nav-menu summary:active { opacity: .7; }
-.nav-menu[open] summary { background: var(--press); }
+.nav-menu[open] summary { background: var(--surface-3); }
 .nav-menu .chev { transition: transform .18s; }
 .nav-menu[open] .chev { transform: rotate(180deg); }
 .nav-menu .menu {
   position: absolute; top: calc(100% + 8px); right: 0; min-width: 128px; z-index: 30;
   display: flex; flex-direction: column; padding: 5px;
-  background: rgba(255,255,255,.95);
+  background: rgba(44,44,46,.88);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--hairline); border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(23,30,42,.3);
+  box-shadow: 0 12px 32px rgba(0,0,0,.5);   /* 真浮层才投黑影 (my-music 菜单档) */
 }
 .nav-menu .menu a {
   font-size: 14px; color: var(--ink-1); text-decoration: none;
   padding: 9px 12px; border-radius: 10px; white-space: nowrap;
 }
-.nav-menu .menu a:active { background: var(--press); }
-.nav-menu .menu a.on { color: var(--dark); font-weight: 600; }   /* 当前页菜单项: 墨黑点亮 (图里不拿彩色当导航色) */
+.nav-menu .menu a:active { background: var(--surface-3); }
+.nav-menu .menu a.on { color: #7db3f0; }   /* 当前页菜单项: 浅蓝点亮 (my-music 同款 — 蓝压暗底的提亮档, 不拿彩色当导航色) */
 .brand-menu { margin-left: 0; }
 .brand-menu summary {
   font-size: 20px; font-weight: 700; letter-spacing: -.3px;
@@ -113,7 +106,7 @@ header {
   font-size: 14px; color: var(--ink-1); text-align: left;
   padding: 9px 12px; border-radius: 10px; white-space: nowrap;
 }
-.nav-menu .menu button:active { background: var(--press); }
+.nav-menu .menu button:active { background: var(--surface-3); }
 @media (max-width: 479px) {
   header { position: relative; }
   .nav-menu { position: static; }
@@ -124,15 +117,14 @@ header {
 main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
        max-width: 640px; width: 100%; margin: 0 auto; }
 #entries { background: var(--surface); border: 1px solid var(--hairline);
-           border-radius: 14px; overflow: hidden;
-           box-shadow: 0 2px 6px rgba(23,30,42,.07), 0 12px 32px rgba(23,30,42,.13); }
-           /* 与 page.css 的账目卡同一副两层影 */
+           border-radius: 14px; overflow: hidden; }
+           /* 平贴黑底的卡不投影, 发丝线描边 (my-music 全仓规矩) */
 .ver { padding: 12px 14px; }
 .ver + .ver { border-top: 1px solid var(--hairline); }
 .v-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
 .v-badge {
   font-family: ui-monospace, Menlo, monospace;
-  font-size: 15px; font-weight: 600; color: var(--dark);
+  font-size: 15px; font-weight: 600; color: #7db3f0;
   font-variant-numeric: tabular-nums;
 }
 .v-date {
@@ -146,15 +138,15 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
 }
 .k { flex: none; margin-top: 2px; font-size: 10.5px; font-weight: 600;
      padding: 1.5px 7px; border-radius: 6px; white-space: nowrap; }
-.k-add { color: var(--accent); background: var(--dark); }   /* 新增 = 炭黑底上荧光黄绿的字 (那枚发光徽标) */
-.k-imp { color: #a06a15; background: rgba(224,138,60,.15); }   /* 改进 = 琥珀 (参考图里那颗橙齿轮) */
-.k-fix { color: var(--green); background: rgba(24,144,106,.12); }   /* 修复 = 冷调绿 */
+.k-add { color: #7db3f0; background: rgba(57,135,229,.18); }   /* 新增 = 半透蓝底浅蓝字 (my-music 同款徽标) */
+.k-imp { color: #f0b13d; background: rgba(224,138,60,.16); }   /* 改进 = 琥珀 (my-music 同款) */
+.k-fix { color: #6fce8e; background: rgba(31,163,73,.16); }   /* 修复 = 提亮绿 (my-music 同款) */
 .t { flex: 1; min-width: 0; }
 
 .state { padding: 40px 20px; text-align: center; color: var(--bg-ink); font-size: 14px; }
 .spin {
   width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 12px;
-  border: 3px solid rgba(31,49,71,.22); border-top-color: var(--dark);
+  border: 3px solid rgba(255,255,255,.18); border-top-color: var(--accent);   /* 旋转头 = 蓝 (my-music 同款) */
   animation: rot .8s linear infinite;
 }
 @keyframes rot { to { transform: rotate(360deg); } }

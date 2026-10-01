@@ -180,8 +180,8 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert ".cp-row.on .ci { --sel: var(--ic-deep); color: #fff; }" in css \
         and ".amt-cat.on .ci { --sel: var(--ic-deep); color: #fff; }" in css
     #    ↑ 选中类别换深一档圆底压白图形 (--ic-deep 深一档, 白线稿压得住; 平时淡色圆底不描边)
-    assert "--icon-tint: #fff;" in css \
-        and ".ci-ring" not in css   # 未选中圆底 = 白井一枚 (红/绿淡底撤), 边框规则整个撤掉
+    assert "--icon-tint: #2c2c2e;" in css \
+        and ".ci-ring" not in css   # 未选中圆底 = 暗井一枚 (红/绿淡底撤), 边框规则整个撤掉
     assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
     assert ".cal-day .e { color: var(--red); }" in css   # 日历每天支出柔红
     assert "font-weight: 650; font-variant-numeric: tabular-nums;\n  color: var(--red);" in css

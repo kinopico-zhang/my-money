@@ -11,7 +11,7 @@
   padding-bottom: 6px;
   background: var(--surface); border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--hairline);
-  box-shadow: 0 -12px 40px rgba(23,30,42,.25);   /* 浅色浮层压柔影 (底下垫着暗化的页面) */
+  box-shadow: 0 -12px 40px rgba(0,0,0,.5);   /* 暗色浮层压黑影 (底下垫着压暗的页面) */
   z-index: 71; transform: translateY(102%); transition: transform .25s;
   max-width: 560px; margin: 0 auto; padding-left: 18px; padding-right: 18px; padding-top: 8px;
   max-height: calc(var(--shell-h, 100dvh) - 24px); overflow-y: auto;   /* 小屏整层滚, 键盘吸底不动 (dvh 赖账时吃 --shell-h 真高) */
@@ -19,13 +19,13 @@
   overscroll-behavior-y: contain;     /* 日期/备注行超宽 7px 就能整层左右拖 */
 }
 #sheet.on { transform: translateY(0); }
-/* 记一笔弹层 = 主页卡片同一个浅灰蓝 (用户点名: 弹层主色调就是金额键盘数字键那个灰) —
-   从屏幕底下升上来的一张大卡, 墨字白井, 与主页一副设计语言。
-   token 全吃页面的 (深墨字/白井/深发丝线 — 不再就地改值), 键盘数字键跟着翻白
-   (页面 --surface-3), 选层 (.pick .cp-panel) / 备注浮层 (#note-kb) 同一副身 */
-/* 方向配色跟收支走 (标签页点选/左右划都换): 支出柔红 (删除钮同款), 收入柔绿 (主页收入同款),
-   都不是纯红纯绿; 金额大字吃 --kind (挂 body 上), 类别图标线稿走行内 --cc (catColor
-   给的淡色档), 未选中圆底是白井 (--icon-tint), 选中填色底走 --ic-deep (深一档, 白线稿压得住) */
+/* 记一笔弹层 = 主页卡同一张深灰面 (iOS 深色抬升灰) — 从屏幕底下升上来的一张大卡,
+   白字暗井, 与主页一副设计语言。token 全吃页面的 (白墨字/暗井/白发丝线 —
+   不再就地改值), 键盘数字键跟着页面 --surface-3 走,
+   选层 (.pick .cp-panel) / 备注浮层 (#note-kb) 同一副身 */
+/* 方向配色跟收支走 (标签页点选/左右划都换): 支出红 (删除钮同款), 收入绿 (主页收入同款),
+   金额大字吃 --kind (挂 body 上), 类别图标线稿走行内 --cc (catColor
+   给的提亮档), 未选中圆底是暗井 (--icon-tint), 选中填色底走 --ic-deep (深一档, 白线稿压得住) */
 body[data-kind="expense"] { --kind: var(--red); --ic-deep: var(--icon-red-deep); }
 body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-deep); }
 /* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字/类别图标圆底 —
@@ -38,26 +38,26 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 @keyframes kind-swap-l { from { transform: translateX(46px); opacity: 0; } }
 @keyframes kind-swap-r { from { transform: translateX(-46px); opacity: 0; } }
 .grab-zone { padding: 7px 0 3px; margin: 0 0 8px; touch-action: none; cursor: pointer; }
-.grab { width: 36px; height: 4px; border-radius: 2px; background: rgba(31,49,71,.22); margin: 0 auto; }   /* 浅灰面板上的把手: 深色半透一档才摸得着 */
+.grab { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.22); margin: 0 auto; }   /* 深灰面板上的把手: 白色半透一档才摸得着 */
 /* 头部: 左边收入/支出标签页 (不是按钮, 低占位), 右边删除/关闭圆钮 */
 .sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .tabs { flex: 1; display: flex; gap: 22px; min-width: 0; }
 .tabs button { padding: 3px 1px 7px; font-size: 16px; color: var(--ink-3); position: relative; }
-.tabs button.on { color: var(--ink-1); font-weight: 600; }   /* 选中标签: 墨字点亮 (浅底上字色最深即最亮) */
-.tabs button.on::after {            /* 选中标签: 底部一道荧光黄绿短线 (唯一强调色给「选中」) */
+.tabs button.on { color: var(--ink-1); font-weight: 600; }   /* 选中标签: 白字点亮 (暗底上字色最白即最亮) */
+.tabs button.on::after {            /* 选中标签: 底部一道蓝短线 (唯一强调色给「选中」) */
   content: ""; position: absolute; left: 0; right: 0; bottom: 0;
   height: 2.5px; border-radius: 2px; background: var(--accent);
 }
 .head-btns { display: flex; gap: 8px; }
 .head-btn {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
-  background: var(--surface-2); color: #47536b;   /* 圆钮 = 白井坐深蓝灰图形 */
+  background: var(--surface-2); color: var(--ink-2);   /* 圆钮 = 暗井坐次级白图形 */
   display: flex; align-items: center; justify-content: center;
 }
 .head-btn svg { width: 14px; height: 14px; display: block; }
 #sheet-del { color: var(--red); }
 /* 金额行: 左边当前类别牌 (色块图标+名字, 点开弹类别树), 金额大字靠右 — 整行坐进
-   比面板更白一档的圆角井 (页面白井同一档, 与时间/标签牌一致) */
+   比面板更亮一档的圆角井 (页面控件静止档, 与时间/标签牌一致) */
 .amt-line {
   display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
   background: var(--surface-2); border-radius: 14px; padding: 10px 14px;
@@ -76,11 +76,11 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .amt-cat.on .ci { --sel: var(--ic-deep); color: #fff; }
                               /* 选上类别: 换方向色圆底压白图形 (平时白圆底不描边 —
                               底色一换即选中, 不再靠边框的隐现说话) */
-.amt-name { font-size: 17px; color: #3e4650; white-space: nowrap;   /* 金额左边的类别名: 调大一号, 配 38px 金额 (浅井深字) */
+.amt-name { font-size: 17px; color: var(--ink-1); white-space: nowrap;   /* 金额左边的类别名: 调大一号, 配 38px 金额 (暗井白字) */
   overflow: hidden; text-overflow: ellipsis; }
-.amt-name.empty { color: #5c6470; }
+.amt-name.empty { color: var(--ink-3); }
 .amt-line .amt-eq {           /* 四则表达式的实时结果 (= 20.5) */
-  flex: none; font-size: 13.5px; font-weight: 600; color: #5c6470;
+  flex: none; font-size: 13.5px; font-weight: 600; color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .amt-line.shake { animation: amt-shake .3s; }
@@ -91,7 +91,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 }
 .amt-line input {
   flex: 1 0 90px; min-width: 0; border: 0; background: none; outline: 0;
-  color: var(--kind); text-align: right;   /* 金额大字跟方向走: 支出红/收入绿 (白井上
+  color: var(--kind); text-align: right;   /* 金额大字跟方向走: 支出红/收入绿 (暗井上
                                    立得住, 跟主页账目行同一个色路) */
   font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
@@ -107,7 +107,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .cat-tiles .tile:active .ci { filter: brightness(.82); }   /* 按下: 色块压暗 */
 .cat-tiles .tn { font-size: 11px; font-weight: 500; color: var(--ink-2); }
 .cat-tiles .tile.on .ci { --sel: var(--ic-deep); color: #fff; }   /* 选中: 填色底压白图形 */
-.cat-tiles .tile.on .tn { color: var(--ink-1); font-weight: 600; }   /* 选中格名字点亮墨黑加粗 */
+.cat-tiles .tile.on .tn { color: var(--ink-1); font-weight: 600; }   /* 选中格名字点亮白字加粗 */
 .cat-ghost {                     /* 横划跟手的「对面页」: JS 按真格子的盒摆位盖上, 松手即撤 */
   position: absolute; margin: 0; pointer-events: none;   /* 贴真页的网格规则照吃 .cat-tiles,
   margin:0 抵掉底边距 (绝对定位认 sheet 的盒), 出屏那截由弹层 overflow-x:hidden 裁掉 */
@@ -127,13 +127,13 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .row2.one { gap: 8px; }
 .row2.one .field { padding: 5px 11px; font-size: 12px; }
 .row2.one .field.when { flex: 0 1 auto; }    /* 时间牌按内容让位, 标签牌摊余下的 */
-.when-t { font-size: 12.5px; color: #3e4650; font-variant-numeric: tabular-nums; white-space: nowrap; }   /* 时间/标签牌 = 白井坐深字 (井随 --surface-2) */
+.when-t { font-size: 12.5px; color: var(--ink-1); font-variant-numeric: tabular-nums; white-space: nowrap; }   /* 时间/标签牌 = 暗井坐白字 (井随 --surface-2) */
 .field.when:active { background: var(--press); }
-.tag-t {                       /* 标签牌: 已选的空格并排, 放不下省略号收尾 (浅井深字) */
-  font-size: 12.5px; color: #3e4650; min-width: 0;
+.tag-t {                       /* 标签牌: 已选的空格并排, 放不下省略号收尾 (暗井白字) */
+  font-size: 12.5px; color: var(--ink-1); min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.tag-t.empty { color: #5c6470; }
+.tag-t.empty { color: var(--ink-3); }
 .field.tags:active { background: var(--press); }
 /* ---------- 底部弹选层 (类别树 / 时间拨轮 / 标签列表共用骨架, 盖在记一笔弹层 71 之上) ---------- */
 .pick { position: fixed; inset: 0; z-index: 80; }
@@ -150,7 +150,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
   border-top: 1px solid var(--hairline);
   transform: translateY(102%); transition: transform .25s;
   padding: 8px 18px calc(env(safe-area-inset-bottom) + 10px);
-  box-shadow: 0 -12px 40px rgba(23,30,42,.3);   /* 选层压重一档的影 (浮在记一笔之上) */
+  box-shadow: 0 -12px 40px rgba(0,0,0,.5);   /* 选层压重一档的黑影 (浮在记一笔之上) */
 }
 .pick.on .cp-panel { transform: translateY(0); }
 .cp-head {
@@ -160,7 +160,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 }
 .cp-x {
   width: 30px; height: 30px; border-radius: 50%;
-  background: var(--surface-2); color: #47536b;   /* 圆钮 = 白井坐深蓝灰图形 */
+  background: var(--surface-2); color: var(--ink-2);   /* 圆钮 = 暗井坐次级白图形 */
   display: flex; align-items: center; justify-content: center;
 }
 .cp-x svg { width: 14px; height: 14px; display: block; }
@@ -193,7 +193,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
   flex: none; width: 34px; height: 34px;
 }
 .cp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cp-check { flex: none; width: 18px; color: var(--accent-ink); font-weight: 700; }   /* 勾选 = 深橄榄 (浅底上荧光黄绿看不清, 用压在黄绿上的那个深字色) */
+.cp-check { flex: none; width: 18px; color: var(--accent); font-weight: 700; }   /* 勾选 = 蓝 (暗底上蓝立得住, 直接用强调色本体) */
 .cp-row.on .cp-name { font-weight: 600; }
 .cp-row.on .cp-check::before { content: "✓"; }
 .cp-row.on .ci { --sel: var(--ic-deep); color: #fff; }   /* 选中: 填色底压白图形 (与格子同款) */
@@ -224,10 +224,10 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
   scroll-snap-align: center; font-size: 15px; color: var(--ink-1);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.wp-it.today {                  /* 今天 = 拨轮的锚点: 深橄榄加粗 (浅底上荧光黄绿压得住的字色), 翻轮一眼找得着 */
-  color: var(--accent-ink); font-weight: 700;
+.wp-it.today {                  /* 今天 = 拨轮的锚点: 蓝加粗 (暗底上蓝压得住的字色), 翻轮一眼找得着 */
+  color: var(--accent); font-weight: 700;
 }
-.wp-it.today::before {          /* 打头一枚黄绿小点 — 与日历今天的黄绿胶囊同一个语言 (随整格一起转) */
+.wp-it.today::before {          /* 打头一枚蓝小点 — 与日历今天的蓝胶囊同一个语言 (随整格一起转) */
   content: ""; flex: none; width: 5px; height: 5px; border-radius: 50%;
   background: var(--accent); margin-right: 5px;
 }
@@ -235,7 +235,7 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .wp-band {                                /* 居中高亮带: 拨到哪格哪格入带 */
   position: absolute; left: 18px; right: 18px; top: 50%; height: 40px;
   transform: translateY(-50%); border-radius: 10px; pointer-events: none;
-  background: rgba(255,255,255,.6);   /* 高亮带: 浅底上一道白 (拨到哪格哪格入带) */
+  background: rgba(255,255,255,.12);   /* 高亮带: 暗底上一道白 (拨到哪格哪格入带) */
   border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
 }
 
@@ -247,10 +247,10 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 .tp-new input {
   flex: 1; min-width: 0; border: 0; outline: 0;
   background: var(--surface-2); border-radius: 999px; padding: 8px 14px;
-  color: #3e4650; font: inherit; font-size: 16px; caret-color: var(--accent-ink);   /* 16px: iOS 聚焦不放大; 白井深字; 光标 = 深橄榄 (浅底上荧光黄绿看不清) */
+  color: var(--ink-1); font: inherit; font-size: 16px; caret-color: var(--accent);   /* 16px: iOS 聚焦不放大; 暗井白字; 光标 = 蓝 (my-music 登录页同款) */
 }
-.tp-new input::placeholder { color: #5c6470; }
-.tp-new button {                       /* 「添加」= 荧光黄绿按钮压深橄榄字 (图里 Pay out now) */
+.tp-new input::placeholder { color: var(--ink-3); }
+.tp-new button {                       /* 「添加」= 蓝按钮压白字 (图里 Pay out now) */
   flex: none; padding: 0 16px; border-radius: 999px;
   background: var(--accent); color: var(--accent-ink); font-size: 13px; font-weight: 600;
 }
@@ -275,6 +275,6 @@ body[data-kind="income"] { --kind: var(--green); --ic-deep: var(--icon-green-dee
 }
 #note-kb input {
   flex: 1; min-width: 0; border: 0; background: none; outline: 0;
-  color: var(--ink-1); font: inherit; font-size: 16px; caret-color: var(--accent-ink);
+  color: var(--ink-1); font: inherit; font-size: 16px; caret-color: var(--accent);   /* 光标 = 蓝 (my-music 同款) */
 }
 #note-kb input::placeholder { color: var(--ink-3); }

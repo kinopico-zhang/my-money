@@ -749,7 +749,7 @@ function calFloatOpen() {         // 点胶囊: 就地展开成悬浮日历面�
                                   // (大投影跟着尺寸逐帧重画最吃帧率), 弹簧到位这一下再亮
   bar.style.transform = "none";   // 展开期不吃样式表的 translateX 居中 (与接管同款)
   calFloatTween(0, () => {        // 展开落位: 面板这张脸浮起来了, 影子这才上 (静止的
-    calSkin.style.boxShadow = "0 2px 6px rgba(23,30,42,.08), 0 16px 40px rgba(23,30,42,.16)";   // 只画一回, 与日历卡同一副 — 挂皮肤层 (形变期壳不画自己)
+    calSkin.style.boxShadow = "0 8px 24px rgba(0,0,0,.45)";   // 只画一回, 与 #cal-bar 浮层影同一副 (暗色浮层黑影档) — 挂皮肤层 (形变期壳不画自己)
   });
 }
 

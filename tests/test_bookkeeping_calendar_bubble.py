@@ -36,8 +36,7 @@ def test_bookkeeping_calendar_float_panel():
         and 'bar.classList.add("morph");' in render
     assert 'calSkin.style.boxShadow = "none";' in render \
         and "calFloatTween(0, () => {" in render \
-        and 'calSkin.style.boxShadow = "0 2px 6px rgba(23,30,42,.08), ' \
-           '0 16px 40px rgba(23,30,42,.16)";' in render
+        and 'calSkin.style.boxShadow = "0 8px 24px rgba(0,0,0,.45)";' in render
     # 收回: 先摘牌 (弹簧路上 calSync 不再二连收), 落位时亮的那副影子先歇, 再弹
     # 到 p=1; 缩到头的收尾 (calDockOrReturn) — 真身滚回眼前了直接交还 (不闪双
     # 日历), 没到就歇进胶囊位 (几何交还样式表); 滚动收拢不点弹簧 (缩放跟手),
