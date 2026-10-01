@@ -14,7 +14,9 @@ def test_swipe_follows_finger():
     """跟手三件套: 定轴门槛 30→10px (原死区 = 整程落后手指一指节才起跟);
     拖动元素上合成层 (逐帧 translateX 不再主线程重绘 — 抖动的主源);
     对面页影子由 fillChips 预建 (原先定轴那一刻 innerHTML 十几枚 SVG,
-    卡一帧 = 起步一顿), 显隐走 hidden 而非建/撤。"""
+    卡一帧 = 起步一顿), 显隐走 hidden 而非建/撤。落定滑翔: 换页时真页
+    顺划向退出与影子刚性首尾相接 (反向飞会在收尾把旧页戳进弹层左缘
+    18px padding 条 — overflow 只裁到 padding 盒)。"""
     assert "Math.abs(dx) > 10" in _JS and "Math.abs(dx) > 30" not in _JS
     assert "will-change: transform" in _SHEET_CSS    # .cat-tiles 一处声明,
     #   影子页同用该类跟着吃到 (display:grid 会盖掉 hidden, css 补一条规则)
@@ -25,6 +27,11 @@ def test_swipe_follows_finger():
     assert "catGhost.hidden = false" in _JS          # 定轴显形 (摆位先行)
     assert "hidden = true" in _JS                    # 松手/中断只藏不撤
     assert 'tiles.style.transition = "none";' in _JS  # 定轴置一次, 不逐帧重写
+    assert "go ? d.dir * d.w : 0" in _JS       # 换页滑翔: 真页顺划向退出, 与
+    #   影子同速同向全程首尾相接; 原先反向飞, 收尾把旧页右缘戳进弹层左缘
+    #   padding 条 (2026-10-02 用户报「收入类别的左边短暂出现部分支出类别」)
+    assert "go ? -d.dir * d.w" not in _JS      # 反向退出的老路 (影子弹回侧的
+    #   `go ? 0 : -d.dir * d.w` 是它自己的, 不相干)
 
 
 def test_category_icon_colors_dark():
