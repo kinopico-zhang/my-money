@@ -10,9 +10,9 @@ from app.bookkeeping import changelog
 def test_versions_wellformed():
     """独立版本线从 1.0.0 起; 每版字段齐全, 文案是用户视角的一句话。"""
     vs = changelog.entries()
-    assert [v.version for v in vs] == ["1.6.0", "1.5.2", "1.5.1", "1.5.0", "1.4.0",
-                                       "1.3.1", "1.3.0", "1.2.0", "1.1.0", "1.0.1",
-                                       "1.0.0"]
+    assert [v.version for v in vs] == ["1.6.1", "1.6.0", "1.5.2", "1.5.1", "1.5.0",
+                                       "1.4.0", "1.3.1", "1.3.0", "1.2.0", "1.1.0",
+                                       "1.0.1", "1.0.0"]
     assert vs[0].date == "2026-10-02"
     kinds = {it.kind for it in vs[0].items}
     assert kinds <= {"新增", "改进", "修复"}   # 合并批次 (单功能批次不硬凑修复)
@@ -23,7 +23,9 @@ def test_versions_wellformed():
             assert it.kind in ("新增", "改进", "修复")
             assert len(it.text) >= 4
             assert "api/" not in it.text and "http" not in it.text
-    assert vs[0].items[0].kind in ("新增", "改进")   # 批头条目是主打 (打磨批首条也是改进)
+    assert kinds == {"修复"} or vs[0].items[0].kind in ("新增", "改进")
+    #    ↑ 批头条目是主打 (打磨批首条也是改进); 纯修复小版本 (1.6.1 图标灰压平)
+    #    整批只有修复, 头条就是修复, 不硬凑改进
     assert "My Tesla" not in " ".join(it.text for v in vs for it in v.items)
 
 
@@ -36,7 +38,9 @@ def test_money_changelog_entries_endpoint(auth):
         assert e["date"] == v.date
         assert e["items"] == [{"kind": it.kind, "text": it.text}
                               for it in v.items]
-    assert es[0]["items"][0]["kind"] in ("新增", "改进")   # 批头条目是主打
+    k0 = {i["kind"] for i in es[0]["items"]}
+    assert k0 == {"修复"} or es[0]["items"][0]["kind"] in ("新增", "改进")
+    #   批头条目是主打; 纯修复小版本 (1.6.1 图标灰压平) 整批只有修复, 不硬凑改进
 
 
 # ---------------------------------------------------------------- 页面

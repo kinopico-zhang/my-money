@@ -69,8 +69,7 @@ def test_categories_api_requires_login(usersdb):
 
 def test_bookkeeping_page_has_amount_keyboard():
     """金额键盘 (常驻吸底 iOS 扁平风): 右列 ⌫/完成 两枚大键, 完成就是保存
-    (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框,
-    只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 5×3 热度排
+    (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框, 只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 5×3 热度排
     (时间窗内频率倒排 → 窗外 LRU → 没记过的树序垫底; 没选类别时没写备注按钟点预选餐段)
     (全部类别点「选类别」弹类别树手风琴选层 (大类标题带图标), 没子类的大类带图标铺成一级行直选),
     图标圆底平时暗井, 线稿未选中灰、选中翻本色圆底压白线稿 (1.5.2 改款); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
@@ -196,6 +195,6 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert '<body data-kind="expense">' in html  # 方向配色挂 body (默认支出)
     assert ".cat-tiles.swap-l { animation: kind-swap-l .3s ease; }" in css
     #    ↑ 左右切换: 类别格顺着划的方向滑入 (去支出从右进/去收入从左进)
-    assert ".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci" \
-           " { transition: color .3s ease; color: var(--ink-2); }" in css
-    #    ↑ 弹层默认脸 = 灰线稿 (.on 翻彩色圆底压白线稿已在前文钉; 圆底换色另有 circle 过渡)
+    assert (".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; "
+             "color: color-mix(in srgb, #ebebf5 62%, var(--icon-tint)); }") in css
+    #    ↑ 弹层默认脸灰线稿 1.6.1 起不透明 (62% 白压平在井底上): 半透明灰交叉处叠亮

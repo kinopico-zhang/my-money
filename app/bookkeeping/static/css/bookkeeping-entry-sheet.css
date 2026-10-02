@@ -34,9 +34,13 @@ body[data-kind="income"] { --kind: var(--green); }
 /* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字; 图形颜色走
    currentColor — color 带上过渡, 灰↔白也吃它), 不生硬跳变 */
 .tabs button, .amt-line input { transition: color .3s ease; }
-.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; color: var(--ink-2); }
+.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; color: color-mix(in srgb, #ebebf5 62%, var(--icon-tint)); }
                               /* ↑ 弹层内的默认脸: 灰线稿 (各自的 .on 规则翻彩色
-                              圆底压白线稿, 特异度多一级压得住) */
+                              圆底压白线稿, 特异度多一级压得住)。灰不直接用 --ink-2
+                              (62% 透明度的白): 线稿是好几条 path, 半透明的灰在线条
+                              交叉处会两次合成叠亮一截, 一粒粒发亮的结点 (2026-10-02
+                              用户报) — 这里取 62% 白在井底 (icon-tint) 上的不透明
+                              等效, 单看一模一样, 交叉处与单线同色 */
 .amt-cat .ci circle, .cp-row .ci circle, .cat-tiles .tile .ci circle { transition: fill .3s ease; }
                               /* ↑ 圆底换色 (暗井↔本色深档) 同步渐变, 选中不生硬跳变 */
 /* 类别那摊顺着划的方向滑入: 去支出从右进 (左划), 去收入从左进 (右划) */
