@@ -47,7 +47,7 @@ body {
 }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 a { color: inherit; text-decoration: none; }
-button, a, select { touch-action: manipulation; }   /* 双击不放大 (收双击缩放留平移) */
+button, a { touch-action: manipulation; }   /* 双击不放大 (收双击缩放留平移) */
 
 /* ---------- 顶栏 (毛玻璃; 上沿钉 --top-clear, 独立模式不进系统模糊带) ---------- */
 header {
@@ -100,21 +100,30 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
   height: 2.5px; border-radius: 2px; background: var(--accent);
 }
 
-/* 添加行: 归属 + 名字 + 添加 (蓝小钮 — 加标签那枚同一副) */
+/* 添加行: 顶上这条专职「新建大类」(蓝小钮 — 加标签那枚同一副); 加小类的口
+   在每个大类展开的列表尾, 就地出输入行 (1.6.2 — 原先归属藏「加在哪」下拉
+   里默认「新建大类」, 不点开根本不知道能往大类里加) */
 .add-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
-.add-bar select, .add-bar input {
+.add-bar input, .add-kid-row input {
   min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px;
   background: var(--surface-2); border-radius: 999px; padding: 8px 12px; color: var(--ink-1);
 }
-.add-bar select { flex: 0 1 auto; max-width: 42%; }
-.add-bar input { flex: 1; }
-.add-bar input::placeholder { color: var(--ink-3); }
-.add-bar button {
+.add-bar input, .add-kid-row input { flex: 1; }
+.add-bar input::placeholder, .add-kid-row input::placeholder { color: var(--ink-3); }
+.add-bar button, .add-kid-row button {
   flex: none; padding: 0 16px; border-radius: 999px; align-self: stretch;
   background: var(--accent); color: var(--accent-ink);
   font-size: 13px; font-weight: 600;
 }
-.add-bar button:active { filter: brightness(.92); }
+.add-bar button:active, .add-kid-row button:active { filter: brightness(.92); }
+.add-kid-row button[data-act="kid-cancel"] {   /* 取消: 暗井平钮 */
+  background: var(--surface-2); color: var(--ink-2); font-weight: 400;
+}
+
+/* 组尾「＋ 添加小类」(1.6.2): 收着是一行灰字, 点开换成输入行 — 小类行同一副缩进;
+   没挂小类的大类也点得开 (展开只见这一行) */
+.add-kid { width: 100%; font-size: 13.5px; color: var(--ink-3); }
+.add-kid:active { color: var(--ink-1); }
 
 /* 两级树: 大类手风琴 (选类别弹层同款), 每行带色点与删除。
  * 头是按钮但色点/删除也是按钮 — 按钮不嵌按钮, 三枚平级排在行里。 */
@@ -126,8 +135,7 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
   padding: 3px 4px; text-align: left; border-radius: 8px;
   font-size: 15px; font-weight: 600; color: var(--ink-1);
 }
-.head:disabled { font-weight: 600; }   /* 没挂小类的: 没得展开, 尖也收掉 */
-.head:disabled .chev { display: none; }
+.head:active { background: var(--press); }   /* 1.6.2: 没挂小类的大类头也点得开了, 给个按下反馈 */
 .grp-top .cnt { flex: none; font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
 .grp-top .chev {
   flex: none; width: 14px; height: 14px; color: var(--ink-3);

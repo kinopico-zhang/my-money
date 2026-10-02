@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
 <link rel="manifest" href="/bookkeeping/static/manifest.json">
 <title>类别管理 · My Money</title>
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-categories.css?v=3">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-categories.css?v=4">
 </head>
 <body>
 
@@ -31,9 +31,9 @@
   </div>
   <div class="msg" id="msg" hidden></div>
   <div class="card">
+    <!-- 顶上这条专职新建大类; 加小类的口在每个大类展开的列表尾 (＋ 添加小类, 1.6.2) -->
     <div class="add-bar">
-      <select id="add-parent" aria-label="加在哪"></select>
-      <input type="text" id="add-name" maxlength="10" placeholder="类别名" autocomplete="off">
+      <input type="text" id="add-name" maxlength="10" placeholder="新大类名" autocomplete="off">
       <button type="button" id="add-btn">添加</button>
     </div>
   </div>
@@ -46,6 +46,6 @@
 </main>
 
 <script src="/bookkeeping/static/category-icons.js?v=15"></script>
-<script src="/bookkeeping/static/bookkeeping-categories.js?v=2"></script>
+<script src="/bookkeeping/static/bookkeeping-categories.js?v=3"></script>
 </body>
 </html>

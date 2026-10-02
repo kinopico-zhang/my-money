@@ -11,6 +11,15 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.6.2", date="2026-10-02", items=[
+        ChangelogItem(kind="改进", text="类别管理里往大类里添小类不绕路了: 点开哪个大类, 小类列表的尾巴上"
+                                       "多了一行「＋ 添加小类」, 点它就地冒出输入框, 打上名字点添加或直接回车, "
+                                       "小类就落进这一组; 连着加几个也不用收 — 加完输入框自己清空待命。"
+                                       "原先这个口藏在页面顶上添加行的「加在哪」下拉里, 默认写着「新建大类」, "
+                                       "不点开根本不知道还能往大类里加; 现在顶上那条专职新建大类, "
+                                       "没挂小类的大类也点得开了 (展开就是那行「＋ 添加小类», "
+                                       "原先没小类的大类压根展开不了)"),
+    ]),
     ChangelogVersion(version="1.6.1", date="2026-10-02", items=[
         ChangelogItem(kind="修复", text="记一笔里没选中的类别图标线条干净了: 原先那副灰色线稿其实是带透明度的白, "
                                        "线条交叉、笔画相叠的地方颜色会叠亮一截, 图标上看着一粒粒发亮的小结点; "
