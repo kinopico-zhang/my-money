@@ -62,6 +62,7 @@ fi
 node node_modules/c8/bin/c8.js \
   --include 'app/bookkeeping/static/bookkeeping-merge.js' \
   --include 'app/bookkeeping/static/amount-calculator.js' \
+  --include 'app/bookkeeping/static/bookkeeping-categorizer.js' \
   --check-coverage --lines 95 --branches 95 --functions 95 \
   --reporter text node --test tests/js/ || rc=1
 

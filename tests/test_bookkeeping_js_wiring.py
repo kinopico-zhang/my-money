@@ -7,7 +7,7 @@ import re
 
 def test_bookkeeping_js_wires_calculator_and_categories():
     """接线: 完成走 saveEntry (evaluateAmount 求值, 不再 parseFloat), ⌫ 走
-    pointerdown (长按清空), 改账带出的旧金额首个数字键重打 (运算键仍接着原金额算), 类别树服务器拿 + 缓存本地 (默认 5×3 常见格, 全部
+    pointerdown (长按清空), 改账带出的旧金额首个数字键重打 (运算键仍接着原金额算), 类别树服务器拿 + 缓存本地 (5×3 热度格: 时间窗频率倒排 → 窗外 LRU → 树序垫底; 没选类别时没写备注按钟点预选餐段, 全部
     类别点「选类别」弹树选层: 大类手风琴 (标题带图标), 点开才见小类; 没子类的
     大类带图标铺成一级行点一下直选), 时间走 iOS 闹钟式
     拨轮 (whenVal 单一事实源, 保存读 whenPicked() 拆 date/time 进条目),
@@ -23,8 +23,8 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     # 大脚本按逻辑拆成了 bookkeeping-*.js 多个模块 (结构化重构), 断言按
     # bookkeeping.html 里的加载顺序拼接起来整体查
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
-               "bookkeeping-state", "category-icons", "bookkeeping-render",
-               "bookkeeping-sync", "bookkeeping-entry-sheet",
+               "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
+               "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
                "bookkeeping-amount-pad", "bookkeeping-boot")
     js = "".join((base / f"{name}.js").read_text(encoding="utf-8")
                  for name in modules)
@@ -79,7 +79,7 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     assert "catIcon(val, sheetKind)" in js           # 子类格按全路径取自己的图标; 底色跟方向走
     assert '"bolt-one"' in js and "car-battery" not in js  # 充电: 插头图形
     assert "\"虾饺\": 'cat'" in js and "shrimp" not in js   # 虾饺是只猫 (家里的猫咪)
-    assert "COMMON_CATS" in js                      # 常见格清单 (恰填满 5×3)
+    assert "COMMON_CATS" not in js                 # 手排清单退役: 格子按账本热度排 (1.6.0)
     assert "#ci-more" not in js and "catAll" not in js   # 「…」全部钮整个撤了
     assert "function updateAmtHead()" in js         # 金额行类别牌随选择刷新
     assert '$("#amt-cat").classList.toggle("on", !!sheetCat);' in js   # 选上翻白点亮
@@ -107,8 +107,8 @@ def test_bookkeeping_sheet_gestures():
     划/拽过的那一下点击当场吃掉 (不顺着误触格子)。"""
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
-               "bookkeeping-state", "category-icons", "bookkeeping-render",
-               "bookkeeping-sync", "bookkeeping-entry-sheet",
+               "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
+               "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
                "bookkeeping-amount-pad", "bookkeeping-boot")
     js = "".join((base / f"{name}.js").read_text(encoding="utf-8")
                  for name in modules)
@@ -148,8 +148,8 @@ def test_bookkeeping_js_selectors_all_exist():
     html = (base / "bookkeeping.html").read_text(encoding="utf-8")
     ids = set(re.findall(r'id="([^"]+)"', html))
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
-               "bookkeeping-state", "category-icons", "bookkeeping-render",
-               "bookkeeping-sync", "bookkeeping-entry-sheet",
+               "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
+               "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
                "bookkeeping-amount-pad", "bookkeeping-boot")
     sel = re.compile(r'\$\("#([A-Za-z0-9_-]+)"\)'
                      r'|querySelector(?:All)?\("#([A-Za-z0-9_-]+)"\)')
