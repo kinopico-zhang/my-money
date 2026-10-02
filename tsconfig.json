@@ -1,7 +1,8 @@
 {
   // 纯逻辑模块的类型检查 (tsc --checkJS): bookkeeping-merge (同步合并
-  // LWW 规则)。页面脚本 (bookkeeping-*.js) 依赖页面 DOM 宿主, 类型声明
-  // 成本高, 由 ESLint 把关。
+  // LWW 规则) + bookkeeping-categorizer (类别聪明事: 备注匹配/格子排序/
+  // 钟点餐段)。页面脚本 (其余 bookkeeping-*.js) 依赖页面 DOM 宿主, 类型
+  // 声明成本高, 由 ESLint 把关。
   // types:[] — 不自动引入 node_modules/@types (共享目录里有别的包声明)
   "compilerOptions": {
     "allowJs": true,
@@ -13,6 +14,7 @@
   },
   "include": [
     "app/bookkeeping/static/bookkeeping-merge.js",
+    "app/bookkeeping/static/bookkeeping-categorizer.js",
     "frontend-globals.d.ts"
   ]
 }

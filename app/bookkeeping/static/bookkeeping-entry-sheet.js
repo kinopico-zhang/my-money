@@ -1,30 +1,28 @@
 // bookkeeping-entry-sheet — My Money 记/改一笔 (底部弹层):
 // 顶部收入/支出标签页 + 金额行类别牌 (点开弹类别树选层: 大类手风琴, 点开才见小类)
-// + 5×3 常见类别格 + 时间 iOS 闹钟式拨轮 (日期/时/分三列) + 标签列表层
+// + 5×3 类别格 (热度排: 时间窗内频率倒排 → 窗外 LRU → 树序垫底)
+// + 时间 iOS 闹钟式拨轮 (日期/时/分三列) + 标签列表层
 // (单选一枚选中即收, 创建时间新→旧, 顶部可打新标签) + 备注浮层输入
 // (点备注行弹, 从行原位升起 rides 系统键盘; 系统键盘回车/点别处收) + 整层手势
 // (左右划换收支 — 只换类别那一摊; 任意部位下拽关层) + 删除/点行改账。
+// 类别聪明事 (逻辑在 bookkeeping-categorizer.js): 备注收起时按历史备注自动配类别,
+// 新记支出没选类别时按拨轮钟点预选一顿饭 — 手选/带出的绝不覆盖。
 // 金额键盘常驻吸底 (amount-pad), 键盘上的「完成」就是保存。
 // 拆自 bookkeeping.js (结构化重构, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
 /* global $, esc, entries, dirty, persist, render, scheduleSync,
           parseTags, todayStr, nowTime, pad, catIcon, catTree,
-          refreshAmountPreview */
+          refreshAmountPreview, matchNoteCategory, buildNoteIndex,
+          rankCategories, mealCategoryByHour */
 /* exported closeSheet, fillChips, whenPicked */
 
 // ---------- 记/改一笔 (底部弹层) ----------
 let editingId = null;
 let sheetKind = "expense";
 let sheetCat = "";
-
-// 常见类别 (默认只铺这些, 恰好填满 5×3): 按组合名存, 树里没有的自动落空 (类别树各家不同)
-const COMMON_CATS = {
-  expense: ["餐饮/早餐", "餐饮/午餐", "餐饮/晚餐", "餐饮/夜宵", "餐饮/买菜原料",
-            "餐饮/饮料水果", "餐饮/零食", "交通/充电", "交通/打车", "交通/地铁",
-            "交通/公交", "交通/加油", "居家/水电燃气", "居家/手机电话", "购物/家居百货"],
-  income: ["工资薪水", "奖金", "兼职外快", "红包", "利息", "基金", "股票",
-           "余额宝", "分红", "营业收入", "工程款", "福利补贴", "礼金", "顺风车", "赔付款"],
-};
+let catHandPicked = false;        // 类别是手选/改账带出的 (备注匹配绝不覆盖; 钟点预选可被顶掉)
+let noteKbOpened = false;         // 备注浮层这回是点开的 (openSheet/closeSheet 的程序化收起不算)
+let pressOn = null;               // 收备注那一下的手指落点 (落在类别区 = 那一下点击说了算)
 
 function treeFor(kind) {          // 当前收支方向的类别树 (离线用缓存)
   return (catTree && catTree[kind]) || [];
@@ -110,6 +108,8 @@ function placeNoteKb(bottom) {    // 贴系统键盘上方; bottom 不给 = visu
 }
 
 function openNoteKb() {           // 同一手势里聚焦, iOS 才肯弹系统键盘
+  noteKbOpened = true;            // 这一开是用户点的: 收起时才让备注匹配接手
+  pressOn = null;
   const bar = $("#note-kb");
   bar.hidden = false;
   const top = $("#note-btn").getBoundingClientRect().top;
@@ -133,20 +133,26 @@ function closeNoteKb() {
   $("#f-note").blur();
   $("#amt-pad").style.visibility = "";
   updateNoteRow();
+  autoPickCat();                  // 备注收起: 历史对上号就替他把类别选上
+}
+
+function catOptions(kind) {       // [组合名, 显示名]: 子类 / 无小类的大类 — 选得上去的全部路径
+  const all = [];
+  for (const {name: top, children: kids} of treeFor(kind)) {
+    if (kids.length) for (const kid of kids) all.push([top + "/" + kid, kid]);
+    else all.push([top, top]);
+  }
+  return all;
 }
 
 function chipsHtml(kind, cat) {     // 格子页 html (真页与横划跟手的「对面页」共用一份)
-  const all = [];                 // [组合名, 显示名] (图标按组合名查: 子类有自己的)
-  for (const {name: top, children: kids} of treeFor(kind)) {
-    if (kids.length) for (const kid of kids) all.push([top + "/" + kid, kid]);
-    else all.push([top, top]);   // 没子类的大类自己就是可选类别
-  }
-  const byKey = new Map(all);
-  return COMMON_CATS[kind]                       // 常见格: 树里有的才上
-    .filter(k => byKey.has(k)).map(k => [k, byKey.get(k)])
-    .map(([val, name]) =>
+  const byKey = new Map(catOptions(kind));
+  // 热度排 (2026-10-02 用户点名「lru + 时间窗, 窗口内按频率倒排」): 近 90 天记得多
+  //的在前, 窗外但最近用过的随后, 从没记过的树序垫底 — 手排清单退役, 常用的自己会升上来
+  return rankCategories(entries, kind, new Set(byKey.keys()), todayStr())
+    .slice(0, 15).map(val =>
       `<button class="tile${cat === val ? " on" : ""}" data-cat="${esc(val)}">` +
-      `<span class="ti">${catIcon(val, kind)}</span><span class="tn">${esc(name)}</span></button>`).join("");
+      `<span class="ti">${catIcon(val, kind)}</span><span class="tn">${esc(byKey.get(val))}</span></button>`).join("");
 }
 
 // 影子页元素 (横划跟手的「对面页」): 开局就挂进 sheet 末尾, 平时 hidden 藏着,
@@ -351,12 +357,35 @@ function closeWhenPick() {
   setTimeout(() => { pick.hidden = true; }, 250);
 }
 
+function sheetCats() {            // 当前方向选得上去的全部类别 (匹配/预选的合法集)
+  return new Set(catOptions(sheetKind).map(([val]) => val));
+}
+
+function autoPickCat() {          // 备注收起: 历史备注对上号就替他把类别选上 (只挑无歧义的)
+  if (!noteKbOpened) return;      // 程序化收起 (openSheet/closeSheet) 不算
+  noteKbOpened = false;
+  if (sheetCat && catHandPicked) return;   // 手选过/改账带出的: 绝不覆盖 (钟点预选可以让贤)
+  if (pressOn) return;            // 这一下是去点类别: 让点的那下说了算 (blur 先于 click)
+  const raw = $("#f-note").value;
+  if (!raw.trim()) return;        // 空备注没得配 (且在扫全账本之前 return)
+  // 索引每次就地重建 (不缓存): 同步/拉树会中途换 entries/catTree, 缓存必吃到陈旧 —
+  // 七千条 ≈ 毫秒级; whenVal.hh 是钟点先验 (平票的几家里属意这顿饭的那类拍板)
+  const hit = matchNoteCategory(raw,
+    buildNoteIndex(entries, sheetKind, sheetCats(), todayStr()), whenVal.hh);
+  if (!hit) return;               // 对不上/歧义: 照旧让他自己点
+  sheetCat = hit.cat;
+  fillChips();                    // 格子选中态 + 影子页一起换 (与手点同一副规矩)
+  updateAmtHead();                // 类别牌翻亮 — 彩色圆底就是反馈
+}
+
 function openSheet(entry) {
+  noteKbOpened = false;           // 程序化收起: 不触发备注匹配 (在 sheetCat 重播前清, 不写脏)
   closeNoteKb();                  // 备注浮层若还开着, 先收 (键盘跟着落)
   editingId = entry ? entry.id : null;
   sheetKind = entry ? entry.kind : "expense";
   document.body.dataset.kind = sheetKind;    // 方向配色跟走 (支出红/收入绿)
   sheetCat = entry ? entry.category : "";
+  catHandPicked = !!entry;        // 改账带出的类别当手选: 备注匹配不覆盖
   $("#kind-seg").querySelectorAll("button").forEach(b =>
     b.classList.toggle("on", b.dataset.kind === sheetKind));
   $("#f-amount").value = entry ? entry.amount : "";
@@ -369,6 +398,13 @@ function openSheet(entry) {
   whenVal.d = new Date(y, mo - 1, da);
   [whenVal.hh, whenVal.mm] = clock.split(":").map(Number);
   updateWhenPill();
+  // 没写备注时按钟点预选餐段 (10 点前早餐, 14 点前午餐, 20 点前晚餐, 凌晨 2 点前
+  // 算宵夜): 新记的支出先替他点亮一顿饭, 树里没有那餐就作罢; 之后写了备注由
+  // 备注匹配顶掉 (预选不落手选旗), 手选的谁也动不了
+  if (!entry && sheetKind === "expense" && !sheetCat) {
+    const meal = mealCategoryByHour(whenVal.hh);
+    if (sheetCats().has(meal)) sheetCat = meal;
+  }
   $("#f-note").value = entry ? entry.note : "";
   updateNoteRow();
   sheetTags = entry ? [...(entry.tags || [])] : [];
@@ -387,6 +423,7 @@ function closeSheet() {
   closeCatPick();               // 类别选层若还开着, 跟着收
   closeWhenPick();              // 时间拨轮同理
   closeTagPick();               // 标签列表同理
+  noteKbOpened = false;         // 程序化收起: 不触发备注匹配
   closeNoteKb();                // 备注浮层同理 (键盘落, 数字键盘回位)
   const mask = $("#sheet-mask"), sheet = $("#sheet");
   mask.classList.remove("on"); sheet.classList.remove("on");
@@ -573,6 +610,7 @@ $("#cp-list").addEventListener("click", e => {
   const btn = e.target.closest("button[data-cat]");
   if (!btn) return;
   sheetCat = btn.dataset.cat;
+  catHandPicked = true;         // 手选落旗: 备注匹配从此不覆盖
   closeCatPick();
   fillChips();
   updateAmtHead();
@@ -613,6 +651,7 @@ $("#cat-tiles").addEventListener("click", e => {
   const btn = e.target.closest("button[data-cat]");
   if (!btn || !btn.dataset.cat) return;
   sheetCat = sheetCat === btn.dataset.cat ? "" : btn.dataset.cat;   // 再点一下取消
+  catHandPicked = true;         // 手选落旗 (取消也是明确意图: 之后备注匹配可以再配)
   fillChips();
   updateAmtHead();
 });
@@ -637,6 +676,14 @@ $("#note-btn").addEventListener("click", openNoteKb);
 $("#f-note").addEventListener("input", updateNoteRow);
 $("#f-note").addEventListener("blur", closeNoteKb);
 $("#f-note").addEventListener("keydown", e => { if (e.key === "Enter") closeNoteKb(); });
+// 收备注那一下若落在类别区 (格子/类别牌/选类别层): iOS blur 先于 click 到, 自动
+// 回填会被随后的 toggle 清掉 = 点了没反应 — 落点记下, autoPickCat 让位给那一下
+document.addEventListener("pointerdown", e => {
+  pressOn = e.target instanceof Element
+    ? e.target.closest("#cat-tiles, #amt-cat, #cat-pick, #cp-list") : null;
+}, true);
+document.addEventListener("pointerup", () => { pressOn = null; }, true);
+document.addEventListener("pointercancel", () => { pressOn = null; }, true);
 if (window.visualViewport)
   for (const ev of ["resize", "scroll"])
     window.visualViewport.addEventListener(ev, () => {
