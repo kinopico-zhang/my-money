@@ -111,16 +111,21 @@ def test_delete_category_guards(usersdb):
 
 
 def test_category_page_and_links(usersdb):
-    """管理页在登录墙后 + 页面骨架 (页签/添加行/列表/加载态) 与设置页入口。"""
+    """管理页在登录墙后 + 页面骨架 (页签/添加行/列表/加载态) 与设置页入口;
+    1.6.2 起顶上添加行专职新建大类, 加小类的口在各大类展开的列表尾。"""
     anon = TestClient(m.app)
     assert anon.get("/bookkeeping/categories", follow_redirects=False).status_code == 302
     client, _ = _user(usersdb, "记账人甲")
     page = client.get("/bookkeeping/categories")
     assert page.status_code == 200, page.text
     html = page.text
-    for pin in ("kind-tabs", "msg", "add-parent", "add-name", "add-btn",
+    for pin in ("kind-tabs", "msg", "add-name", "add-btn",
                 "cat-list", "loading", "load-error", "retry"):
         assert f'id="{pin}"' in html, f"管理页缺 {pin}"
+    assert 'placeholder="新大类名"' in html     # 顶上这条只管新建大类 (1.6.2)
+    assert "add-parent" not in html             # 「加在哪」下拉退役: 口挪进组尾
+    assert 'bookkeeping-categories.js?v=3"' in html and \
+           'bookkeeping-categories.css?v=4"' in html    # 新入口连样式进新缓存
     assert 'href="/bookkeeping/settings"' in html       # 返回设置页
     settings = _static("settings.html")
     assert 'href="/bookkeeping/categories"' in settings and "类别管理" in settings
@@ -128,7 +133,9 @@ def test_category_page_and_links(usersdb):
 
 def test_categories_js_wiring():
     """管理页脚本: 三个写口 + 拉树灌色表, 树落 localStorage 与记账页同一份;
-    删除两击确认、色票即点即存、错误亮 detail。图标色表跨页接线都在。"""
+    删除两击确认、色票即点即存、错误亮 detail、组尾「＋ 添加小类」就地输入
+    (回车=添加, 打一半的字重画不丢) — 添加两口共用 nameError 守门。
+    图标色表跨页接线都在。"""
     js = _static("bookkeeping-categories.js")
     assert '"/bookkeeping/api/categories", { cache: "no-store" }' in js
     for ep in ('/bookkeeping/api/categories/color', "/bookkeeping/api/categories/add",
@@ -139,6 +146,14 @@ def test_categories_js_wiring():
     assert 'armConfirmReset' in js and '"确认" : "✕"' in js  # 两击确认
     assert "SWATCHES" in js and "默认" in js
     assert "data.detail" in js                             # 服务端的人话原因直出
+    # 1.6.2 组尾加小类口 (「加在哪」下拉退役)
+    assert 'data-act="add-kid"' in js and "addKidFor" in js and "submitKid" in js
+    assert "fillParentSelect" not in js and "add-parent" not in js
+    assert "function nameError(" in js     # 顶栏/组尾两口同一副守门
+    assert js.count("nameError(") == 3     # 定义 + 两个调用口
+    assert 'ev.key !== "Enter"' in js      # 输入行回车 = 点「添加」
+    assert "addKidText = ev.target.value" in js   # 打一半的字重画不丢
+    assert 'addCategory("", name)' in js   # 顶栏专职新建大类 (parent 恒空)
     icons = _static("category-icons.js")
     assert "function setCatColors" in icons and "const CAT_COLORS = new Map()" in icons
     assert 'CAT_COLORS.get(key) || CAT_COLORS.get(key.split("/")[0])' in icons  # 小类落大类
