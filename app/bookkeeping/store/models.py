@@ -57,3 +57,4 @@ class Category(EntryBase):
     parent: Mapped[str] = mapped_column(String, default="")   # "" = 大类
     sort: Mapped[int] = mapped_column(default=0)          # 同层展示顺序
     color: Mapped[str | None] = mapped_column(default=None)   # 图标自选色 #rrggbb (空 = 方向色)
+    icon: Mapped[str | None] = mapped_column(default=None)    # 图标自选 slug (空 = 按名字映射)

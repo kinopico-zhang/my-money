@@ -84,11 +84,13 @@ class TagSeed(BaseModel):
 class CategoryTree(BaseModel):
     """类别树 + 标签种子 (选层数据): 支出/收入各自的大类列表按种子的
     sort 保序; tags 是挖财迁来的历史标签 (静态种子, 客户端与账本用过的合并);
-    colors 是自选图标色 (设置页「类别管理」挑的): 全名 → #rrggbb。"""
+    colors 是自选图标色 (设置页「类别管理」挑的): 全名 → #rrggbb;
+    icons 是自选图标 (新建弹框挑的): 全名 → slug。"""
 
     expense: list[CategoryGroup]
     income: list[CategoryGroup]
     colors: dict[str, str] = Field(default_factory=dict)
+    icons: dict[str, str] = Field(default_factory=dict)
     tags: list[TagSeed] = Field(default_factory=list)
 
 
@@ -100,6 +102,13 @@ class _CategoryTarget(BaseModel):
     name: str = Field(min_length=1, max_length=20)
 
 
+def _check_hex_color(value: str) -> str:
+    """自选色只收 #rrggbb (或空 = 撤掉自选), 别的形状一律拒 (挑色/新建两口共用)。"""
+    if value and not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+        raise ValueError("颜色要 #rrggbb 形状")
+    return value
+
+
 class CategoryColorIn(_CategoryTarget):
     """给一个类别挑图标色 (空串 = 恢复方向色兜底)。"""
 
@@ -109,17 +118,34 @@ class CategoryColorIn(_CategoryTarget):
     @classmethod
     def check_color(cls, value: str) -> str:
         """自选色只收 #rrggbb (或空 = 撤掉自选), 别的形状一律拒。"""
-        if value and not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
-            raise ValueError("颜色要 #rrggbb 形状")
-        return value
+        return _check_hex_color(value)
 
 
 class CategoryAddIn(BaseModel):
-    """加一个类别: parent 空 = 新建大类; 名字不带 / (组合名是路径分隔)。"""
+    """加一个类别: parent 空 = 新建大类; 名字不带 / (组合名是路径分隔)。
+    1.7.0 起新建弹框连图标和颜色一起挑好: icon 是 slug (空 = 按名字映射),
+    color 是 #rrggbb (空 = 方向色)。"""
 
     kind: Literal["expense", "income"]
     parent: str = Field(default="", max_length=20)
     name: str = Field(min_length=1, max_length=10)
+    icon: str = ""
+    color: str = ""
+
+    @field_validator("icon")
+    @classmethod
+    def check_icon(cls, value: str) -> str:
+        """自选图标只收 slug 形状 (小写字母/数字/连字符), 空串 = 按名字映射;
+        slug 集合在前端图标库里, 这里只把形状, 不认集。"""
+        if value and not re.fullmatch(r"[a-z0-9-]{1,40}", value):
+            raise ValueError("图标名只收小写字母数字和连字符")
+        return value
+
+    @field_validator("color")
+    @classmethod
+    def check_color(cls, value: str) -> str:
+        """同挑色口那副形状守卫。"""
+        return _check_hex_color(value)
 
 
 class CategoryDeleteIn(_CategoryTarget):

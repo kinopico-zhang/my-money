@@ -90,3 +90,5 @@ def migrate_columns(eng: Engine | None = None) -> None:
         if cat_cols and "color" not in cat_cols:   # 1.4.0: 图标自选色 (空 = 方向色);
             # 表还没有的老库不 ALTER (create_all 稍后建表就带 color), 只补已有表
             conn.exec_driver_sql("ALTER TABLE categories ADD COLUMN color TEXT")
+        if cat_cols and "icon" not in cat_cols:    # 1.7.0: 图标自选 slug (空 = 名字映射)
+            conn.exec_driver_sql("ALTER TABLE categories ADD COLUMN icon TEXT")

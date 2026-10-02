@@ -8,10 +8,11 @@
 // 注入口按本体形态分流 (带 <mask 的提升进文档级共享 defs, 不进 <use> 影子树 ——
 // 影子树里的 url(#…) 引用 iOS WebKit 解析不了, 挂它的元素整枚不渲染), 详见文件尾。
 // 拆自 bookkeeping-state.js 的 emoji 映射: emoji 换矢量, 不吃各系统 emoji
-// 渲染差异。图标是纯展示映射, 跟着类别数据走不进库;
-// 没映射到的类别图标兜底 notes、方向没传按支出红兜底 (默认页)。
+// 渲染差异。1.7.0 前图标是纯展示映射不进库; 1.7.0 起新建类别弹框连图标
+// 一起挑, slug 落库随树下发 (CAT_ICONS, 解析排在名字映射前), 没自选的
+// 照旧按名字映射、没映射到的兜底 notes、方向没传按支出红兜底 (默认页)。
 "use strict";
-/* exported catIcon, setCatColors */
+/* exported catIcon, setCatColors, catIconBySlug, ICON_NAMES, ICON_HINTS */
 
 const CATEGORY_ICONS = {
   "餐饮": 'noodles',
@@ -358,14 +359,47 @@ document.body.insertAdjacentHTML("afterbegin",
     .join("") +
   "</svg>");
 
-// 自选色 (设置页「类别管理」里挑的): 全名/大类名 → #rrggbb。树随接口下发
-// (colors 表), 各页拿到树灌进来 (记账页 sync.js 开局+刷新, 统计页/管理页各自灌);
-// 没挑的走方向色兜底。小类没单挑就落大类的自选色 (与图标解析同一个路数)。
+// 新建弹框的取材 (1.7.0): ICON_NAMES 是图标栅格的全量名字 (ICON_BODIES 的
+// 键序 — 手工排过, 不动); ICON_HINTS 是打字自动预选的第二层小词典: 第一层
+// 拿输入的名字在 CATEGORY_ICONS 的键里找包含, 没含到再查这里 (输入含词条)。
+// 143 枚线稿没有的东西只能猜个近似的 (咖啡落茶壶、奶茶落果汁杯),
+// 不许诺打啥都能联想上。
+const ICON_NAMES = Object.keys(ICON_BODIES);
+const ICON_HINTS = {
+  "奶茶": "juice",
+  "猫": "cat",
+  "狗": "bird",
+  "话费": "phone-telephone",
+  "电费": "lightning",
+  "水费": "lightning",
+  "理发": "scissors",
+  "酒店": "hotel",
+  "网费": "router",
+  "外卖": "noodles",
+  "宵夜": "barbecue",
+  "医院": "medical-box",
+  "衣服": "t-shirt",
+  "装修": "hammer-and-anvil",
+  "游戏": "game-two",
+  "生日": "party-balloon",
+  "机票": "airplane",
+  "火车票": "high-speed-rail",
+};
+
+// 自选色与自选图标 (设置页挑的色 / 新建弹框挑的图标): 全名/大类名 → 值。
+// 树随接口下发 (colors/icons 两张表), 各页拿到树灌进来 (记账页 sync.js
+// 开局+刷新, 统计页/管理页各自灌); 没挑的走方向色/名字映射兜底。小类没
+// 单挑就落大类的自选 (色与图标同一个路数)。函数名照旧叫 setCatColors —
+// 灌树只有一个口, 色和图标一起灌。
 const CAT_COLORS = new Map();
+const CAT_ICONS = new Map();
 function setCatColors(tree) {
   CAT_COLORS.clear();
   const colors = (tree && tree.colors) || {};
   for (const k of Object.keys(colors)) if (colors[k]) CAT_COLORS.set(k, colors[k]);
+  CAT_ICONS.clear();
+  const icons = (tree && tree.icons) || {};
+  for (const k of Object.keys(icons)) if (icons[k]) CAT_ICONS.set(k, icons[k]);
 }
 
 // 底色跟收支方向走 (支出柔红/收入柔绿 — 图标专用的降饱和档: 高饱和红绿在浅蓝灰
@@ -378,17 +412,27 @@ function catColor(kind, cat) {
   return kind === "income" ? "var(--icon-green)" : "var(--icon-red)";
 }
 
-// 全路径 ("大类/子类") → 子类图标; 没有就落大类图标; 再没有兜底。
-// kind ("expense"/"income") 定图标色; 圆底是自带的 <circle> (铺满井, 井的 CSS
-// 不再画底色); 填色走行内 style 而非 fill 属性 —— var() 在 presentation
-// attribute 里 iOS 不认。
+// 全路径 ("大类/子类") → 子类图标, 解析链 (1.7.0): 自选 (CAT_ICONS 全名)
+// → 名字映射全名 → 自选 (大类名) → 名字映射大类名 → 兜底; 解析完拿 slug
+// 交给 catIconBySlug 产 svg, 色走 catColor (自选色盖方向色)。
+function catIcon(cat, kind) {
+  const key = String(cat || "");
+  const name = CAT_ICONS.get(key) || CATEGORY_ICONS[key] ||
+    CAT_ICONS.get(key.split("/")[0]) || CATEGORY_ICONS[key.split("/")[0]] ||
+    FALLBACK_ICON;
+  return catIconBySlug(name, catColor(kind, key));
+}
+
+// 按 slug 直接产一枚图标 (新建弹框的栅格与预览也走这里: 传挑中的 slug 和
+// 挑中的色); 形参必须叫 name —— 测试钉着 mask 引用的模板串。kind 不进来:
+// 色由调用方算好 (账本侧走 catColor, 弹框走挑中的色)。
+// 圆底是自带的 <circle> (铺满井, 井的 CSS 不再画底色); 填色走行内 style
+// 而非 fill 属性 —— var() 在 presentation attribute 里 iOS 不认。
 // 两态: 平时白圆底 (不描边) 坐同色线稿; 选中 (css 给 --sel) 才换方向色底压白图形。
 // 图形缩一圈居中 (scale .7, 平移 24-24×.7=7.2): 圆里多留边, 图形更秀气
 const GLYPH_INSET = 'transform="translate(7.2 7.2) scale(.7)"';
-function catIcon(cat, kind) {
-  const key = String(cat || "");
-  const name = CATEGORY_ICONS[key] || CATEGORY_ICONS[key.split("/")[0]] || FALLBACK_ICON;
-  return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${catColor(kind, key)}" aria-hidden="true">` +
+function catIconBySlug(name, color) {
+  return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${color}" aria-hidden="true">` +
     `<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>` +
     (MASKED.has(name)
       ? `<path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ci-m-${name})" ${GLYPH_INSET}/>`

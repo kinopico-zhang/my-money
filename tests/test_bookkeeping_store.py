@@ -66,3 +66,31 @@ def test_migrate_columns_adds_time_and_tags(tmp_path):
         cols2 = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(entries)")]
     assert cols2.count("time") == 1 and cols2.count("tags") == 1
     eng.dispose()
+
+
+def test_migrate_columns_adds_category_icon(tmp_path):
+    """老库升级 (1.7.0): categories 有 color 没 icon → ALTER 补 icon 列,
+    旧行默认空 (空 = 按名字映射), 老自选色保住; 再跑一遍不炸不重复 (幂等)。"""
+    from sqlalchemy import create_engine, text  # pylint: disable=import-outside-toplevel
+    from app.bookkeeping import store  # pylint: disable=import-outside-toplevel
+    eng = create_engine(f"sqlite:///{tmp_path / 'old-cat.db'}")
+    with eng.begin() as conn:          # 1.4.0–1.6.x 的老表 (entries 得在, 迁移顺带补列)
+        conn.execute(text("CREATE TABLE entries (id VARCHAR PRIMARY KEY)"))
+        conn.execute(text(
+            "CREATE TABLE categories (id INTEGER PRIMARY KEY, name VARCHAR, "
+            "kind VARCHAR, parent VARCHAR, sort INTEGER, color VARCHAR)"))
+        conn.execute(text(
+            "INSERT INTO categories (name, kind, parent, sort, color) "
+            "VALUES ('餐饮', 'expense', '', 1, '#1b8e9c')"))
+    store.migrate_columns(eng)
+    with eng.begin() as conn:
+        cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(categories)")]
+        row = conn.execute(text(
+            "SELECT color, icon FROM categories WHERE name = '餐饮'")).one()
+    assert "icon" in cols
+    assert row == ("#1b8e9c", None)    # 老自选色保住, icon 空 = 按名字映射
+    store.migrate_columns(eng)         # 幂等
+    with eng.begin() as conn:
+        cols2 = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(categories)")]
+    assert cols2.count("icon") == 1
+    eng.dispose()

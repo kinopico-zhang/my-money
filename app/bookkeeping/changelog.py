@@ -11,6 +11,22 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.7.0", date="2026-10-02", items=[
+        ChangelogItem(kind="新增", text="新建类别换成整框了: 点「＋ 新建大类」或大类里的「＋ 添加小类」,"
+                                       "底部弹出一个框, 名字、图标、颜色一次选齐 — 图标是一整版"
+                                       "140 多枚线性图标, 滚动着挑; 打字的时候它会照你打的字自动"
+                                       "预选一枚贴切的 (打「咖啡」跳茶壶、打「外卖」跳面碗),"
+                                       "不称心再手点一枚锁定; 顶上实时预览, 预览是什么样子"
+                                       "加进去就是什么样子; 颜色另有 12 色色票可挑。"
+                                       "原先 1.6.2 只能打名字的就地输入框升级成了这个框"),
+        ChangelogItem(kind="改进", text="类别列表的行能左滑删除了: 往左一滑露出红底「删除」, 点一下变「确认」, "
+                                       "再点才真删 — 挂着小类的大类、有账在用的类别照旧拒删并说明原因; "
+                                       "行尾那枚小 ✕ 钮退场 (挤在行尾容易误点, 滑出来的口子宽敞得多)。"
+                                       "手势跟记账页删账目是同一副"),
+        ChangelogItem(kind="改进", text="整个应用掐死了放大缩小: 双指捏合、双击、点输入框的自动放大一概不动了。"
+                                       "原先只有记账主页拦了捏合, 类别管理、统计、设置、更新日志这些页"
+                                       "双指一捏照样整页放大, 放大过还得自己捏回来"),
+    ]),
     ChangelogVersion(version="1.6.2", date="2026-10-02", items=[
         ChangelogItem(kind="改进", text="类别管理里往大类里添小类不绕路了: 点开哪个大类, 小类列表的尾巴上"
                                        "多了一行「＋ 添加小类」, 点它就地冒出输入框, 打上名字点添加或直接回车, "

@@ -36,12 +36,15 @@ def category_tree(session: Session) -> CategoryTree:
                            ).scalars().all()
     children: dict[str, list[str]] = {}
     colors: dict[str, str] = {}          # 自选图标色: 全名 ("餐饮/早餐" / "餐饮") → #rrggbb
+    icons: dict[str, str] = {}           # 自选图标: 全名 → slug (空 = 按名字映射)
     for row in rows:
         if row.parent:
             children.setdefault(row.parent, []).append(row.name)
         if row.color:
             colors[f"{row.parent}/{row.name}" if row.parent else row.name] = row.color
-    tree = CategoryTree(expense=[], income=[], colors=colors,
+        if row.icon:
+            icons[f"{row.parent}/{row.name}" if row.parent else row.name] = row.icon
+    tree = CategoryTree(expense=[], income=[], colors=colors, icons=icons,
                         tags=[TagSeed(name=n, created=c) for n, c in DEFAULT_TAGS])
     for row in rows:
         if not row.parent:

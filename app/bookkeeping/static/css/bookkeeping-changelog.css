@@ -40,6 +40,8 @@ html { -webkit-text-size-adjust: 100%; background: var(--bg); }
 /* 壳就是纯平黑 (my-music 同款, page.css 同一副): 1.4.0 那层钉在视口上的冰蓝渐变
    环境光随换装撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
 body {
+  touch-action: pan-y;   /* 1.7.0 全应用禁缩放 (page.css 同款):
+                            双指捏合在 body 收口, 行内控件自带更窄的 touch-action */
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
                "Helvetica Neue", system-ui, sans-serif;
