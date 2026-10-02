@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 1.7.0 全应用禁缩放: maximum-scale/user-scalable 掐双击放大/点输入框的自动放大;
+     iOS 两指捏合不吃 touch-action, 由 body 后第一条脚本 no-zoom.js 拦 gesture -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <!-- 状态栏样式跟暗底走 (my-music 同款): black-translucent = 全出血, 页面伸进
@@ -19,6 +21,7 @@
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=10">
 </head>
 <body data-kind="expense">
+<script src="/static/no-zoom.js?v=1"></script>
 
 <div class="sync-strip" id="sync-strip">
   <span class="dot"></span><span id="sync-text">本地账本</span>
@@ -140,7 +143,7 @@
 <script src="/bookkeeping/static/amount-calculator.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-categorizer.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-state.js?v=4"></script>
-<script src="/bookkeeping/static/category-icons.js?v=15"></script>
+<script src="/bookkeeping/static/category-icons.js?v=16"></script>
 <script src="/bookkeeping/static/bookkeeping-render.js?v=42"></script>
 <script src="/bookkeeping/static/bookkeeping-sync.js?v=3"></script>
 <script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=26"></script>

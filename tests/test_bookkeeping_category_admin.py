@@ -84,6 +84,30 @@ def test_add_category_and_guards(usersdb):
     assert over.status_code == 400 and "不超过 20 字" in over.json()["detail"]
 
 
+def test_add_category_with_icon_and_color(usersdb):
+    """加类别带自选图标/颜色 (1.7.0 弹框): 落库, 树的 icons/colors 表收录
+    (大类短名/小类全名); 不带 = 默认不进表; 形状不对 (icon 大写、color 非 #rrggbb) 422。"""
+    client, _ = _user(usersdb, "记账人甲")
+    top = _post(client, "/bookkeeping/api/categories/add",
+                {"kind": "expense", "parent": "", "name": "下午茶",
+                 "icon": "juice", "color": "#8a5fc9"})
+    assert top.status_code == 200, top.text
+    assert top.json()["icons"]["下午茶"] == "juice"      # 大类按短名收
+    assert top.json()["colors"]["下午茶"] == "#8a5fc9"
+    kid = _post(client, "/bookkeeping/api/categories/add",
+                {"kind": "expense", "parent": "餐饮", "name": "宵夜加餐",
+                 "icon": "barbecue", "color": "#4dbf90"})
+    assert kid.status_code == 200 and kid.json()["icons"]["餐饮/宵夜加餐"] == "barbecue"  # 小类全名
+    plain = _post(client, "/bookkeeping/api/categories/add",
+                  {"kind": "expense", "parent": "", "name": "素面朝天"})
+    assert plain.status_code == 200, plain.text
+    assert "素面朝天" not in plain.json()["icons"]       # 不带 = 默认, 不进表
+    for body in ({"kind": "expense", "parent": "", "name": "大写图标", "icon": "Juice"},
+                 {"kind": "expense", "parent": "", "name": "错的颜色", "color": "red"}):
+        r = _post(client, "/bookkeeping/api/categories/add", body)
+        assert r.status_code == 422, r.text              # 形状守卫在模型层
+
+
 def test_delete_category_guards(usersdb):
     """删类别: 挂着小类的大类拒; 有账在用 (含墓碑) 拒并报笔数;
     干净的小类/自建大类删得掉, 树里跟着没了。"""
@@ -111,21 +135,22 @@ def test_delete_category_guards(usersdb):
 
 
 def test_category_page_and_links(usersdb):
-    """管理页在登录墙后 + 页面骨架 (页签/添加行/列表/加载态) 与设置页入口;
-    1.6.2 起顶上添加行专职新建大类, 加小类的口在各大类展开的列表尾。"""
+    """管理页在登录墙后 + 页面骨架 (页签/添加钮/列表/加载态) 与设置页入口;
+    1.7.0 起添加进弹框 (顶栏「＋ 新建大类」与大类组尾「＋ 添加小类」都进它)。"""
     anon = TestClient(m.app)
     assert anon.get("/bookkeeping/categories", follow_redirects=False).status_code == 302
     client, _ = _user(usersdb, "记账人甲")
     page = client.get("/bookkeeping/categories")
     assert page.status_code == 200, page.text
     html = page.text
-    for pin in ("kind-tabs", "msg", "add-name", "add-btn",
-                "cat-list", "loading", "load-error", "retry"):
+    for pin in ("kind-tabs", "msg", "add-cat-btn", "cat-list", "loading", "load-error",
+                "retry", "cat-modal", "cm-title", "cm-name", "cm-icon", "cm-icons",
+                "cm-colors", "cm-err", "cm-ok", "cm-mask"):
         assert f'id="{pin}"' in html, f"管理页缺 {pin}"
-    assert 'placeholder="新大类名"' in html     # 顶上这条只管新建大类 (1.6.2)
+    assert 'placeholder="类别名字 (1-10 个字)"' in html   # 名字在弹框里 (1.7.0)
     assert "add-parent" not in html             # 「加在哪」下拉退役: 口挪进组尾
-    assert 'bookkeeping-categories.js?v=3"' in html and \
-           'bookkeeping-categories.css?v=4"' in html    # 新入口连样式进新缓存
+    assert 'bookkeeping-categories.js?v=4"' in html and \
+           'bookkeeping-categories.css?v=5"' in html    # 新入口连样式进新缓存
     assert 'href="/bookkeeping/settings"' in html       # 返回设置页
     settings = _static("settings.html")
     assert 'href="/bookkeeping/categories"' in settings and "类别管理" in settings
@@ -133,9 +158,8 @@ def test_category_page_and_links(usersdb):
 
 def test_categories_js_wiring():
     """管理页脚本: 三个写口 + 拉树灌色表, 树落 localStorage 与记账页同一份;
-    删除两击确认、色票即点即存、错误亮 detail、组尾「＋ 添加小类」就地输入
-    (回车=添加, 打一半的字重画不丢) — 添加两口共用 nameError 守门。
-    图标色表跨页接线都在。"""
+    新建走弹框 (打字预选图标、手点锁定、回车=添加), 删除走行左滑
+    (红条两击确认, 3 秒缩回), 错误亮 detail (弹框提交亮框里); 图标色表跨页接线都在。"""
     js = _static("bookkeeping-categories.js")
     assert '"/bookkeeping/api/categories", { cache: "no-store" }' in js
     for ep in ('/bookkeeping/api/categories/color', "/bookkeeping/api/categories/add",
@@ -143,27 +167,33 @@ def test_categories_js_wiring():
         assert ep in js, f"缺写口 {ep}"
     assert 'localStorage.setItem("bk-categories-v2"' in js   # 与记账页同一份缓存
     assert "setCatColors(" in js and "catIcon(" in js
-    assert 'armConfirmReset' in js and '"确认" : "✕"' in js  # 两击确认
     assert "SWATCHES" in js and "默认" in js
     assert "data.detail" in js                             # 服务端的人话原因直出
-    # 1.6.2 组尾加小类口 (「加在哪」下拉退役)
-    assert 'data-act="add-kid"' in js and "addKidFor" in js and "submitKid" in js
+    # 1.7.0 弹框 (两口都进它: 顶栏新建大类 + 大类组尾添加小类)
+    assert 'data-act="add-kid"' in js and "modalFor" in js and "openModal" in js
     assert "fillParentSelect" not in js and "add-parent" not in js
-    assert "function nameError(" in js     # 顶栏/组尾两口同一副守门
-    assert js.count("nameError(") == 3     # 定义 + 两个调用口
-    assert 'ev.key !== "Enter"' in js      # 输入行回车 = 点「添加」
-    assert "addKidText = ev.target.value" in js   # 打一半的字重画不丢
-    assert 'addCategory("", name)' in js   # 顶栏专职新建大类 (parent 恒空)
+    assert "addKidFor" not in js and "submitKid" not in js  # 就地输入行退役
+    assert js.count("nameError(") == 2     # 定义 + 弹框提交口 (守门在提交)
+    assert 'ev.key !== "Enter"' in js and "mName = ev.target.value" in js  # 回车=添加; 名字随打换预览
+    assert "mIconLocked" in js and 'icon: modalIcon(), color: mColor' in js  # 手选锁定; 所见=落库
+    assert "catIconBySlug" in js and "ICON_NAMES" in js and "ICON_HINTS" in js
+    assert '往「${modalFor}」加小类' in js  # 组尾进框带父类 (标题换)
+    # 1.7.0 行左滑删除 (记账页账目行同一副手势): 滑开露红条, 两击确认
+    assert "const SW_W = 72" in js and "swClick" in js and "closeOpenRow" in js
+    assert 'closest(".sw-wrap")' in js and "passive: false" in js
+    assert "armConfirmReset" in js and '"确认" : "删除"' in js  # 两击确认
+    assert 'touchstart' in js and "touchcancel" in js
     icons = _static("category-icons.js")
     assert "function setCatColors" in icons and "const CAT_COLORS = new Map()" in icons
+    assert "const CAT_ICONS = new Map()" in icons   # 1.7.0: 自选图标同树灌入
     assert 'CAT_COLORS.get(key) || CAT_COLORS.get(key.split("/")[0])' in icons  # 小类落大类
-    sync = _static("bookkeeping-sync.js")
-    assert "setCatColors(tree);" in sync                   # 拉到树就灌色
-    boot = _static("bookkeeping-boot.js")
-    assert "setCatColors(catTree);" in boot                # 开局缓存树先带色
-    stats = _static("bookkeeping-stats.js")
-    assert 'setCatColors(loadLS("bk-categories-v2"' in stats  # 统计页吃缓存树
+    assert "CAT_ICONS.get(key) || CATEGORY_ICONS[key]" in icons  # 自选排在名字映射前
+    assert "function catIconBySlug" in icons and \
+           "const ICON_NAMES = Object.keys(ICON_BODIES)" in icons
+    assert "setCatColors(tree);" in _static("bookkeeping-sync.js")      # 拉到树就灌色
+    assert "setCatColors(catTree);" in _static("bookkeeping-boot.js")   # 开局缓存树先带色
+    assert 'setCatColors(loadLS("bk-categories-v2"' in _static("bookkeeping-stats.js")
     html = _static("bookkeeping.html")
-    assert "category-icons.js?v=15" in html and "bookkeeping-sync.js?v=3" in html \
+    assert "category-icons.js?v=16" in html and "bookkeeping-sync.js?v=3" in html \
         and "bookkeeping-boot.js?v=4" in html              # 改了内容的都进新缓存
-    assert "category-icons.js?v=15" in _static("stats.html")
+    assert "category-icons.js?v=16" in _static("stats.html")

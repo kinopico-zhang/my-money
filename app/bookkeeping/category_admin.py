@@ -53,7 +53,8 @@ def add_category(body: CategoryAddIn, request: Request,
                  users: Session = Depends(database.get_users_db),
                  bk: Session = Depends(store.get_db)
                  ) -> CategoryTree:
-    """加一个类别 (parent 空 = 新建大类), 排同层末尾, 回新树。"""
+    """加一个类别 (parent 空 = 新建大类), 排同层末尾; 1.7.0 起弹框连图标/
+    颜色一起挑好带进来 (空 = 各自的兜底), 回新树。"""
     _require_user(request, users)
     name = body.name.strip()
     if not name or len(name) > 10 or "/" in name:
@@ -65,7 +66,8 @@ def add_category(body: CategoryAddIn, request: Request,
     if _find(bk, body.kind, body.parent, name) is not None:
         raise HTTPException(400, "这个名字已经有了")
     last = bk.execute(select(func.max(Category.sort))).scalar_one() or 0
-    bk.add(Category(name=name, kind=body.kind, parent=body.parent, sort=last + 1))
+    bk.add(Category(name=name, kind=body.kind, parent=body.parent, sort=last + 1,
+                    icon=body.icon or None, color=body.color or None))
     bk.commit()
     return category_tree(bk)
 
