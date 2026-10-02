@@ -53,7 +53,10 @@ def test_category_icon_colors_dark():
     # 深档 token --icon-*-deep/--ic-deep 退役, 深档现由 mix 就地导出, 自选色全适用)
     assert "--icon-red-deep" not in page_css and "--icon-green-deep" not in page_css
     assert "--ic-deep" not in _SHEET_CSS
-    assert "transition: color .3s ease; color: var(--ink-2); }" in _SHEET_CSS
+    assert ("transition: color .3s ease; color: color-mix(in srgb, "
+            "#ebebf5 62%, var(--icon-tint)); }") in _SHEET_CSS
+    #   ↑ 1.6.1: 灰线稿压平成不透明等效 (62% 白在井底上) — 半透明的灰在线稿
+    #   path 交叉处两次合成叠亮一截, 观感脏
     assert _SHEET_CSS.count("--sel: color-mix(in srgb, var(--cc) 72%, #000)") == 3
     assert " { transition: fill .3s ease; }" in _SHEET_CSS   # 圆底换色同步渐变
     assert "--icon-tint: #2c2c2e;" in page_css       # 圆井底: 控件静止档不换

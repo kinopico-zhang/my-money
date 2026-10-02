@@ -11,6 +11,12 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.6.1", date="2026-10-02", items=[
+        ChangelogItem(kind="修复", text="记一笔里没选中的类别图标线条干净了: 原先那副灰色线稿其实是带透明度的白, "
+                                       "线条交叉、笔画相叠的地方颜色会叠亮一截, 图标上看着一粒粒发亮的小结点; "
+                                       "现在换成算好了的不透明灰 (在图标的圆井底上调成同一副观感), "
+                                       "交叉的地方和单根线条是一个颜色了"),
+    ]),
     ChangelogVersion(version="1.6.0", date="2026-10-02", items=[
         ChangelogItem(kind="新增", text="记一笔的备注收起来的时候, 会照你记过的账自动把类别选上: "
                                        "备注跟历史里哪一笔对得上号, 就替你点好那一笔的类别 (格子上亮出彩色圆底); "
