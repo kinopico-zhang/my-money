@@ -16,16 +16,6 @@ syncNow();
 // 掐掉才是 iOS 上的真解
 document.addEventListener("gesturestart", (event) => event.preventDefault());
 
-// 子页预热 (1.7.4): 主页一就绪就顺手把设置/统计两页的骨架+样式+脚本
-// 取进 HTTP 缓存 —— 都是 ?v= 一年 immutable 的地址, 取过一次往后全是
-// 本地命中; 头一回点开也不等网络, 页面即点即画 (数据照旧点开现拉)
-for (const warm of [
-  "/bookkeeping/settings?v=1", "/bookkeeping/stats?v=1",
-  "/bookkeeping/static/bookkeeping-settings.js?v=3",
-  "/bookkeeping/static/bookkeeping-stats.js?v=2",
-  "/bookkeeping/static/css/bookkeeping-settings.css?v=4",
-  "/bookkeeping/static/css/bookkeeping-stats.css?v=5",
-  "/static/back-swipe.js?v=2",
-]) {
-  fetch(warm).catch(() => { });   // 预热失败无妨 (点开时再取就是)
-}
+// 1.7.4 的子页预热 (拉独立子页的 HTML/CSS/JS 进 HTTP 缓存) 随 1.8.0 退役:
+// 设置/统计/类别管理/更新日志不再是独立网页, 住进推入层 — 层的骨架与脚本
+// 本来就随主页一起装好了, 点开即画, 无物可预热。
