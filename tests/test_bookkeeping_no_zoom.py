@@ -24,11 +24,11 @@ def test_no_zoom_on_every_page():
         html = page.read_text(encoding="utf-8")
         assert "maximum-scale=1, user-scalable=no" in html, \
             f"{page.name} 的 viewport meta 没掐缩放"
-        assert '<script src="/static/no-zoom.js?v=1"></script>' in html, \
+        assert '<script src="/static/no-zoom.js?v=2"></script>' in html, \
             f"{page.name} 没装 no-zoom"
         body_at = html.index("<body")             # 记账/更新日志页带数据属性
         assert html.index("<script", body_at + 1) == \
-            html.index('<script src="/static/no-zoom.js?v=1"></script>'), \
+            html.index('<script src="/static/no-zoom.js?v=2"></script>'), \
             f"{page.name} 的 no-zoom 不是 body 后第一条脚本"
     js = (_HOME / "no-zoom.js").read_text(encoding="utf-8")
     assert '"gesturestart", "gesturechange"' in js   # iOS 捏合走非标准 gesture 事件

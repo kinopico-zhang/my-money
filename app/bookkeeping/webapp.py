@@ -9,11 +9,11 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from .. import account_store, database
+from ..home.staticfiles import VersionedStaticFiles
 from ..models import User
 from ..schemas import ChangelogVersion
 from . import changelog, store
@@ -146,4 +146,5 @@ def bookkeeping_sync(body: SyncRequest, request: Request,
 
 bk_app.include_router(api)
 bk_app.include_router(category_admin)
-bk_app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# 记账静态: 带 ?v= 的回一年 immutable (?v= 家规配套 — 手机公网导航提速的主修)
+bk_app.mount("/static", VersionedStaticFiles(directory=STATIC_DIR), name="static")
