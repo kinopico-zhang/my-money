@@ -13,6 +13,19 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.8.0", date="2026-10-04", items=[
+        ChangelogItem(kind="新增", text="设置、统计、类别管理、更新日志不再是"
+                                       "「跳到另一张网页」了: 点开就从右边滑进来, "
+                                       "盖在记账页上轻轻停稳 (跟 My Music 的二级页"
+                                       "同一个脾气), 右划 / 右拖 / Esc 再滑回去 — "
+                                       "记账页原样躺在底下, 滚到哪了、记到一半的"
+                                       "表格都还在; 设置里进类别管理/更新日志, "
+                                       "也是在层上再叠一层"),
+        ChangelogItem(kind="改进", text="这四页并进记账页一起装: 原先点开要另取的"
+                                       "页面骨架、样式、脚本全省了, 点开即画; "
+                                       "记完账回到统计页, 数字就是新的。老书签/旧"
+                                       "链接点进去会落回记账主页"),
+    ]),
     ChangelogVersion(version="1.7.4", date="2026-10-03", items=[
         ChangelogItem(kind="改进", text="点设置/统计连头一回也不等了: 主页"
                                        "一就绪就顺手把两页的骨架和样式先取到"

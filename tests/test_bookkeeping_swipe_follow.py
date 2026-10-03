@@ -35,19 +35,17 @@ def test_swipe_follows_finger():
 
 
 def test_category_icon_colors_dark():
-    """图标色: 方向线稿色三份 :root 副本 (page/categories/stats) 暗底提亮档
-    (1.5.0); 1.5.2 起弹层里未选中灰线稿、选中翻本色圆底压白线稿 (深档底由
-    color-mix 从 --cc 就地导出, 不再养 token); 色票盘 12 枚暗底档 (库里自选
-    色列全空, 换值无迁移)。"""
-    for name in ("bookkeeping-page.css", "bookkeeping-categories.css",
-                 "bookkeeping-stats.css"):
-        css = (_STATIC / "css" / name).read_text(encoding="utf-8")
+    """图标色: 方向线稿色 :root 档 (page.css — 1.8.0 起唯一副本, 子页并进
+    推入层后层随主文档吃同一份 :root) 暗底提亮档 (1.5.0); 1.5.2 起弹层里
+    未选中灰线稿、选中翻本色圆底压白线稿 (深档底由 color-mix 从 --cc 就地
+    导出, 不再养 token); 色票盘 12 枚暗底档 (库里自选色列全空, 换值无迁移)。"""
+    page_css = (_STATIC / "css" / "bookkeeping-page.css").read_text(
+        encoding="utf-8")
+    for css, name in ((page_css, "bookkeeping-page.css"),):
         assert "--icon-red: #e5666a;" in css, name
         assert "--icon-green: #5fd47f;" in css, name
         assert "--icon-red: #d18f8f;" not in css, name    # 粉彩档不许回潮
         assert "--icon-green: #7fb5a3;" not in css, name
-    page_css = (_STATIC / "css" / "bookkeeping-page.css").read_text(
-        encoding="utf-8")
     # 1.5.2 续 (用户点名「被选中的图标要有颜色」): 选中翻本色圆底压白线稿 —
     # svg 里休眠的 --sel 钩子启用, 底 = 行内 --cc 经 color-mix 压深一档 (旧填色底
     # 深档 token --icon-*-deep/--ic-deep 退役, 深档现由 mix 就地导出, 自选色全适用)

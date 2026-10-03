@@ -133,32 +133,31 @@ def test_delete_category_guards(usersdb):
     assert not any(g["name"] == "试用大类" for g in clean.json()["expense"])
 
 
-def test_category_page_and_links(usersdb):
-    """管理页在登录墙后 + 页面骨架 (页签/添加钮/列表/加载态) 与设置页入口;
-    1.7.0 起添加进弹框 (顶栏「＋ 新建大类」与大类组尾「＋ 添加小类」都进它)。"""
+def test_category_view_and_entries(usersdb):
+    """类别管理视图 (1.8.0 起住推入层): 页签/添加钮/列表/加载态与新建弹框
+    (cm-*) 全在层模板里; 老地址 307 落回主页。1.7.0 起添加进弹框 (「＋ 新建
+    大类」与大类组尾「＋ 添加小类」都进它)。"""
     anon = TestClient(m.app)
     assert anon.get("/bookkeeping/categories", follow_redirects=False).status_code == 302
     client, _ = _user(usersdb, "记账人甲")
-    page = client.get("/bookkeeping/categories")
-    assert page.status_code == 200, page.text
-    html = page.text
+    r = client.get("/bookkeeping/categories", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/bookkeeping/"
+    js = _static("bookkeeping-categories.js")
+    assert "function renderCategoriesView(target)" in js
     for pin in ("kind-tabs", "msg", "add-cat-btn", "cat-list", "loading", "load-error",
                 "retry", "cat-modal", "cm-title", "cm-name", "cm-icon", "cm-icons",
                 "cm-colors", "cm-err", "cm-ok", "cm-mask"):
-        assert f'id="{pin}"' in html, f"管理页缺 {pin}"
-    assert 'placeholder="类别名字 (1-10 个字)"' in html   # 名字在弹框里 (1.7.0)
-    assert "add-parent" not in html             # 「加在哪」下拉退役: 口挪进组尾
-    assert 'bookkeeping-categories.js?v=5"' in html and \
-           'bookkeeping-categories.css?v=6"' in html    # 新入口连样式进新缓存
-    assert 'data-back="/bookkeeping/settings?v=1"' in html   # 右划返回的目标: 设置页 (1.7.3 起目标带版本号进长缓存)
-    settings = _static("settings.html")
-    assert 'href="/bookkeeping/categories?v=1"' in settings and "类别管理" in settings
+        assert f'id="{pin}"' in js, f"类别管理视图缺 {pin}"
+    assert 'placeholder="类别名字 (1-10 个字)"' in js   # 名字在弹框里 (1.7.0)
+    assert "add-parent" not in js             # 「加在哪」下拉退役: 口挪进组尾
+    settings = _static("bookkeeping-settings.js")
+    assert 'data-push="categories"' in settings and "类别管理" in settings  # 设置视图里再推一层
 
 
 def test_categories_js_wiring():
-    """管理页脚本: 三个写口 + 拉树灌色表, 树落 localStorage 与记账页同一份;
-    新建走弹框 (打字预选图标、手点锁定、回车=添加), 删除走行左滑
-    (红条两击确认, 3 秒缩回), 错误亮 detail (弹框提交亮框里); 图标色表跨页接线都在。"""
+    """管理视图脚本: 三个写口 + 拉树灌色表, 树落 localStorage 与记账页同一份;
+    新建走弹框, 删除走行左滑 (两击确认), 错误亮 detail; 元素查找收在 target
+    里 (层滑出还挂 DOM 的空档不抓错层), 图标色表跨页接线都在。"""
     js = _static("bookkeeping-categories.js")
     assert '"/bookkeeping/api/categories", { cache: "no-store" }' in js
     for ep in ('/bookkeeping/api/categories/color', "/bookkeeping/api/categories/add",
@@ -166,6 +165,7 @@ def test_categories_js_wiring():
         assert ep in js, f"缺写口 {ep}"
     assert 'localStorage.setItem("bk-categories-v2"' in js   # 与记账页同一份缓存
     assert "setCatColors(" in js and "catIcon(" in js
+    assert "target.querySelector" in js and "document.querySelector" not in js
     assert "SWATCHES" in js and "默认" in js
     assert "data.detail" in js                             # 服务端的人话原因直出
     # 1.7.0 弹框 (两口都进它: 顶栏新建大类 + 大类组尾添加小类)
@@ -182,6 +182,7 @@ def test_categories_js_wiring():
     assert 'closest(".sw-wrap")' in js and "passive: false" in js
     assert "armConfirmReset" in js and '"确认" : "删除"' in js  # 两击确认
     assert 'touchstart' in js and "touchcancel" in js
+    assert "if (dx > 12) { sw = null; return; }" in js  # 右向让层的右划返回 (任意起手位)
     icons = _static("category-icons.js")
     assert "function setCatColors" in icons and "const CAT_COLORS = new Map()" in icons
     assert "const CAT_ICONS = new Map()" in icons   # 1.7.0: 自选图标同树灌入
@@ -192,8 +193,8 @@ def test_categories_js_wiring():
     assert "setCatColors(tree);" in _static("bookkeeping-sync.js")      # 拉到树就灌色
     assert "setCatColors(catTree);" in _static("bookkeeping-boot.js")   # 开局缓存树先带色
     assert 'setCatColors(loadLS("bk-categories-v2"' in _static("bookkeeping-stats.js")
-    html = _static("bookkeeping.html") + _static("stats.html")
-    assert "category-icons.js?v=17" in html              # 两页图标库都进新缓存 (1.7.1 图形缩档)
-    assert "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=5" in html
-    css = _static("css/bookkeeping-categories.css")
+    html = _static("bookkeeping.html")      # 图标库/同步/开局脚本只随主页装 (层视图同吃)
+    assert "category-icons.js?v=17" in html and \
+           "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=6" in html
+    css = _static("css/bookkeeping-panes.css")
     assert "pointer-events: none" in css   # 1.7.1: 压暗层不挡点击 (1.7.0 丢了这句, 点大类点不动)

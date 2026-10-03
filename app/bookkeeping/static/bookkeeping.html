@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=55">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=41">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=10">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=1">
 </head>
 <body data-kind="expense">
 <script src="/static/no-zoom.js?v=2"></script>
@@ -45,9 +46,11 @@
   <div class="feed-end" id="feed-end" hidden></div>
 </main>
 
+<!-- 1.8.0 起统计/设置不再是跳页: 推入层从右滑入 (bookkeeping-push.js),
+     data-push 写谁推谁; 设置页里的类别管理/更新日志在层里再推一层 -->
 <div id="fab-stack">
-  <a class="quick-btn" href="/bookkeeping/stats?v=1" aria-label="统计"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4.5 19.5h15"/><path d="M7 19.5v-5.5M12 19.5V7.5M17 19.5v-8.5"/></g></svg></a>
-  <a class="quick-btn" href="/bookkeeping/settings?v=1" aria-label="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6.5h8.6M17.4 6.5H20M4 12h3.6M12.4 12H20M4 17.5h10.6M19.4 17.5H20"/><circle cx="15" cy="6.5" r="2.4"/><circle cx="10" cy="12" r="2.4"/><circle cx="17" cy="17.5" r="2.4"/></g></svg></a>
+  <button type="button" class="quick-btn" data-push="stats" aria-label="统计"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4.5 19.5h15"/><path d="M7 19.5v-5.5M12 19.5V7.5M17 19.5v-8.5"/></g></svg></button>
+  <button type="button" class="quick-btn" data-push="settings" aria-label="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6.5h8.6M17.4 6.5H20M4 12h3.6M12.4 12H20M4 17.5h10.6M19.4 17.5H20"/><circle cx="15" cy="6.5" r="2.4"/><circle cx="10" cy="12" r="2.4"/><circle cx="17" cy="17.5" r="2.4"/></g></svg></button>
   <button type="button" id="fab" aria-label="记一笔">＋</button>
 </div>
 
@@ -138,6 +141,9 @@
   <input type="text" id="f-note" maxlength="200" placeholder="输入备注..." autocomplete="off" enterkeyhint="done">
 </div>
 
+<!-- 推入层挂点 (1.8.0): 设置/统计/类别管理/更新日志从右滑入盖住主页 -->
+<div id="push-stack"></div>
+
 <script src="/bookkeeping/static/bookkeeping-viewport.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-merge.js?v=4"></script>
 <script src="/bookkeeping/static/amount-calculator.js?v=1"></script>
@@ -148,6 +154,10 @@
 <script src="/bookkeeping/static/bookkeeping-sync.js?v=3"></script>
 <script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=26"></script>
 <script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=8"></script>
-<script src="/bookkeeping/static/bookkeeping-boot.js?v=5"></script>
+<script src="/bookkeeping/static/bookkeeping-settings.js?v=4"></script>
+<script src="/bookkeeping/static/bookkeeping-stats.js?v=3"></script>
+<script src="/bookkeeping/static/bookkeeping-categories.js?v=6"></script>
+<script src="/bookkeeping/static/bookkeeping-push.js?v=1"></script>
+<script src="/bookkeeping/static/bookkeeping-boot.js?v=6"></script>
 </body>
 </html>

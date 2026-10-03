@@ -1,17 +1,20 @@
-// bookkeeping-categories — 类别管理页脚本: 拉类别树渲染两级列表 (大类手风琴
-// + 小类缩进, 与「选类别」弹层同一副长相), 每行带色点 (点开脚下调色盘,
-// 即点即存)。三个写口 (改色/添加/删除) 都回整棵新树, 就地换上; 树同时落
-// localStorage (bk-categories-v2 — 与记账页同一份缓存, 那边开局/刷新就能
-// 吃到新色)。断网这页只能看不能改 (写口要打服务端)。
-// 添加与删除的口 (1.7.0): 添加进弹框 — 名字/图标/颜色一次选齐 (顶栏「＋
-// 新建大类」与大类列表尾「＋ 添加小类」都进这框, 打字自动预选贴切图标);
-// 删除走行左滑 (记账页账目行同款手势) — 滑开露红条, 两击确认。
+// bookkeeping-categories — 类别管理视图 (1.8.0 起住推入层, 原 categories.html
+// 整页退役): 拉类别树渲染两级列表 (大类手风琴 + 小类缩进, 与「选类别」弹层
+// 同一副长相), 每行带色点 (点开脚下调色盘, 即点即存)。三个写口 (改色/添加/
+// 删除) 都回整棵新树, 就地换上; 树同时落 localStorage (bk-categories-v2 —
+// 与记账页同一份缓存, 那边开局/刷新就能吃到新色)。断网只能看不能改 (写口
+// 要打服务端)。添加与删除的口 (1.7.0): 添加进弹框 — 名字/图标/颜色一次选齐
+// (「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框, 打字自动预选贴切
+// 图标); 删除走行左滑 (记账页账目行同款手势) — 滑开露红条, 两击确认。
+// 元素查找全收在 target 里 (my-music 的教训: 层滑出还挂着 DOM 的空档,
+// 全局找会抓错层); 渲染目标由调用方给。
 "use strict";
 /* global catIcon, catIconBySlug, setCatColors, CATEGORY_ICONS, CAT_ICONS,
-   ICON_NAMES, ICON_HINTS, FALLBACK_ICON */
+          ICON_NAMES, ICON_HINTS, FALLBACK_ICON */
+/* exported renderCategoriesView */
 
-(() => {
-  const $ = s => document.querySelector(s);
+function renderCategoriesView(target) {
+  const $ = s => target.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g,
     c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -42,6 +45,45 @@
   let sw = null;             // 进行中的滑动: { row, body, x0, y0, base, cur, mode }
   let swClick = false;       // 刚滑完的收尾 click 别当成点按
 
+  target.innerHTML = `
+    <div class="pane-title">类别管理</div>
+    <div class="kind-tabs" id="kind-tabs">
+      <button type="button" data-kind="expense" class="on">支出</button>
+      <button type="button" data-kind="income">收入</button>
+    </div>
+    <div class="msg" id="msg" hidden></div>
+    <div class="card">
+      <!-- 顶上这条专职新建大类; 加小类的口在每个大类展开的列表尾 (＋ 添加小类) -->
+      <button type="button" class="add-bar" id="add-cat-btn">＋ 新建大类</button>
+    </div>
+    <div class="card" id="cat-list"></div>
+    <div class="state" id="loading"><div class="spin"></div>正在读取类别…</div>
+    <div class="state" id="load-error" hidden>
+      <div>加载失败, 检查网络后重试</div>
+      <button type="button" class="retry-btn" id="retry">重试</button>
+    </div>
+    <!-- 新建类别弹框 (1.7.0): 「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框
+         (标题/图标预选随入口换)。hidden + .on 双段过渡, 样式 cm-* 一套在
+         bookkeeping-panes.css -->
+    <div id="cat-modal" hidden>
+      <div class="cm-mask" id="cm-mask"></div>
+      <div class="cm-panel" role="dialog" aria-modal="true" aria-label="新建类别">
+        <div class="cm-head"><span id="cm-title">新建大类</span>
+          <button type="button" class="cm-x" id="cm-x" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
+        </div>
+        <div class="cm-prev">
+          <span class="cm-prev-ic" id="cm-icon" aria-hidden="true"></span>
+          <input type="text" id="cm-name" maxlength="10" placeholder="类别名字 (1-10 个字)" autocomplete="off" aria-label="类别名字">
+        </div>
+        <div class="cm-label">图标</div>
+        <div class="cm-icons" id="cm-icons"></div>
+        <div class="cm-label">颜色</div>
+        <div class="cm-colors" id="cm-colors"></div>
+        <div class="cm-err" id="cm-err" hidden></div>
+        <button type="button" class="cm-ok" id="cm-ok">添加</button>
+      </div>
+    </div>`;
+
   const groups = () => (tree ? tree[kind] : []);
   const trayOpen = (parent, name) =>
     !!trayFor && trayFor.parent === parent && trayFor.name === name;
@@ -55,7 +97,7 @@
 
   function saveTree() {      // 树缓存与记账页同一份, 别的页开局就吃到新色
     try { localStorage.setItem("bk-categories-v2", JSON.stringify(tree)); }
-    catch (_e) { /* 私隐模式/盘满: 只影响别页用旧缓存, 本页不受影响 */ }
+    catch (_e) { /* 私隐模式/盘满: 只影响别页用旧缓存, 本层不受影响 */ }
   }
 
   function applyTree(next) {
@@ -180,7 +222,7 @@
   }
 
   function openModal(parent) {         // parent 空 = 新建大类; 名字框不自动聚焦
-    closeOpenRow();                    // (这页没装视口医生, 不去顶 iOS 键盘几何)
+    closeOpenRow();                    // (不去顶 iOS 键盘几何, 面板高度自己算)
     trayFor = null;
     confirmKey = null;
     modalFor = parent || null;
@@ -231,7 +273,7 @@
     setTimeout(() => {                  // 不走全量 render (会把滑开的行拍回去):
       if (confirmKey !== key) return;   // 只清旗, 钮还在 DOM 就地改回文案
       confirmKey = null;
-      const btn = document.querySelector(
+      const btn = target.querySelector(
         `#cat-list .sw-del[data-parent="${CSS.escape(key.parent)}"]` +
         `[data-name="${CSS.escape(key.name)}"]`);
       if (btn) { btn.textContent = "删除"; btn.classList.remove("confirm"); }
@@ -325,8 +367,9 @@
       if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
         sw = null; closeOpenRow(); return;             // 滚列表: 滑开的行顺手收掉
       }
-      if (sw.x0 < 24 && dx > 12) { sw = null; return; }   // 左缘右划 = 全局返回 (back-swipe 接管), 行不抢
-      if (Math.abs(dx) > 12) {                   // 12 起才当滑 (点按的手指微晃不开门)
+      if (dx > 12) { sw = null; return; }   // 右向 = 推入层的右划返回 (层任意位置
+                                            // 起手都归它, 不只左缘), 行不抢
+      if (dx < -12) {                  // 12 起才当滑 (点按的手指微晃不开门)
         sw.mode = "swipe"; sw.row.classList.add("dragging");
         if (openRow && openRow !== sw.row) closeOpenRow();
       } else return;
@@ -354,7 +397,7 @@
   $("#cat-list").addEventListener("touchend", swFinish);
   $("#cat-list").addEventListener("touchcancel", swFinish);
 
-  document.addEventListener("touchstart", e => {        // 滑开的行: 点到行外任何地方收掉
+  target.addEventListener("touchstart", e => {    // 滑开的行: 点到行外任何地方收掉
     if (staleRow() && e.target instanceof Element && !e.target.closest(".sw-wrap"))
       closeOpenRow();
   }, { passive: true });
@@ -397,7 +440,7 @@
     const btn = ev.target.closest("button[data-kind]");
     if (!btn || btn.dataset.kind === kind) return;
     kind = btn.dataset.kind;
-    document.querySelectorAll("#kind-tabs button").forEach(b =>
+    target.querySelectorAll("#kind-tabs button").forEach(b =>
       b.classList.toggle("on", b === btn));
     openTop = null; trayFor = null; confirmKey = null;
     closeOpenRow();
@@ -424,4 +467,4 @@
   }
   $("#retry").addEventListener("click", load);
   load();
-})();
+}

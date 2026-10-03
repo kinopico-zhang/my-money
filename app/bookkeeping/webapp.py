@@ -8,7 +8,7 @@ from datetime import timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -81,27 +81,28 @@ def bookkeeping_login_page(request: Request) -> FileResponse:
 
 
 @bk_app.get("/changelog")
-def bookkeeping_changelog_page(request: Request) -> FileResponse:
-    """更新日志页 (记账应用自己的版本线, 与 My Tesla 的日志各自独立)。"""
-    return _page("changelog.html", request)
+def bookkeeping_changelog_page() -> RedirectResponse:
+    """更新日志页 (1.8.0 起住推入层, 独立页退役): 老链接/收藏落回记账主页,
+    进去后点「设置 → 更新日志」即见同一份内容。"""
+    return RedirectResponse("/bookkeeping/", status_code=307)
 
 
 @bk_app.get("/settings")
-def bookkeeping_settings_page(request: Request) -> FileResponse:
-    """设置页: 当前账号/版本号, 更新日志入口, 退出登录。"""
-    return _page("settings.html", request)
+def bookkeeping_settings_page() -> RedirectResponse:
+    """设置页 (1.8.0 起住推入层, 独立页退役): 老链接/收藏落回记账主页。"""
+    return RedirectResponse("/bookkeeping/", status_code=307)
 
 
 @bk_app.get("/stats")
-def bookkeeping_stats_page(request: Request) -> FileResponse:
-    """统计页: 按月聚合本地账本 (分类榜/记账人分摊), 断网也能看。"""
-    return _page("stats.html", request)
+def bookkeeping_stats_page() -> RedirectResponse:
+    """统计页 (1.8.0 起住推入层, 独立页退役): 老链接/收藏落回记账主页。"""
+    return RedirectResponse("/bookkeeping/", status_code=307)
 
 
 @bk_app.get("/categories")
-def bookkeeping_categories_page(request: Request) -> FileResponse:
-    """类别管理页 (设置页进): 挑图标颜色, 增删类别。"""
-    return _page("categories.html", request)
+def bookkeeping_categories_page() -> RedirectResponse:
+    """类别管理页 (1.8.0 起住推入层, 独立页退役): 老链接/收藏落回记账主页。"""
+    return RedirectResponse("/bookkeeping/", status_code=307)
 
 
 @bk_app.get("/changelog/api/entries")

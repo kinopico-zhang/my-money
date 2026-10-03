@@ -6,12 +6,11 @@ _CSS = Path(__file__).parent.parent / "app" / "bookkeeping" / "static" / "css"
 
 
 def test_bookkeeping_dark_theme_palette():
-    """五份页面级 :root 副本是手工同步的, 主题身份 (dark 声明 + 纯黑壳 + 蓝强调)
-    逐份点名 — 漏改一份就有的页还停在浅色; 顺手把旧浅色时代的字面量钉死为零
-    (再冒头就是漏网的硬编码, 类别色票在 js 里不归这管)。"""
-    with_root = ["bookkeeping-page.css", "bookkeeping-changelog.css",
-                 "bookkeeping-categories.css", "bookkeeping-stats.css",
-                 "bookkeeping-settings.css"]
+    """页面级 :root 副本是手工同步的, 主题身份 (dark 声明 + 纯黑壳 + 蓝强调)
+    逐份点名 — 漏改就有的页还停在浅色 (1.8.0 起唯一副本在 page.css: 四个子
+    页并进推入层, 层随主文档吃同一份 :root); 顺手把旧浅色时代的字面量钉死
+    为零 (再冒头就是漏网的硬编码, 类别色票在 js 里不归这管)。"""
+    with_root = ["bookkeeping-page.css"]
     for name in with_root:
         text = (_CSS / name).read_text(encoding="utf-8")
         assert "color-scheme: dark" in text, name
