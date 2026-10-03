@@ -325,6 +325,7 @@
       if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
         sw = null; closeOpenRow(); return;             // 滚列表: 滑开的行顺手收掉
       }
+      if (sw.x0 < 24 && dx > 12) { sw = null; return; }   // 左缘右划 = 全局返回 (back-swipe 接管), 行不抢
       if (Math.abs(dx) > 12) {                   // 12 起才当滑 (点按的手指微晃不开门)
         sw.mode = "swipe"; sw.row.classList.add("dragging");
         if (openRow && openRow !== sw.row) closeOpenRow();

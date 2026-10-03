@@ -429,8 +429,9 @@ function catIcon(cat, kind) {
 // 圆底是自带的 <circle> (铺满井, 井的 CSS 不再画底色); 填色走行内 style
 // 而非 fill 属性 —— var() 在 presentation attribute 里 iOS 不认。
 // 两态: 平时白圆底 (不描边) 坐同色线稿; 选中 (css 给 --sel) 才换方向色底压白图形。
-// 图形缩一圈居中 (scale .7, 平移 24-24×.7=7.2): 圆里多留边, 图形更秀气
-const GLYPH_INSET = 'transform="translate(7.2 7.2) scale(.7)"';
+// 图形缩一圈居中 (1.7.1 再缩一档: scale .6, 平移 24-24×.6=9.6) — 圆底个头
+// 不动, 圆里多留边 (1.7.0 的 .7 用户点名图形太大)
+const GLYPH_INSET = 'transform="translate(9.6 9.6) scale(.6)"';
 function catIconBySlug(name, color) {
   return `<svg class="ci" viewBox="0 0 48 48" style="--cc:${color}" aria-hidden="true">` +
     `<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>` +

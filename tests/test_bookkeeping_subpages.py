@@ -8,6 +8,7 @@ import app.main as m
 from tests.bookkeeping_sync_helpers import _user
 
 _BASE = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
+_HOME = Path(__file__).parent.parent / "app" / "home" / "static"
 
 
 def _static(name: str) -> str:
@@ -51,6 +52,28 @@ def test_subpages_serve(usersdb):
                 "by-cat", "by-cat-in", "by-who", "income-card"):
         assert f'id="{pin}"' in t.text, f"统计页缺 {pin}"
     assert "/bookkeeping/static/category-icons.js" in t.text   # 分类行图标复用类别图标库
+
+
+def test_back_swipe_everywhere():
+    """1.7.1 全局右划返回: 返回钮退役 (设置/统计/类别管理三页撤掉), 四个子页
+    (含更新日志) 都装 back-swipe.js 且 body 带 data-back 目标; 手势与类别列表
+    的行左滑互不抢 (行滑那头认左缘起手右划让位), 弹框开着不返回。"""
+    js = (_HOME / "back-swipe.js").read_text(encoding="utf-8")
+    assert "document.body.dataset.back" in js and "location.href = target" in js
+    assert "touchcancel" in js and "passive: false" in js
+    assert 'closest("#cat-modal")' in js               # 弹框开着不返回
+    for page, back in (("settings", "/bookkeeping/"), ("stats", "/bookkeeping/"),
+                       ("changelog", "/bookkeeping/")):
+        html = _static(f"{page}.html")
+        assert f'data-back="{back}"' in html, f"{page} 没给返回目标"
+        assert '<script src="/static/back-swipe.js?v=1"></script>' in html, page
+        assert 'class="back"' not in html, f"{page} 返回钮没撤干净"
+    cats = _static("categories.html")
+    assert 'data-back="/bookkeeping/settings"' in cats and \
+           '<script src="/static/back-swipe.js?v=1"></script>' in cats
+    assert 'class="back"' not in cats                   # 类别管理返回的是设置页
+    rows = _static("bookkeeping-categories.js")
+    assert "sw.x0 < 24 && dx > 12" in rows              # 左缘右划让位给返回, 行不抢
 
 
 def test_settings_js_wiring():
