@@ -148,5 +148,12 @@ class CategoryAddIn(BaseModel):
         return _check_hex_color(value)
 
 
+class CategoryUpdateIn(CategoryAddIn):
+    """改一个小类 (1.9.0 点行开框): 名字/图标/颜色一起; new_name 与 name
+    相同 = 只改图标颜色。改名由接口迁账上的组合名 (含墓碑)。"""
+
+    new_name: str = Field(min_length=1, max_length=10)
+
+
 class CategoryDeleteIn(_CategoryTarget):
     """删一个类别 (在用/挂着小类会被拒)。"""

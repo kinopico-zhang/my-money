@@ -27,9 +27,9 @@ def test_quick_buttons_push_layers():
         'href="/bookkeeping/settings' not in html   # 跳页入口退役
     assert 'id="fab-stack"' in html and 'id="fab"' in html
     assert '<div id="push-stack"></div>' in html
-    for src in ("css/bookkeeping-panes.css?v=1",
+    for src in ("css/bookkeeping-panes.css?v=2",
                 "bookkeeping-settings.js?v=4", "bookkeeping-stats.js?v=3",
-                "bookkeeping-categories.js?v=6", "bookkeeping-push.js?v=1",
+                "bookkeeping-categories.js?v=7", "bookkeeping-push.js?v=1",
                 "bookkeeping-boot.js?v=6"):
         assert f'src="/bookkeeping/static/{src}"' in html or \
             f'href="/bookkeeping/static/{src}"' in html, f"主页没装 {src}"
@@ -97,6 +97,13 @@ def test_settings_view_wiring():
     assert "status === 401" in js and '"/bookkeeping/login"' in js
     assert 'id="me-name"' in js and 'id="ver"' in js and 'id="logout"' in js
     assert "类别管理" in js and "更新日志" in js and "退出登录" in js
+    css = _static("css/bookkeeping-panes.css")
+    # 1.9.0 修一: iOS 给按钮吃 flex 却不块化, 行按钮得 width: 100% 才吃满
+    # 卡宽 (用户报「类别管理/更新日志没填充整行」; my-music 1.8.24 同款兜底)
+    assert ".push-pane button.row { width: 100%; text-align: left; }" in css
+    # 1.9.0 修二: 层顶衬与 my-music 根页首段标题同一高度 (env+14, 不吃
+    # --top-clear 的 96 下限 — 用户点名对齐 my-music 根页)
+    assert "padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px" in css
 
 
 def test_stats_view_aggregates_local_ledger():
