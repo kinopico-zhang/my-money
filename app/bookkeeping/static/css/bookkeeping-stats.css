@@ -60,14 +60,8 @@ header {
 }
 .nav-row { display: flex; align-items: center; gap: 8px;
            max-width: 640px; width: 100%; margin: 0 auto; }
-.back {                    /* 返回记账页: 暗井胶囊 (时间/标签牌同一副) */
-  display: flex; align-items: center; gap: 1px; font-size: 14px;
-  background: var(--surface-2); border-radius: 999px; padding: 5px 12px 5px 8px;
-}
-.back svg { width: 15px; height: 15px; display: block; }
-.back:active { background: var(--press); }
+/* 返回钮退役 (1.7.1): 换全局左缘右划返回 (back-swipe.js), 行里只剩题词 */
 .page-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
-.nav-row::after { content: ""; width: 68px; }   /* 题词真居中: 右边垫回返回钮那格宽 */
 
 /* ---------- 正文 ---------- */
 main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);

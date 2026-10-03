@@ -11,6 +11,17 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.7.1", date="2026-10-03", items=[
+        ChangelogItem(kind="改进", text="返回钮退役, 换成全局右划返回: 屏幕左缘起手往右一划,"
+                                       " 页面跟手滑开, 松手就退回上一页 (设置/统计/类别管理/"
+                                       "更新日志都认); 划不够线自己弹回, 轻快一甩也算数。"
+                                       "原先各页左上角那枚「返回」胶囊撤了"),
+        ChangelogItem(kind="修复", text="类别管理里点大类展开不开了 — 昨天那版给行身加按一下"
+                                       "压暗的透明层时漏了一句「不挡点击」, 整行的点击都被它吃了"
+                                       "(大类头、色点全都点不动); 补上后点大类开合、点色点挑色都回来了"),
+        ChangelogItem(kind="修复", text="类别图标里的图形缩了一号 — 圆底个头不变, 线稿图形在圆里"
+                                       "坐小一圈、留边更宽 (昨天换上的新图标栅格里图形顶得太满, 显得挤)"),
+    ]),
     ChangelogVersion(version="1.7.0", date="2026-10-02", items=[
         ChangelogItem(kind="新增", text="新建类别换成整框了: 点「＋ 新建大类」或大类里的「＋ 添加小类」,"
                                        "底部弹出一个框, 名字、图标、颜色一次选齐 — 图标是一整版"

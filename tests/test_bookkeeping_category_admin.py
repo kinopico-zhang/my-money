@@ -92,8 +92,7 @@ def test_add_category_with_icon_and_color(usersdb):
                 {"kind": "expense", "parent": "", "name": "下午茶",
                  "icon": "juice", "color": "#8a5fc9"})
     assert top.status_code == 200, top.text
-    assert top.json()["icons"]["下午茶"] == "juice"      # 大类按短名收
-    assert top.json()["colors"]["下午茶"] == "#8a5fc9"
+    assert top.json()["icons"]["下午茶"] == "juice" and top.json()["colors"]["下午茶"] == "#8a5fc9"
     kid = _post(client, "/bookkeeping/api/categories/add",
                 {"kind": "expense", "parent": "餐饮", "name": "宵夜加餐",
                  "icon": "barbecue", "color": "#4dbf90"})
@@ -149,9 +148,9 @@ def test_category_page_and_links(usersdb):
         assert f'id="{pin}"' in html, f"管理页缺 {pin}"
     assert 'placeholder="类别名字 (1-10 个字)"' in html   # 名字在弹框里 (1.7.0)
     assert "add-parent" not in html             # 「加在哪」下拉退役: 口挪进组尾
-    assert 'bookkeeping-categories.js?v=4"' in html and \
-           'bookkeeping-categories.css?v=5"' in html    # 新入口连样式进新缓存
-    assert 'href="/bookkeeping/settings"' in html       # 返回设置页
+    assert 'bookkeeping-categories.js?v=5"' in html and \
+           'bookkeeping-categories.css?v=6"' in html    # 新入口连样式进新缓存
+    assert 'data-back="/bookkeeping/settings"' in html   # 右划返回的目标: 设置页 (1.7.1 返回钮退役)
     settings = _static("settings.html")
     assert 'href="/bookkeeping/categories"' in settings and "类别管理" in settings
 
@@ -193,7 +192,8 @@ def test_categories_js_wiring():
     assert "setCatColors(tree);" in _static("bookkeeping-sync.js")      # 拉到树就灌色
     assert "setCatColors(catTree);" in _static("bookkeeping-boot.js")   # 开局缓存树先带色
     assert 'setCatColors(loadLS("bk-categories-v2"' in _static("bookkeeping-stats.js")
-    html = _static("bookkeeping.html")
-    assert "category-icons.js?v=16" in html and "bookkeeping-sync.js?v=3" in html \
-        and "bookkeeping-boot.js?v=4" in html              # 改了内容的都进新缓存
-    assert "category-icons.js?v=16" in _static("stats.html")
+    html = _static("bookkeeping.html") + _static("stats.html")
+    assert "category-icons.js?v=17" in html              # 两页图标库都进新缓存 (1.7.1 图形缩档)
+    assert "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=4" in html
+    css = _static("css/bookkeeping-categories.css")
+    assert "pointer-events: none" in css   # 1.7.1: 压暗层不挡点击 (1.7.0 丢了这句, 点大类点不动)

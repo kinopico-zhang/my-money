@@ -116,7 +116,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert "border: 1.5px solid var(--ink-3)" not in css   # 圆底自带, 不描边
     assert ".ci { color: var(--cc); }" in css   # 本色线稿 (page.css 全局脸; 弹层里另有灰/亮收口)
     assert '<circle cx="24" cy="24" r="24" style="fill: var(--sel, var(--icon-tint))"/>' in icons \
-        and "translate(7.2 7.2) scale(.7)" in icons   # 圆底平时白井 (--icon-tint), 图形缩一圈居中
+        and "translate(9.6 9.6) scale(.6)" in icons   # 圆底平时白井 (--icon-tint), 1.7.1 图形再缩一档
     assert "function catTint(" not in icons and "--icon-red-tint" not in css \
         and "ci-ring" not in icons   # 未选中: 白圆底不描边 (红/绿淡底撤)
     assert 'kind === "income" ? "var(--icon-green)" : "var(--icon-red)"' in icons \
