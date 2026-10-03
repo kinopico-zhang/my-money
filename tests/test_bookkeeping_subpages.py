@@ -20,7 +20,8 @@ def test_quick_buttons_on_main_page():
     悬浮位收成一竖排 (#fab-stack 定位, #fab 只管自己的脸)。"""
     html = _static("bookkeeping.html")
     css = _static("css/bookkeeping-page.css")
-    assert 'href="/bookkeeping/stats"' in html and 'href="/bookkeeping/settings"' in html
+    assert 'href="/bookkeeping/stats?v=1"' in html and \
+        'href="/bookkeeping/settings?v=1"' in html
     assert 'id="fab-stack"' in html and 'id="fab"' in html and 'class="quick-btn"' in html
     stack = css.split("#fab-stack {")[1].split("}")[0]
     assert "position: fixed; right: 18px;" in stack and "z-index: 60;" in stack
@@ -45,13 +46,23 @@ def test_subpages_serve(usersdb):
     s = client.get("/bookkeeping/settings")
     assert s.status_code == 200, s.text
     assert 'id="me-name"' in s.text and 'id="ver"' in s.text
-    assert 'href="/bookkeeping/changelog"' in s.text and 'id="logout"' in s.text
+    assert 'href="/bookkeeping/changelog?v=1"' in s.text and 'id="logout"' in s.text
+    assert 'href="/bookkeeping/categories?v=1"' in s.text
     t = client.get("/bookkeeping/stats")
     assert t.status_code == 200, t.text
     for pin in ("m-prev", "m-next", "m-title", "sum-out", "sum-in",
                 "by-cat", "by-cat-in", "by-who", "income-card"):
         assert f'id="{pin}"' in t.text, f"统计页缺 {pin}"
     assert "/bookkeeping/static/category-icons.js" in t.text   # 分类行图标复用类别图标库
+    # 1.7.3 子页 HTML 也版本化: 带 ?v= 的一年 immutable (手机点开即画, 不再
+    # 先等服务器点头), 不带的照旧 ETag 重校验; 挂载点无斜杠地址直出
+    # (start_url/门厅链接/登录回跳指的都是它, 原先 307 跳斜杠版白付一跳)
+    assert s.headers["cache-control"] == "no-cache"
+    for path in ("/bookkeeping/settings?v=1", "/bookkeeping/stats?v=1",
+                 "/bookkeeping/changelog?v=1", "/bookkeeping/categories?v=1"):
+        assert client.get(path).headers["cache-control"] == \
+            "public, max-age=31536000, immutable", path
+    assert client.get("/bookkeeping", follow_redirects=False).status_code == 200
 
 
 def test_back_swipe_everywhere():
@@ -69,7 +80,7 @@ def test_back_swipe_everywhere():
         assert '<script src="/static/back-swipe.js?v=2"></script>' in html, page
         assert 'class="back"' not in html, f"{page} 返回钮没撤干净"
     cats = _static("categories.html")
-    assert 'data-back="/bookkeeping/settings"' in cats and \
+    assert 'data-back="/bookkeeping/settings?v=1"' in cats and \
            '<script src="/static/back-swipe.js?v=2"></script>' in cats
     assert 'class="back"' not in cats                   # 类别管理返回的是设置页
     rows = _static("bookkeeping-categories.js")
@@ -95,6 +106,10 @@ def test_settings_js_wiring():
     js = _static("bookkeeping-settings.js")
     assert '"/api/me"' in js and "changelog/api/entries" in js
     assert '"/bookkeeping/api/logout"' in js and "location.href" in js
+    # 1.7.3: 页面骨架进长缓存后登录墙拦不到它 — 会话过期 (401) 自己回登录页
+    assert "status === 401" in js and '"/bookkeeping/login"' in js
+    assert '<script src="/bookkeeping/static/bookkeeping-settings.js?v=2">' \
+        in _static("settings.html")
 
 
 def test_stats_js_aggregates_local_ledger():

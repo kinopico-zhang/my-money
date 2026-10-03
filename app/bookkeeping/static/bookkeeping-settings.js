@@ -6,9 +6,14 @@
   const $ = s => document.querySelector(s);
 
   fetch("/api/me")                      // 门厅会话接口: 菜单那行账号信息同源
-    .then(r => (r.ok ? r.json() : null))
+    .then(r => {
+      // 页面骨架带版本号进了长缓存 (2026-10-03 秒开批), 会话过期时登录墙
+      // 拦不到它 — 401 自己回登录页, 账号行照旧占位兜底
+      if (r.status === 401) location.href = "/bookkeeping/login";
+      return r.ok ? r.json() : null;
+    })
     .then(me => { if (me && me.name) $("#me-name").textContent = me.name; })
-    .catch(() => { /* 断网/会话过期: 行内容着占位 */ });
+    .catch(() => { /* 断网: 行内容着占位 */ });
 
   fetch("/bookkeeping/changelog/api/entries")   // 版本号 = 版本线第一条
     .then(r => (r.ok ? r.json() : null))

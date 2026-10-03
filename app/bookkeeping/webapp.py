@@ -35,12 +35,16 @@ async def sqlalchemy_error_handler(
     return JSONResponse({"detail": f"数据库查询失败: {exc}"}, status_code=503)
 
 
-def _page(fname: str, directory: Path | None = None) -> FileResponse:
-    """HTML 页面: 允许缓存但必须带 ETag 重新校验 (与主应用同一策略)。
+def _page(fname: str, request: Request, directory: Path | None = None) -> FileResponse:
+    """HTML 页面: 带 ?v= 的一年 immutable (?v= 家规配套 — 2026-10-03 点子页
+    秒开的主修, 手机公网点页不再先等服务器点头), 不带的必须带 ETag 重新校验
+    (与主应用同一策略)。
 
     目录缺省记账应用自己的静态目录; 登录页是门厅共享层的。"""
     resp = FileResponse((directory or STATIC_DIR) / fname)
-    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["Cache-Control"] = (
+        "public, max-age=31536000, immutable"
+        if "v" in request.query_params else "no-cache")
     return resp
 
 
@@ -53,39 +57,51 @@ def _require_user(request: Request, users: Session) -> User:
 
 
 @bk_app.get("/")
-def bookkeeping_page() -> FileResponse:
+def bookkeeping_page(request: Request) -> FileResponse:
     """记账页: 离线优先 (本地保存, 联网同步), 多人账本。"""
-    return _page("bookkeeping.html")
+    return _page("bookkeeping.html", request)
+
+
+bare_root = APIRouter()
+
+
+@bare_root.get("/bookkeeping", include_in_schema=False)
+def bookkeeping_root(request: Request) -> FileResponse:
+    """记账页, 挂载点裸地址版: /bookkeeping (无斜杠) 是 manifest 的 start_url、
+    门厅账号页链接、登录后回跳共同的落点, 而 Mount 不收裸地址 — 原先 307 跳
+    /bookkeeping/ 再取页, 手机公网冷启动每次白付一跳往返 (2026-10-03 砍掉)。
+    本路由由宿主 (组合仓 / 单仓跑) include, 认同一枚会话中间件。"""
+    return _page("bookkeeping.html", request)
 
 
 @bk_app.get("/login")
-def bookkeeping_login_page() -> FileResponse:
+def bookkeeping_login_page(request: Request) -> FileResponse:
     """记账应用 scope 内的登录页 (门厅那张): 会话过期 302 过来不越界。"""
-    return _page("login.html", directory=HOME_STATIC_DIR)
+    return _page("login.html", request, directory=HOME_STATIC_DIR)
 
 
 @bk_app.get("/changelog")
-def bookkeeping_changelog_page() -> FileResponse:
+def bookkeeping_changelog_page(request: Request) -> FileResponse:
     """更新日志页 (记账应用自己的版本线, 与 My Tesla 的日志各自独立)。"""
-    return _page("changelog.html")
+    return _page("changelog.html", request)
 
 
 @bk_app.get("/settings")
-def bookkeeping_settings_page() -> FileResponse:
+def bookkeeping_settings_page(request: Request) -> FileResponse:
     """设置页: 当前账号/版本号, 更新日志入口, 退出登录。"""
-    return _page("settings.html")
+    return _page("settings.html", request)
 
 
 @bk_app.get("/stats")
-def bookkeeping_stats_page() -> FileResponse:
+def bookkeeping_stats_page(request: Request) -> FileResponse:
     """统计页: 按月聚合本地账本 (分类榜/记账人分摊), 断网也能看。"""
-    return _page("stats.html")
+    return _page("stats.html", request)
 
 
 @bk_app.get("/categories")
-def bookkeeping_categories_page() -> FileResponse:
+def bookkeeping_categories_page(request: Request) -> FileResponse:
     """类别管理页 (设置页进): 挑图标颜色, 增删类别。"""
-    return _page("categories.html")
+    return _page("categories.html", request)
 
 
 @bk_app.get("/changelog/api/entries")
