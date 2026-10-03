@@ -10,7 +10,8 @@ from app.bookkeeping import changelog
 def test_versions_wellformed():
     """独立版本线从 1.0.0 起; 每版字段齐全, 文案是用户视角的一句话。"""
     vs = changelog.entries()
-    assert [v.version for v in vs] == ["1.7.2", "1.7.1", "1.7.0", "1.6.2", "1.6.1",
+    assert [v.version for v in vs] == ["1.7.3", "1.7.2", "1.7.1", "1.7.0",
+                                       "1.6.2", "1.6.1",
                                        "1.6.0", "1.5.2", "1.5.1", "1.5.0",
                                        "1.4.0", "1.3.1",
                                        "1.3.0", "1.2.0", "1.1.0", "1.0.1",
@@ -53,7 +54,7 @@ def test_money_changelog_page_skeleton(auth):
     for frag in [
         "<title>更新日志 · My Money</title>",
         '<a href="/bookkeeping/">记账</a>',                    # 回主页
-        '<a class="on" href="/bookkeeping/changelog">更新日志</a>',   # 菜单 (自身亮)
+        '<a class="on" href="/bookkeeping/changelog?v=1">更新日志</a>',   # 菜单 (自身亮; 1.7.3 起带版本号进长缓存)
         'id="brand-menu"', 'id="logout"',
         'id="entries"', 'id="list"', 'id="loading"', 'id="error"', 'id="retry"',
         'data-changelog-api="/bookkeeping/changelog/api/entries"',   # 数据源 (body)

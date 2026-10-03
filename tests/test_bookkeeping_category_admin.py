@@ -150,9 +150,9 @@ def test_category_page_and_links(usersdb):
     assert "add-parent" not in html             # 「加在哪」下拉退役: 口挪进组尾
     assert 'bookkeeping-categories.js?v=5"' in html and \
            'bookkeeping-categories.css?v=6"' in html    # 新入口连样式进新缓存
-    assert 'data-back="/bookkeeping/settings"' in html   # 右划返回的目标: 设置页 (1.7.1 返回钮退役)
+    assert 'data-back="/bookkeeping/settings?v=1"' in html   # 右划返回的目标: 设置页 (1.7.3 起目标带版本号进长缓存)
     settings = _static("settings.html")
-    assert 'href="/bookkeeping/categories"' in settings and "类别管理" in settings
+    assert 'href="/bookkeeping/categories?v=1"' in settings and "类别管理" in settings
 
 
 def test_categories_js_wiring():
