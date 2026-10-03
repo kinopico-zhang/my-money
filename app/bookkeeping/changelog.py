@@ -13,6 +13,12 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.7.4", date="2026-10-03", items=[
+        ChangelogItem(kind="改进", text="点设置/统计连头一回也不等了: 主页"
+                                       "一就绪就顺手把两页的骨架和样式先取到"
+                                       "手机里, 点开即画 (数据照旧点开现拉); "
+                                       "设置页也照样预热类别管理和更新日志。"),
+    ]),
     ChangelogVersion(version="1.7.3", date="2026-10-03", items=[
         ChangelogItem(kind="改进", text="点设置/统计秒开: 设置/统计/更新日志/"
                                        "类别管理四页的页面骨架也带版本号进了"

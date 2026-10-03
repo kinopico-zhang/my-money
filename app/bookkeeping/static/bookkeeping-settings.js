@@ -20,6 +20,18 @@
     .then(vs => { if (vs && vs[0]) $("#ver").textContent = vs[0].version; })
     .catch(() => { /* 断网: 版本行内容着占位 */ });
 
+  // 子页预热 (1.7.4): 设置页就绪顺手把类别管理/更新日志两页的骨架+样式
+  // 取进缓存 (?v= 一年 immutable, 往后本地命中) —— 点开即画
+  for (const warm of [
+    "/bookkeeping/categories?v=1", "/bookkeeping/changelog?v=1",
+    "/bookkeeping/static/bookkeeping-categories.js?v=5",
+    "/bookkeeping/static/css/bookkeeping-categories.css?v=6",
+    "/bookkeeping/static/css/bookkeeping-changelog.css?v=15",
+    "/static/menu-user.js?v=2", "/static/changelog-page.js?v=1",
+  ]) {
+    fetch(warm).catch(() => { });   // 预热失败无妨 (点开时再取就是)
+  }
+
   $("#logout").addEventListener("click", () => {
     fetch("/bookkeeping/api/logout", { method: "POST" })
       .catch(() => { /* 清 cookie 在服务端, 失败也照走 (cookie 可能已没了) */ })
