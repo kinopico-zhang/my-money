@@ -13,6 +13,18 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.9.0", date="2026-10-04", items=[
+        ChangelogItem(kind="新增", text="类别管理里点一下小类就能改: 名字、图标、"
+                                       "颜色都在当初新建的那枚弹框里改; 改名字的话, "
+                                       "账上记过的每一笔也跟着换成新类别 (删过的也"
+                                       "换, 别的设备同步时自然跟上); 删除还是老路子 "
+                                       "— 左滑"),
+        ChangelogItem(kind="修复", text="设置里的「类别管理」「更新日志」两行在手机上"
+                                       "没吃满整行宽, 右边空当点着没反应 — 补齐"
+                                       "(iOS 对行按钮的老脾气, My Music 踩过同款)"),
+        ChangelogItem(kind="修复", text="推入层页顶的大标题矮了小半寸, 与 My Music "
+                                       "根页标题不在一条线上 — 顶衬对齐同一高度"),
+    ]),
     ChangelogVersion(version="1.8.0", date="2026-10-04", items=[
         ChangelogItem(kind="新增", text="设置、统计、类别管理、更新日志不再是"
                                        "「跳到另一张网页」了: 点开就从右边滑进来, "

@@ -6,6 +6,8 @@
 // 要打服务端)。添加与删除的口 (1.7.0): 添加进弹框 — 名字/图标/颜色一次选齐
 // (「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框, 打字自动预选贴切
 // 图标); 删除走行左滑 (记账页账目行同款手势) — 滑开露红条, 两击确认。
+// 1.9.0 点小类行身开同一框编辑 (名字/图标/颜色, 提交走 update 口, 改名由
+// 服务端把账面上的组合名一并迁走)。
 // 元素查找全收在 target 里 (my-music 的教训: 层滑出还挂着 DOM 的空档,
 // 全局找会抓错层); 渲染目标由调用方给。
 "use strict";
@@ -31,9 +33,12 @@ function renderCategoriesView(target) {
   let trayFor = null;        // 调色盘垫在哪一行脚下 {parent, name} (只开一盘)
   let confirmKey = null;     // 删除两击确认的第一击 {parent, name} (3 秒内点第二下才真删)
 
-  // 弹框状态: modalFor 是往哪个大类里加 (null = 新建大类); mIconLocked 后
-  // 打字不再抢预选 (手点图标 = 定了); mColor 空 = 默认跟收支方向走
+  // 弹框状态: modalFor 是往哪个大类里加 (null = 新建大类); mEditName 非空 =
+  // 改那个小类 (1.9.0 点行开框, 提交走 update 口); mIconLocked 后打字不再
+  // 抢预选 (手点图标 = 定了; 编辑开局也锁 —— 当前的可能是手挑的); mColor
+  // 空 = 默认跟收支方向走
   let modalFor = null;
+  let mEditName = "";
   let mName = "";
   let mIcon = "";
   let mIconLocked = false;
@@ -62,9 +67,9 @@ function renderCategoriesView(target) {
       <div>加载失败, 检查网络后重试</div>
       <button type="button" class="retry-btn" id="retry">重试</button>
     </div>
-    <!-- 新建类别弹框 (1.7.0): 「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框
-         (标题/图标预选随入口换)。hidden + .on 双段过渡, 样式 cm-* 一套在
-         bookkeeping-panes.css -->
+    <!-- 类别弹框 (1.7.0 新建 / 1.9.0 编辑同一枚): 「＋ 新建大类」与大类列表尾
+         「＋ 添加小类」进它新建, 点小类行身进它编辑 (标题/按钮文案随入口换)。
+         hidden + .on 双段过渡, 样式 cm-* 一套在 bookkeeping-panes.css -->
     <div id="cat-modal" hidden>
       <div class="cm-mask" id="cm-mask"></div>
       <div class="cm-panel" role="dialog" aria-modal="true" aria-label="新建类别">
@@ -129,7 +134,10 @@ function renderCategoriesView(target) {
     const key = `${parent}/${name}`;
     return `<div class="kid sw-wrap">` +
       swDelBtn(parent, name) +
-      `<div class="sw-body">` +
+      // 行身可点 (1.9.0): 点一下开编辑框; 色点仍是快改色的口 (closest 先
+      // 摸到它自己的 data-act, 不会落进行身这枚)
+      `<div class="sw-body" data-act="edit" data-parent="${esc(parent)}"` +
+      ` data-name="${esc(name)}" role="button" aria-label="编辑 ${esc(name)}">` +
       `<span class="ic">${catIcon(key, kind)}</span>` +
       `<span class="nm">${esc(name)}</span>` +
       `<button type="button" class="dot" data-act="color" data-parent="${esc(parent)}"` +
@@ -221,14 +229,22 @@ function renderCategoriesView(target) {
         ` style="background:${c}" data-color="${c}" aria-label="${c}"></button>`).join("");
   }
 
-  function openModal(parent) {         // parent 空 = 新建大类; 名字框不自动聚焦
-    closeOpenRow();                    // (不去顶 iOS 键盘几何, 面板高度自己算)
-    trayFor = null;
-    confirmKey = null;
+  function openModal(parent, editName) {  // parent 空 = 新建大类; editName 给了
+    closeOpenRow();                       // = 编辑那个小类 (名字/图标/颜色
+    trayFor = null;                       // 先铺现状, 所见 = 所得; 名字框都
+    confirmKey = null;                    // 不自动聚焦 — 不去顶 iOS 键盘几何)
     modalFor = parent || null;
-    mName = ""; mIcon = ""; mIconLocked = false; mColor = "";
-    $("#cm-title").textContent = modalFor ? `往「${modalFor}」加小类` : "新建大类";
-    $("#cm-name").value = "";
+    mEditName = editName || "";
+    mName = mEditName;
+    mIcon = mEditName ? iconSlugFor(`${parent}/${mEditName}`) : "";
+    mIconLocked = !!mEditName;   // 编辑开局锁当前图标: 可能是手挑的, 名字预选不许抢跑
+    mColor = mEditName ? ownColor(parent, mEditName) : "";
+    $("#cm-title").textContent = mEditName ? `编辑「${mEditName}」`
+      : (modalFor ? `往「${modalFor}」加小类` : "新建大类");
+    $(".cm-panel").setAttribute("aria-label",
+      mEditName ? "编辑类别" : "新建类别");
+    $("#cm-name").value = mName;
+    $("#cm-ok").textContent = mEditName ? "保存" : "添加";
     $("#cm-err").hidden = true;
     paintGrid();
     paintColors();
@@ -244,16 +260,20 @@ function renderCategoriesView(target) {
     setTimeout(() => { box.hidden = true; }, 250);   // 收完动画再藏 (与过渡同拍)
   }
 
-  async function submitModal() {       // 弹框提交: 回车/「添加」都走这; 失败
-    const name = mName.trim();         // 亮在框里不关框 (改字即撤错)
+  async function submitModal() {       // 弹框提交: 回车/「添加·保存」都走这;
+    const name = mName.trim();         // 失败亮在框里不关框 (改字即撤错)
     const err = nameError(name);
     if (err) { cmErr(err); return; }
     const parent = modalFor || "";
-    const next = await mutate("/bookkeeping/api/categories/add",
-      { kind, parent, name, icon: modalIcon(), color: mColor }, $("#cm-err"));
+    const next = mEditName
+      ? await mutate("/bookkeeping/api/categories/update",
+        { kind, parent, name: mEditName, new_name: name,
+          icon: modalIcon(), color: mColor }, $("#cm-err"))
+      : await mutate("/bookkeeping/api/categories/add",
+        { kind, parent, name, icon: modalIcon(), color: mColor }, $("#cm-err"));
     if (next) {                        // 图标送框里生效的那枚 (预览所见 = 落库所得)
       closeModal();
-      openTop = parent || name;        // 展开落点那一组, 新类别一眼看到
+      openTop = parent || name;        // 展开落点那一组, 改动一眼看到
       render();
     }
   }
@@ -344,6 +364,12 @@ function renderCategoriesView(target) {
         mutate("/bookkeeping/api/categories/delete", { kind, parent, name });
       }
       return;                    // 第一击就地变脸; 第二击回树再画
+    } else if (act === "edit") {
+      // 删除条露着时点行身: 这一下当收条 (把滑开的状态收回去), 不开框
+      const wrap = btn.closest(".sw-wrap");
+      if (wrap && wrap === staleRow()) { closeOpenRow(); return; }
+      openModal(parent, name);
+      return;
     } else if (act === "add-kid") {
       openModal(parent);
       return;

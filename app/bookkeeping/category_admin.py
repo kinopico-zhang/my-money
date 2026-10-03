@@ -4,6 +4,8 @@
 /api/categories; 这里只开写路径。三个口都回整棵新树 —— 客户端就地
 换上, 少一个来回。删有守卫: 挂着小类的大类先删小类; 有账在用的
 (含墓碑 — 别的设备还捏着活副本) 不给删。"""
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -12,7 +14,7 @@ from .. import account_store, database
 from ..models import User
 from . import store
 from .schemas import (CategoryAddIn, CategoryColorIn, CategoryDeleteIn,
-                   CategoryTree)
+                   CategoryTree, CategoryUpdateIn)
 from .store import Category, Entry, category_tree
 
 admin = APIRouter(prefix="/api/categories")
@@ -68,6 +70,45 @@ def add_category(body: CategoryAddIn, request: Request,
     last = bk.execute(select(func.max(Category.sort))).scalar_one() or 0
     bk.add(Category(name=name, kind=body.kind, parent=body.parent, sort=last + 1,
                     icon=body.icon or None, color=body.color or None))
+    bk.commit()
+    return category_tree(bk)
+
+
+@admin.post("/update", response_model=CategoryTree)
+def update_category(body: CategoryUpdateIn, request: Request,
+                    users: Session = Depends(database.get_users_db),
+                    bk: Session = Depends(store.get_db)
+                    ) -> CategoryTree:
+    """改一个小类: 名字/图标/颜色一起 (1.9.0 点行开框), 回新树。改名把
+    账上的组合名一并迁移 (含墓碑 —— 删过的账也吊在类别上), 且要顶
+    synced_at: 增量下发按它取游标, 不顶这笔就永远不会再下发, 别的
+    设备上名字吊在旧类别上; updated_at 一概不动 —— 客户端下行合并
+    平局归服务器, 不动它改名照样落地, 动了反而会跟慢钟手机的离线
+    改动打 LWW 架 (改完几分钟内的编辑会被吞)。"""
+    _require_user(request, users)
+    if not body.parent:
+        raise HTTPException(400, "这版先只支持改小类 (大类牵着一整组, 改名得整组迁)")
+    row = _find(bk, body.kind, body.parent, body.name)
+    if row is None:
+        raise HTTPException(404, "类别不存在")
+    new_name = body.new_name.strip()
+    if not new_name or len(new_name) > 10 or "/" in new_name:
+        raise HTTPException(400, "名字要 1-10 个字, 不能带 /")
+    if len(f"{body.parent}/{new_name}") > 20:
+        raise HTTPException(400, "名字太长 (带大类不超过 20 字)")
+    if new_name != body.name:
+        if _find(bk, body.kind, body.parent, new_name) is not None:
+            raise HTTPException(400, "这个名字已经有了")
+        old_path = f"{body.parent}/{body.name}"
+        new_path = f"{body.parent}/{new_name}"
+        now = datetime.utcnow()
+        for entry in bk.execute(select(Entry).where(
+                Entry.kind == body.kind, Entry.category == old_path)).scalars():
+            entry.category = new_path
+            entry.synced_at = now
+        row.name = new_name
+    row.icon = body.icon or None
+    row.color = body.color or None
     bk.commit()
     return category_tree(bk)
 

@@ -29,9 +29,12 @@
   overflow-y: auto; -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;   /* 本体回弹保留, 向外的滚动链掐断 (别带主页) */
   overflow-x: hidden;             /* 单向滚动器 iOS 也配横向橡皮筋, 竖滑带偏会晃 */
-  /* 顶衬吃 --top-clear (独立模式 96 下限): 层内容不进系统磨砂带 —
-     与退役前各子页顶栏同一条线; 左右 16px 比子页的 14px 略宽, 贴 my-music */
-  padding: calc(var(--top-clear) + 14px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  /* 顶衬与 my-music 的 pane-scroll 同款 (env+14): 页顶大标题由此落在
+     my-music 根页首段标题的同一高度 (2026-10-04 用户点名对齐 — 此前吃
+     --top-clear 的 96 下限, 独立模式矮了小半寸; 层顶没有磨砂钉顶件,
+     用不着那条带子的边界); 左右 16px 比子页的 14px 略宽, 贴 my-music */
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px
+           calc(env(safe-area-inset-bottom) + 24px);
 }
 /* 页顶大标题 (my-music .pane-title 同款, iOS 设置式): 随内容一起滚走 */
 .push-pane .pane-title {
@@ -52,6 +55,11 @@
                        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .push-pane .row .chev { color: var(--ink-3); font-size: 17px; line-height: 1; }
 .push-pane .row.danger { justify-content: center; color: var(--red); font-weight: 500; }
+/* 行按钮化兜底 (my-music button.section-head 1.8.24 同款): iOS WebKit 给
+   按钮吃 display: flex 却不块化 — 外层仍缩到内容宽, width: 100% 才吃满
+   卡宽 (2026-10-04 用户报「类别管理/更新日志没填充整行」); 按钮自家的
+   居中文字顺手拨成左对齐 */
+.push-pane button.row { width: 100%; text-align: left; }
 .push-pane .state { padding: 40px 20px; text-align: center; color: var(--bg-ink);
                     font-size: 14px; }
 .push-pane .spin {
