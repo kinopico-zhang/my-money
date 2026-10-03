@@ -108,7 +108,7 @@ def test_settings_js_wiring():
     assert '"/bookkeeping/api/logout"' in js and "location.href" in js
     # 1.7.3: 页面骨架进长缓存后登录墙拦不到它 — 会话过期 (401) 自己回登录页
     assert "status === 401" in js and '"/bookkeeping/login"' in js
-    assert '<script src="/bookkeeping/static/bookkeeping-settings.js?v=2">' \
+    assert '<script src="/bookkeeping/static/bookkeeping-settings.js?v=3">' \
         in _static("settings.html")
 
 
@@ -121,3 +121,44 @@ def test_stats_js_aggregates_local_ledger():
     assert 'split("/")[0]' in js and "catIcon(" in js and "curMonth()" in js
     assert "createdByName" in js          # 记账人分摊: 本地刚记的没名字标「我」
     assert ".bar {" in css and "tabular-nums" in css and "var(--red)" in css
+
+
+def test_subpage_warmup_lists():
+    """1.7.4 子页预热: 主页就绪顺手把设置/统计两页的骨架+样式+脚本取进
+    HTTP 缓存 (?v= 一年 immutable, 往后本地命中), 设置页再预热类别管理/
+    更新日志 —— 连头一回点开也不用等网络。预热地址必须与目标页的实际
+    引用同版本: 漂移了就是预热了个没人要的旧地址, 白忙。"""
+    boot = _static("bookkeeping-boot.js")
+    for url in ("/bookkeeping/settings?v=1", "/bookkeeping/stats?v=1",
+                "/bookkeeping/static/bookkeeping-settings.js?v=3",
+                "/bookkeeping/static/bookkeeping-stats.js?v=2",
+                "/bookkeeping/static/css/bookkeeping-settings.css?v=4",
+                "/bookkeeping/static/css/bookkeeping-stats.css?v=5",
+                "/static/back-swipe.js?v=2"):
+        assert f'"{url}"' in boot, f"主页预热缺 {url}"
+    sjs = _static("bookkeeping-settings.js")
+    for url in ("/bookkeeping/categories?v=1", "/bookkeeping/changelog?v=1",
+                "/bookkeeping/static/bookkeeping-categories.js?v=5",
+                "/bookkeeping/static/css/bookkeeping-categories.css?v=6",
+                "/bookkeeping/static/css/bookkeeping-changelog.css?v=15",
+                "/static/menu-user.js?v=2", "/static/changelog-page.js?v=1"):
+        assert f'"{url}"' in sjs, f"设置页预热缺 {url}"
+    # 版本对账: 预热列表里的静态地址, 目标页面里得有同串引用
+    for url, page in (("/bookkeeping/static/bookkeeping-settings.js?v=3",
+                       "settings.html"),
+                      ("/bookkeeping/static/css/bookkeeping-settings.css?v=4",
+                       "settings.html"),
+                      ("/bookkeeping/static/bookkeeping-stats.js?v=2",
+                       "stats.html"),
+                      ("/bookkeeping/static/css/bookkeeping-stats.css?v=5",
+                       "stats.html"),
+                      ("/bookkeeping/static/bookkeeping-categories.js?v=5",
+                       "categories.html"),
+                      ("/bookkeeping/static/css/bookkeeping-categories.css?v=6",
+                       "categories.html"),
+                      ("/bookkeeping/static/css/bookkeeping-changelog.css?v=15",
+                       "changelog.html"),
+                      ("/static/menu-user.js?v=2", "changelog.html"),
+                      ("/static/changelog-page.js?v=1", "changelog.html"),
+                      ("/static/back-swipe.js?v=2", "settings.html")):
+        assert f'"{url}"' in _static(page), f"{page} 实际引用与预热不同步: {url}"

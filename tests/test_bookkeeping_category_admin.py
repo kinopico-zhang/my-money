@@ -194,6 +194,6 @@ def test_categories_js_wiring():
     assert 'setCatColors(loadLS("bk-categories-v2"' in _static("bookkeeping-stats.js")
     html = _static("bookkeeping.html") + _static("stats.html")
     assert "category-icons.js?v=17" in html              # 两页图标库都进新缓存 (1.7.1 图形缩档)
-    assert "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=4" in html
+    assert "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=5" in html
     css = _static("css/bookkeeping-categories.css")
     assert "pointer-events: none" in css   # 1.7.1: 压暗层不挡点击 (1.7.0 丢了这句, 点大类点不动)
