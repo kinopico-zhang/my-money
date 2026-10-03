@@ -11,6 +11,20 @@ from ..schemas import ChangelogItem, ChangelogVersion
 from .changelog_early import VERSIONS as EARLY_VERSIONS
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.7.2", date="2026-10-03", items=[
+        ChangelogItem(kind="改进", text="子页点开提速: 带版本号的页面资源一律许缓存"
+                                       "一整年、不再逐个回服务器核对 — 手机走公网"
+                                       "访问时, 点开设置/统计这类子页要等的那串"
+                                       "「每个文件都问一遍」砍掉了 (线上服务 9 月底"
+                                       "已先行, 这回钉进本仓和测试, 应用单独跑"
+                                       "也齐)。"),
+        ChangelogItem(kind="修复", text="手机上「右划返回」和「禁缩放」其实一直没装上 —"
+                                       "负责的两个共享脚本此前在服务器上缺席过"
+                                       "(地址 404), 浏览器还把「不存在」当成了"
+                                       "可长期缓存的结果记住, 服务器补上文件后手机"
+                                       "也不再来取; 这回换用新版本号的地址, 手机"
+                                       "重新拿到, 两个功能恢复。"),
+    ]),
     ChangelogVersion(version="1.7.1", date="2026-10-03", items=[
         ChangelogItem(kind="改进", text="返回钮退役, 换成全局右划返回: 屏幕左缘起手往右一划,"
                                        " 页面跟手滑开, 松手就退回上一页 (设置/统计/类别管理/"

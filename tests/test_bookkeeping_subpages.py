@@ -66,14 +66,28 @@ def test_back_swipe_everywhere():
                        ("changelog", "/bookkeeping/")):
         html = _static(f"{page}.html")
         assert f'data-back="{back}"' in html, f"{page} 没给返回目标"
-        assert '<script src="/static/back-swipe.js?v=1"></script>' in html, page
+        assert '<script src="/static/back-swipe.js?v=2"></script>' in html, page
         assert 'class="back"' not in html, f"{page} 返回钮没撤干净"
     cats = _static("categories.html")
     assert 'data-back="/bookkeeping/settings"' in cats and \
-           '<script src="/static/back-swipe.js?v=1"></script>' in cats
+           '<script src="/static/back-swipe.js?v=2"></script>' in cats
     assert 'class="back"' not in cats                   # 类别管理返回的是设置页
     rows = _static("bookkeeping-categories.js")
     assert "sw.x0 < 24 && dx > 12" in rows              # 左缘右划让位给返回, 行不抢
+
+
+def test_versioned_static_cache_control():
+    """静态缓存头: 带 ?v= 的回一年 immutable (?v= 家规配套 — 2026-10-03
+    设置/统计页点开慢的主修, 手机公网翻页不再逐个重拉资产); 不带的
+    (manifest/图标这类没法换 URL 的) 照旧 ETag 协商, 改了能及时生效。"""
+    client = TestClient(m.app)
+    versioned = client.get("/bookkeeping/static/category-icons.js?v=17")
+    assert versioned.status_code == 200
+    assert versioned.headers["cache-control"] == \
+        "public, max-age=31536000, immutable"
+    plain = client.get("/bookkeeping/static/category-icons.js")
+    assert plain.status_code == 200
+    assert "immutable" not in plain.headers.get("cache-control", "")
 
 
 def test_settings_js_wiring():

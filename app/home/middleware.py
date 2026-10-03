@@ -82,5 +82,8 @@ async def auth_middleware(
     elif path.startswith(_STATIC_PREFIXES):
         # JS 工具迭代频繁, 必须重新校验; ETag 命中时 304 很便宜。
         # 只发 Last-Modified 时浏览器走启发式缓存, 会继续用旧 JS。
-        resp.headers["Cache-Control"] = "no-cache"
+        # 带 ?v= 的例外: 版本号一换就是新地址, VersionedStaticFiles 盖上的
+        # 一年 immutable 不许抹掉 (组合仓 2026-10-03 同款口径)。
+        if "v" not in request.query_params:
+            resp.headers["Cache-Control"] = "no-cache"
     return resp
