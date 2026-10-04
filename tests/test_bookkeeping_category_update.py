@@ -175,12 +175,11 @@ def test_update_rename_top_migrates_group(usersdb):
 def test_update_js_wiring():
     """客户端接线: 点小类行身 (sw-body) 开同一枚新建弹框, 名字/图标/颜色
     先铺现状 (开局锁图标 —— 当前的可能是手挑的); 提交按编辑/新建分走
-    update/add 两口; 删除条露着时点行身是收条不是开框; 大类编辑走左划
-    动作条上的「编辑」钮 (1.10.0, 行开多宽量动作条实宽); 版本钉随批 bump。"""
+    update/add 两口; 删除条露着时点行身是收条不是开框; 左划动作条上的
+    「编辑」钮 (1.10.0 大类 / 1.12.0 小类对齐); 版本钉随批 bump。"""
     js = _static("bookkeeping-categories.js")
     assert 'data-act="edit"' in js and 'aria-label="编辑 ${esc(name)}"' in js
     assert "openModal(parent, name);" in js            # 行身点按进编辑
-    assert "wrap === staleRow()" in js                 # 删除条露着: 收条不开框
     assert 'let mEditName = "";' in js
     assert "编辑「${mEditName}」" in js
     assert '$("#cm-ok").textContent = mEditName ? "保存" : "添加";' in js
@@ -188,13 +187,14 @@ def test_update_js_wiring():
     assert 'mColor = mEditName ? ownColor(parent, mEditName) : "";' in js
     assert '"/bookkeeping/api/categories/update"' in js
     assert "{ kind, parent, name: mEditName, new_name: name," in js
-    # 1.10.0 大类: 左划动作条 编辑+删除 两枚 (小类只删除, 编辑口在行身)
-    assert 'data-act="edit-top"' in js and 'class="sw-act edit"' in js
-    assert 'openModal("", name);' in js                # 大类编辑: parent 空串
+    # 1.12.0: 动作条两枚大类小类同副, 编辑口并成 act=edit (edit-top 退役)
+    assert 'class="sw-act edit" data-act="edit"' in js and "edit-top" not in js
+    assert 'swActs(parent, name) +' in js and 'swActs("", g.name) +' in js
+    assert '!btn.classList.contains("sw-act") && wrap && wrap === staleRow()' in js
     assert "const swW = row =>" in js and "w: swW(row)," in js   # 行宽 = 动作条实宽
     css = _static("css/bookkeeping-panes.css")
-    assert ".push-pane .sw-acts {" in css              # 动作条: 大类两枚/小类一枚
+    assert ".push-pane .sw-acts {" in css              # 动作条: 两枚 (大类小类同副)
     assert ".sw-act.edit { background: var(--accent); }" in css  # 非销毁性: 蓝
     assert ".sw-act.del { background: var(--red); }" in css
     html = _static("bookkeeping.html")
-    assert "bookkeeping-categories.js?v=9" in html and "css/bookkeeping-panes.css?v=4" in html
+    assert "bookkeeping-categories.js?v=10" in html and "css/bookkeeping-panes.css?v=4" in html

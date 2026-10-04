@@ -13,6 +13,13 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.12.0", date="2026-10-04", items=[
+        ChangelogItem(kind="新增", text="小类左滑也能编辑了: 左划小类, 删除旁边"
+                                       "多一枚「编辑」, 跟大类同一副动作条 — 点开"
+                                       "就是原来那个编辑框 (名字/图标/颜色都能改); "
+                                       "点小类行身进编辑的老口子也还在, 两个口"
+                                       "哪个顺手用哪个"),
+    ]),
     ChangelogVersion(version="1.11.1", date="2026-10-04", items=[
         ChangelogItem(kind="改进", text="同步的提示只在你主动下拉时醒目: 打开应用、"
                                        "联网恢复这些自动同步不再弹条子, 静悄悄做完; "

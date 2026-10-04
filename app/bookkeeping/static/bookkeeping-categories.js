@@ -7,8 +7,9 @@
 // (「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框, 打字自动预选贴切
 // 图标); 删除走行左滑 (记账页账目行同款手势) — 滑开露红条, 两击确认。
 // 1.9.0 点小类行身开同一框编辑 (名字/图标/颜色, 提交走 update 口, 改名由
-// 服务端把账面上的组合名一并迁走)。1.10.0 大类左划的动作条多一枚「编辑」
-// (小类的编辑口在行身点按, 不占条), 开的是同一枚框 — 大类改名服务端整组迁。
+// 服务端把账面上的组合名一并迁走)。1.10.0 大类左划的动作条多一枚「编辑」,
+// 1.12.0 小类条也补上 (用户点名) — 编辑口并成一枚 data-act=edit: 行身点按
+// 与动作条钮同路 (钮自带 .sw-act, 不吃「条露着点行身=收条」的规矩)。
 // 1.11.0 图标栅格扩到 550 枚按意义分 19 组 (ICON_GROUPS 分节铺小标),
 // 选中态照记账页磁贴 (圆底反白), 换掉蓝描圈。
 // 元素查找全收在 target 里 (my-music 的教训: 层滑出还挂着 DOM 的空档,
@@ -50,7 +51,7 @@ function renderCategoriesView(target) {
 
   // 行左滑状态 (记账页账目行同一副手势)
   const SW_W = 72;           // 单枚动作钮宽 (与 css .sw-act 的 width 一致;
-                             // 行开多宽看条里有几枚 — 小类 72 / 大类 144)
+                             // 行开多宽看条里有几枚 — 大类小类都两枚 144)
   const swW = row => {       // 行宽 = 身后动作条实宽 (渲染时机不同也能拿准)
     const acts = row.querySelector(".sw-acts");
     return acts ? acts.offsetWidth : SW_W;
@@ -133,12 +134,12 @@ function renderCategoriesView(target) {
 
   const confirming = (parent, name) =>
     !!confirmKey && confirmKey.parent === parent && confirmKey.name === name;
-  function swActs(parent, name, withEdit) {  // 行身后的动作条 (左滑才见):
-    const conf = confirming(parent, name);   // 删除两击确认 (第一击后就地变脸)
+  function swActs(parent, name) {   // 行身后的动作条 (左滑才见): 编辑+删除两枚
+    const conf = confirming(parent, name);   // (1.10.0 大类 / 1.12.0 小类对齐);
+                                    // 删除两击确认 (第一击后就地变脸)
     return `<div class="sw-acts">` +
-      (withEdit              // 大类条: 编辑+删除两枚 (1.10.0); 小类条只删除 —
-        ? `<button type="button" class="sw-act edit" data-act="edit-top"` +  // 小类的编辑口
-          ` data-parent="${esc(parent)}" data-name="${esc(name)}">编辑</button>` : "") +  // 在行身点按
+      `<button type="button" class="sw-act edit" data-act="edit"` +
+      ` data-parent="${esc(parent)}" data-name="${esc(name)}">编辑</button>` +
       `<button type="button" class="sw-act del${conf ? " confirm" : ""}"` +
       ` data-act="del" data-parent="${esc(parent)}" data-name="${esc(name)}"` +
       ` aria-label="删除">${conf ? "确认" : "删除"}</button></div>`;
@@ -147,9 +148,9 @@ function renderCategoriesView(target) {
   function kidRow(parent, name) {
     const key = `${parent}/${name}`;
     return `<div class="kid sw-wrap">` +
-      swActs(parent, name, false) +
-      // 行身可点 (1.9.0): 点一下开编辑框; 色点仍是快改色的口 (closest 先
-      // 摸到它自己的 data-act, 不会落进行身这枚)
+      swActs(parent, name) +
+      // 行身可点 (1.9.0): 点一下开编辑框 (1.12.0 左滑条上也有编辑钮, 同一
+      // 枚框); 色点仍是快改色的口 (closest 先摸到它自己的 data-act, 不落进行身)
       `<div class="sw-body" data-act="edit" data-parent="${esc(parent)}"` +
       ` data-name="${esc(name)}" role="button" aria-label="编辑 ${esc(name)}">` +
       `<span class="ic">${catIcon(key, kind)}</span>` +
@@ -164,7 +165,7 @@ function renderCategoriesView(target) {
     const open = openTop === g.name;   // 没挂小类的大类也点得开 (展开就是添加行)
     return `<div class="grp${open ? " open" : ""}">` +
       `<div class="grp-top sw-wrap">` +
-      swActs("", g.name, true) +
+      swActs("", g.name) +
       `<div class="sw-body">` +
       `<button type="button" class="head" data-act="toggle" data-parent="${esc(g.name)}">` +
       `<span class="ic">${catIcon(g.name, kind)}</span>` +
@@ -385,16 +386,14 @@ function renderCategoriesView(target) {
       }
       return;                    // 第一击就地变脸; 第二击回树再画
     } else if (act === "edit") {
-      // 删除条露着时点行身: 这一下当收条 (把滑开的状态收回去), 不开框
+      // 编辑口 (1.12.0 并成一枚): 小类行身点按 / 左滑动作条上的「编辑」钮
+      // (大类小类都有)。条露着时点行身 = 收条不开框; 动作条上的钮自带
+      // .sw-act, 豁免这条规矩 (大类 parent 是空串, 对象由名字认)
       const wrap = btn.closest(".sw-wrap");
-      if (wrap && wrap === staleRow()) { closeOpenRow(); return; }
-      openModal(parent, name);
-      return;
-    } else if (act === "edit-top") {
-      // 大类动作条上的编辑 (1.10.0): 条露着才点得到, 开框顺手收条;
-      // 大类的 parent 是空串, 编辑模式由名字认 (与小类同一枚框)
-      closeOpenRow();
-      openModal("", name);
+      if (!btn.classList.contains("sw-act") && wrap && wrap === staleRow()) {
+        closeOpenRow(); return;
+      }
+      openModal(parent, name);   // openModal 自带收条
       return;
     } else if (act === "add-kid") {
       openModal(parent);

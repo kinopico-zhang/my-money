@@ -29,7 +29,7 @@ def test_quick_buttons_push_layers():
     assert '<div id="push-stack"></div>' in html
     for src in ("css/bookkeeping-panes.css?v=4",
                 "bookkeeping-settings.js?v=4", "bookkeeping-stats.js?v=3",
-                "bookkeeping-categories.js?v=9", "bookkeeping-push.js?v=1",
+                "bookkeeping-categories.js?v=10", "bookkeeping-push.js?v=1",
                 "bookkeeping-boot.js?v=8"):
         assert f'src="/bookkeeping/static/{src}"' in html or \
             f'href="/bookkeeping/static/{src}"' in html, f"主页没装 {src}"

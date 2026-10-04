@@ -209,8 +209,8 @@
 .push-pane .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
                  white-space: nowrap; }
 /* 左滑动作条: 行身不透明底盖住身后的钮, 压暗走 ::after (半透明会漏钮)。
-   大类条两枚 (编辑蓝+删除红, 1.10.0), 小类条一枚 (删除) — 钮定宽 72
-   (与 js 的 SW_W 同一枚数), 行开多宽 = 条内钮数 × 72, js 量条实宽走 */
+   大类小类同副两枚 (编辑蓝+删除红; 1.10.0 大类先有, 1.12.0 小类对齐) —
+   钮定宽 72 (与 js 的 SW_W 同一枚数), 行开多宽 = 条内钮数 × 72, js 量条实宽走 */
 .push-pane .sw-acts {
   position: absolute; top: 0; right: 0; bottom: 0; display: flex;
 }
