@@ -183,9 +183,14 @@ def test_bookkeeping_row_swipe_delete():
     # 二次确认: 警示框节点 html 里都有, js 全接上 (选择器×html 交叉对账)
     assert 'id="del-confirm"' in html and 'id="dc-msg"' in html \
         and 'id="dc-cancel"' in html and 'id="dc-ok"' in html and 'id="dc-mask"' in html
-    assert "function askDelRow(" in js and "function closeDelConfirm()" in js
+    assert "function askDelEntry(" in js and "function askDelRow(" in js \
+        and "function closeDelConfirm()" in js
     assert '$("#dc-ok").addEventListener("click"' in js \
         and '$("#dc-mask").addEventListener("click"' in js
-    # 确认删除与记一笔里删同一套墓碑 (js 里恰两处), 滑完的收尾点击吃掉
-    assert js.count("prev.deleted = true;") == 2
+    # 删除路径全应用唯一 (1.10.0): 只剩确认框一处落墓碑 — 记一笔弹层顶上的
+    # 垃圾桶原先裸删, 现在也开这框, 确认完连弹层一起收
+    assert js.count("prev.deleted = true;") == 1
+    assert "askDelEntry(prev);" in js and \
+        'if (!$("#sheet").hidden) closeSheet();' in js
+    # 滑完的收尾点击吃掉
     assert "if (swClick) { swClick = false; return; }" in js

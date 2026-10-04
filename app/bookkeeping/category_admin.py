@@ -79,33 +79,53 @@ def update_category(body: CategoryUpdateIn, request: Request,
                     users: Session = Depends(database.get_users_db),
                     bk: Session = Depends(store.get_db)
                     ) -> CategoryTree:
-    """改一个小类: 名字/图标/颜色一起 (1.9.0 点行开框), 回新树。改名把
-    账上的组合名一并迁移 (含墓碑 —— 删过的账也吊在类别上), 且要顶
+    """改一个类别: 名字/图标/颜色一起 (1.9.0 小类 / 1.10.0 大类), 回新树。
+    改名把账上的组合名一并迁移 (含墓碑 —— 删过的账也吊在类别上), 且要顶
     synced_at: 增量下发按它取游标, 不顶这笔就永远不会再下发, 别的
     设备上名字吊在旧类别上; updated_at 一概不动 —— 客户端下行合并
     平局归服务器, 不动它改名照样落地, 动了反而会跟慢钟手机的离线
-    改动打 LWW 架 (改完几分钟内的编辑会被吞)。"""
+    改动打 LWW 架 (改完几分钟内的编辑会被吞)。大类改名是整组迁:
+    账上裸大类名与「大类/小类」都换头, 小类行的 parent 跟着搬; 有
+    小类的路径会被新名字顶超 20 字的先拒 (账目串有 20 字上限, 超了
+    那些账再也传不上来)。"""
     _require_user(request, users)
-    if not body.parent:
-        raise HTTPException(400, "这版先只支持改小类 (大类牵着一整组, 改名得整组迁)")
     row = _find(bk, body.kind, body.parent, body.name)
     if row is None:
         raise HTTPException(404, "类别不存在")
     new_name = body.new_name.strip()
     if not new_name or len(new_name) > 10 or "/" in new_name:
         raise HTTPException(400, "名字要 1-10 个字, 不能带 /")
-    if len(f"{body.parent}/{new_name}") > 20:
+    if body.parent and len(f"{body.parent}/{new_name}") > 20:
         raise HTTPException(400, "名字太长 (带大类不超过 20 字)")
     if new_name != body.name:
         if _find(bk, body.kind, body.parent, new_name) is not None:
             raise HTTPException(400, "这个名字已经有了")
-        old_path = f"{body.parent}/{body.name}"
-        new_path = f"{body.parent}/{new_name}"
         now = datetime.utcnow()
-        for entry in bk.execute(select(Entry).where(
-                Entry.kind == body.kind, Entry.category == old_path)).scalars():
-            entry.category = new_path
-            entry.synced_at = now
+        if body.parent:            # 小类: 只迁自己那一个全名
+            old_path = f"{body.parent}/{body.name}"
+            for entry in bk.execute(select(Entry).where(
+                    Entry.kind == body.kind,
+                    Entry.category == old_path)).scalars():
+                entry.category = f"{body.parent}/{new_name}"
+                entry.synced_at = now
+        else:                      # 大类: 裸名与「大类/小类」整组换头
+            kids = bk.execute(select(Category).where(
+                Category.kind == body.kind,
+                Category.parent == body.name)).scalars().all()
+            for kid in kids:       # 先验小类路径不被顶爆 (传不回来的账没有意义)
+                if len(f"{new_name}/{kid.name}") > 20:
+                    raise HTTPException(
+                        400, f"小类「{kid.name}」带新名字会超 20 字, 先改短它")
+            head = f"{body.name}/"   # startswith 的 %/_ 由 autoescape 转义
+            for entry in bk.execute(select(Entry).where(
+                    Entry.kind == body.kind,
+                    or_(Entry.category == body.name,
+                        Entry.category.startswith(head, autoescape=True)))).scalars():
+                entry.category = (new_name if entry.category == body.name
+                                  else f"{new_name}/{entry.category[len(head):]}")
+                entry.synced_at = now
+            for kid in kids:
+                kid.parent = new_name
         row.name = new_name
     row.icon = body.icon or None
     row.color = body.color or None

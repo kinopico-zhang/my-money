@@ -698,16 +698,11 @@ if (window.visualViewport)
     });
 
 $("#sheet-del").addEventListener("click", () => {
+  // 弹层里的垃圾桶也走二次确认 (1.10.0): 原先这一点是裸删, 手一滑账就
+  // 没了 — 全应用的删除钮统一两道闸 (行左滑与类别左滑是「删除→确认」,
+  // 这里是警示框); 确认在 dc-ok 那头, 连弹层一起收
   const prev = entries.find(x => x.id === editingId);
-  if (prev) {          // 墓碑: 本地也留着, 才能把删除同步给别人
-    prev.deleted = true;
-    prev.updatedAt = new Date().toISOString();
-    dirty.add(prev.id);
-    persist();
-  }
-  closeSheet();
-  render();
-  scheduleSync();
+  if (prev) askDelEntry(prev);
 });
 
 /* ---------- 账目行左滑删除: 滑出红条, 点了还要再确认一次 (防手滑误删) ----------
@@ -779,10 +774,8 @@ document.addEventListener("touchstart", e => {        // 滑开的行: 点到行
     closeOpenRow();
 }, { passive: true });
 
-function askDelRow(row) {    // 删除的二次确认: iOS 警示框 (写着这笔是啥, 红字删除)
-  const entry = entries.find(x => x.id === row.dataset.id);
-  if (!entry) { closeOpenRow(); return; }
-  delId = entry.id;
+function askDelEntry(entry) {  // 删除的二次确认: iOS 警示框 (写着这笔是啥, 红字删除)
+  delId = entry.id;            // 行上与弹层垃圾桶共用这一框 (1.10.0 起没有裸删的口)
   clearTimeout(dcTimer);
   $("#dc-msg").textContent =
     `${entry.category ? entry.category.split("/").pop() : "未分类"} · ` +
@@ -790,6 +783,11 @@ function askDelRow(row) {    // 删除的二次确认: iOS 警示框 (写着这�
   const dlg = $("#del-confirm");
   dlg.hidden = false;        // 先显示再点亮 (跟选层同一套开合)
   requestAnimationFrame(() => dlg.classList.add("on"));
+}
+function askDelRow(row) {    // 账目行进来: 行可能已随重画没了
+  const entry = entries.find(x => x.id === row.dataset.id);
+  if (!entry) { closeOpenRow(); return; }
+  askDelEntry(entry);
 }
 function closeDelConfirm() {
   const dlg = $("#del-confirm");
@@ -800,7 +798,7 @@ function closeDelConfirm() {
 }
 $("#dc-cancel").addEventListener("click", closeDelConfirm);
 $("#dc-mask").addEventListener("click", closeDelConfirm);   // 点遮罩也是取消
-$("#dc-ok").addEventListener("click", () => {        // 确认: 与记一笔里删同一套墓碑
+$("#dc-ok").addEventListener("click", () => {        // 确认: 行上与弹层里删同一套墓碑
   const prev = entries.find(x => x.id === delId);
   if (prev) {
     prev.deleted = true;
@@ -809,6 +807,7 @@ $("#dc-ok").addEventListener("click", () => {        // 确认: 与记一笔里�
     persist();
   }
   closeDelConfirm();
+  if (!$("#sheet").hidden) closeSheet();   // 从弹层垃圾桶进来的: 确认完连弹层一起收
   openRow = null;            // 行随重画没了, 别攥着旧元素
   render();
   scheduleSync();

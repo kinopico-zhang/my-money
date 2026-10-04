@@ -179,7 +179,7 @@
 .push-pane .add-kid { width: 100%; padding: 6px 14px 6px 2px;
                       font-size: 13.5px; color: var(--ink-3); }
 .push-pane .add-kid:active { color: var(--ink-1); }
-/* 两级树: 大类手风琴 + 小类缩进, 每行带色点; 删除走左滑 (红条垫行身身后) */
+/* 两级树: 大类手风琴 + 小类缩进, 每行带色点; 动作条垫在行身身后 (左滑才见) */
 .push-pane .grp-top { position: relative; overflow: hidden; }
 .push-pane .grp + .grp { border-top: 1px solid var(--hairline); }
 .push-pane .grp-top .sw-body { display: flex; align-items: center; gap: 8px;
@@ -208,13 +208,19 @@
 .push-pane .ic .ci { width: 100%; height: 100%; display: block; color: var(--cc); }
 .push-pane .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
                  white-space: nowrap; }
-/* 左滑删除: 行身不透明底盖住身后红条, 压暗走 ::after (半透明会漏红条) */
-.push-pane .sw-del {
-  position: absolute; top: 0; right: 0; bottom: 0; width: 72px;
-  background: var(--red); color: rgba(255,255,255,.92);
+/* 左滑动作条: 行身不透明底盖住身后的钮, 压暗走 ::after (半透明会漏钮)。
+   大类条两枚 (编辑蓝+删除红, 1.10.0), 小类条一枚 (删除) — 钮定宽 72
+   (与 js 的 SW_W 同一枚数), 行开多宽 = 条内钮数 × 72, js 量条实宽走 */
+.push-pane .sw-acts {
+  position: absolute; top: 0; right: 0; bottom: 0; display: flex;
+}
+.push-pane .sw-act {
+  width: 72px; color: rgba(255,255,255,.92);
   font-size: 13px; font-weight: 600;
 }
-.push-pane .sw-del.confirm { box-shadow: inset 0 0 0 2px #fff; font-weight: 700; }
+.push-pane .sw-act.edit { background: var(--accent); }  /* 非销毁性: 蓝, 红留给删除 */
+.push-pane .sw-act.del { background: var(--red); }
+.push-pane .sw-act.confirm { box-shadow: inset 0 0 0 2px #fff; font-weight: 700; }
 .push-pane .sw-body {
   position: relative; background: var(--surface);
   transition: transform .25s ease;

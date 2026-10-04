@@ -13,6 +13,15 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.10.0", date="2026-10-04", items=[
+        ChangelogItem(kind="新增", text="大类也能改了: 左划大类, 删除旁边多一枚"
+                                       "「编辑」— 点开跟小类同一枚弹框, 改名字、图标、"
+                                       "颜色; 改名字是整组跟着走 (账上记的大类名和每个"
+                                       "小类的账都换成新头, 各设备同步自然跟上)"),
+        ChangelogItem(kind="改进", text="全应用的删除都过两道闸: 记一笔弹层顶上的"
+                                       "垃圾桶原先一点就删, 现在也弹「删除这笔账?」"
+                                       "的确认框 (账目行左滑与类别左滑的两击确认照旧)"),
+    ]),
     ChangelogVersion(version="1.9.0", date="2026-10-04", items=[
         ChangelogItem(kind="新增", text="类别管理里点一下小类就能改: 名字、图标、"
                                        "颜色都在当初新建的那枚弹框里改; 改名字的话, "
