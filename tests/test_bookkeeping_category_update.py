@@ -1,7 +1,8 @@
-"""小类编辑测试 (1.9.0): 点小类行开框改名字/图标/颜色。接口守卫 + 改名迁账
-(含墓碑, 按 kind 圈定) + 增量下游标顶账 (synced_at 顶, updated_at 不动 —
+"""类别编辑测试 (1.9.0 小类 / 1.10.0 大类): 点小类行或大类左划动作条的编辑
+钮开框改名字/图标/颜色。接口守卫 + 改名迁账 (小类只迁全名 / 大类整组换头,
+含墓碑, 按 kind 圈定) + 增量下游标顶账 (synced_at 顶, updated_at 不动 —
 下行合并平局归服务器, 改名照样落地还不跟离线改动打 LWW 架) + 客户端
-开框/提交/行身点按的接线钉子。admin 测试文件顶满 200 行, 编辑批收在这。"""
+开框/提交/行身点按/动作条的接线钉子。admin 测试文件顶满 200 行, 收在这。"""
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -97,12 +98,10 @@ def test_update_rename_respects_kind(usersdb):
 
 
 def test_update_guards(usersdb):
-    """守卫: 只收小类 (大类牵一整组)、类别得在、重名拒、名字带 / 拒、
-    路径超 20 字拒; 形状 (icon 大写 / color 非 #rrggbb) 在模型层 422。"""
+    """守卫: 类别得在、重名拒、名字带 / 拒、路径超 20 字拒; 形状
+    (icon 大写 / color 非 #rrggbb) 在模型层 422。"""
     client, _ = _user(usersdb, "记账人甲")
     for body, why in (
-            ({"kind": "expense", "parent": "", "name": "餐饮", "new_name": "吃饭"},
-             "大类这版不改"),
             ({"kind": "expense", "parent": "餐饮", "name": "没有的", "new_name": "随"},
              "类别得在"),
             ({"kind": "expense", "parent": "餐饮", "name": "早餐", "new_name": "夜宵"},
@@ -128,10 +127,56 @@ def test_update_guards(usersdb):
     assert over.status_code == 400 and "不超过 20 字" in over.json()["detail"]
 
 
+def test_update_rename_top_migrates_group(usersdb):
+    """大类改名 (1.10.0): 整组迁 — 账上裸大类名与「大类/小类」都换头 (含
+    墓碑), 小类行的 parent 跟着搬到新头下; 收入侧同名类别与别大类的账不
+    牵连; 小类路径会被新名字顶超 20 字的先拒 (账目串 20 字上限, 超了
+    那些账再也传不上来); 与别大类同名也拒。"""
+    client, _ = _user(usersdb, "记账人甲")
+    dup = _post(client, "/bookkeeping/api/categories/add",
+                {"kind": "expense", "parent": "", "name": "撞名甲"})
+    assert dup.status_code == 200, dup.text
+    clash = _post(client, _UPDATE, {"kind": "expense", "parent": "",
+                                    "name": "餐饮", "new_name": "撞名甲"})
+    assert clash.status_code == 400 and "已经有了" in clash.json()["detail"]
+    first = client.post("/bookkeeping/api/sync", json={"entries": [
+        _entry("top-bare-1", "2026-09-03T10:00:00", category="餐饮"),
+        _entry("top-kid-2", "2026-09-03T11:00:00", category="餐饮/早餐"),
+        _entry("top-tomb-3", "2026-09-03T12:00:00", category="餐饮/夜宵", deleted=True),
+        _entry("top-other-4", "2026-09-03T13:00:00", category="购物/日常"),
+        _entry("top-inc-5", "2026-09-03T14:00:00", kind="income", category="餐饮"),
+    ]})
+    assert first.status_code == 200, first.text
+    r = _post(client, _UPDATE, {"kind": "expense", "parent": "",
+                                "name": "餐饮", "new_name": "吃喝",
+                                "icon": "rice", "color": "#e88a55"})
+    assert r.status_code == 200, r.text
+    tree = r.json()
+    grp = next(g for g in tree["expense"] if g["name"] == "吃喝")
+    assert "早餐" in grp["children"] and "夜宵" in grp["children"]  # 小类行跟到新头下
+    assert tree["icons"]["吃喝"] == "rice" and tree["colors"]["吃喝"] == "#e88a55"
+    delta = client.post("/bookkeeping/api/sync", json={
+        "entries": [], "last_sync": first.json()["server_now"]}).json()
+    by_id = {e["id"]: e for e in delta["entries"]}
+    assert by_id["top-bare-1"]["category"] == "吃喝"       # 裸大类名换头
+    assert by_id["top-kid-2"]["category"] == "吃喝/早餐"   # 小类账换头
+    assert by_id["top-tomb-3"]["category"] == "吃喝/夜宵"  # 墓碑也换 (别机还捏着)
+    assert "top-other-4" not in by_id                      # 别大类的账不牵连
+    assert "top-inc-5" not in by_id                        # 收入侧同名不牵连 (kind 圈定)
+    for body in ({"kind": "expense", "parent": "", "name": "甲"},
+                 {"kind": "expense", "parent": "甲", "name": "十字小类名字满十啊哈"}):
+        assert _post(client, "/bookkeeping/api/categories/add",
+                     body).status_code == 200               # 甲/十字小类名字满十啊哈 = 12 字
+    over = _post(client, _UPDATE, {"kind": "expense", "parent": "",
+                                   "name": "甲", "new_name": "十个字的大类名字啊哈"})
+    assert over.status_code == 400 and "超 20 字" in over.json()["detail"]
+
+
 def test_update_js_wiring():
     """客户端接线: 点小类行身 (sw-body) 开同一枚新建弹框, 名字/图标/颜色
     先铺现状 (开局锁图标 —— 当前的可能是手挑的); 提交按编辑/新建分走
-    update/add 两口; 删除条露着时点行身是收条不是开框; 版本钉随批 bump。"""
+    update/add 两口; 删除条露着时点行身是收条不是开框; 大类编辑走左划
+    动作条上的「编辑」钮 (1.10.0, 行开多宽量动作条实宽); 版本钉随批 bump。"""
     js = _static("bookkeeping-categories.js")
     assert 'data-act="edit"' in js and 'aria-label="编辑 ${esc(name)}"' in js
     assert "openModal(parent, name);" in js            # 行身点按进编辑
@@ -139,10 +184,17 @@ def test_update_js_wiring():
     assert 'let mEditName = "";' in js
     assert "编辑「${mEditName}」" in js
     assert '$("#cm-ok").textContent = mEditName ? "保存" : "添加";' in js
-    assert "mIcon = mEditName ? iconSlugFor(`${parent}/${mEditName}`) : \"\";" in js
+    assert "iconSlugFor(parent ? `${parent}/${mEditName}` : mEditName)" in js  # 大类认裸名
     assert 'mColor = mEditName ? ownColor(parent, mEditName) : "";' in js
     assert '"/bookkeeping/api/categories/update"' in js
     assert "{ kind, parent, name: mEditName, new_name: name," in js
+    # 1.10.0 大类: 左划动作条 编辑+删除 两枚 (小类只删除, 编辑口在行身)
+    assert 'data-act="edit-top"' in js and 'class="sw-act edit"' in js
+    assert 'openModal("", name);' in js                # 大类编辑: parent 空串
+    assert "const swW = row =>" in js and "w: swW(row)," in js   # 行宽 = 动作条实宽
+    css = _static("css/bookkeeping-panes.css")
+    assert ".push-pane .sw-acts {" in css              # 动作条: 大类两枚/小类一枚
+    assert ".sw-act.edit { background: var(--accent); }" in css  # 非销毁性: 蓝
+    assert ".sw-act.del { background: var(--red); }" in css
     html = _static("bookkeeping.html")
-    assert "bookkeeping-categories.js?v=7" in html     # 编辑批: 内容定稿后 bump
-    assert "css/bookkeeping-panes.css?v=2" in html     # 行宽兜底 + 标题顶衬同批
+    assert "bookkeeping-categories.js?v=8" in html and "css/bookkeeping-panes.css?v=3" in html

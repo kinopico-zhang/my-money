@@ -60,4 +60,4 @@ def test_meal_preselect_and_load_order():
     assert 'bookkeeping-categorizer.js?v=1' in _HTML
     assert _HTML.index("amount-calculator.js?v=1") < _HTML.index("bookkeeping-categorizer.js?v=1")
     assert _HTML.index("bookkeeping-categorizer.js?v=1") < _HTML.index("bookkeeping-state.js")
-    assert 'bookkeeping-entry-sheet.js?v=26' in _HTML
+    assert 'bookkeeping-entry-sheet.js?v=27' in _HTML

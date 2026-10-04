@@ -7,7 +7,8 @@
 // (「＋ 新建大类」与大类列表尾「＋ 添加小类」都进这框, 打字自动预选贴切
 // 图标); 删除走行左滑 (记账页账目行同款手势) — 滑开露红条, 两击确认。
 // 1.9.0 点小类行身开同一框编辑 (名字/图标/颜色, 提交走 update 口, 改名由
-// 服务端把账面上的组合名一并迁走)。
+// 服务端把账面上的组合名一并迁走)。1.10.0 大类左划的动作条多一枚「编辑」
+// (小类的编辑口在行身点按, 不占条), 开的是同一枚框 — 大类改名服务端整组迁。
 // 元素查找全收在 target 里 (my-music 的教训: 层滑出还挂着 DOM 的空档,
 // 全局找会抓错层); 渲染目标由调用方给。
 "use strict";
@@ -33,10 +34,11 @@ function renderCategoriesView(target) {
   let trayFor = null;        // 调色盘垫在哪一行脚下 {parent, name} (只开一盘)
   let confirmKey = null;     // 删除两击确认的第一击 {parent, name} (3 秒内点第二下才真删)
 
-  // 弹框状态: modalFor 是往哪个大类里加 (null = 新建大类); mEditName 非空 =
-  // 改那个小类 (1.9.0 点行开框, 提交走 update 口); mIconLocked 后打字不再
-  // 抢预选 (手点图标 = 定了; 编辑开局也锁 —— 当前的可能是手挑的); mColor
-  // 空 = 默认跟收支方向走
+  // 弹框状态: modalFor 是往哪个大类里加 (null = 新建大类; 大类编辑时也是
+  // null — 编辑对象由 mEditName 认); mEditName 非空 = 改那个类别 (1.9.0
+  // 小类点行开框 / 1.10.0 大类动作条), 提交走 update 口; mIconLocked 后
+  // 打字不再抢预选 (手点图标 = 定了; 编辑开局也锁 —— 当前的可能是手挑的);
+  // mColor 空 = 默认跟收支方向走
   let modalFor = null;
   let mEditName = "";
   let mName = "";
@@ -45,9 +47,14 @@ function renderCategoriesView(target) {
   let mColor = "";
 
   // 行左滑状态 (记账页账目行同一副手势)
-  const SW_W = 72;           // 删除钮宽 (与 css .sw-del 的 width 一致)
+  const SW_W = 72;           // 单枚动作钮宽 (与 css .sw-act 的 width 一致;
+                             // 行开多宽看条里有几枚 — 小类 72 / 大类 144)
+  const swW = row => {       // 行宽 = 身后动作条实宽 (渲染时机不同也能拿准)
+    const acts = row.querySelector(".sw-acts");
+    return acts ? acts.offsetWidth : SW_W;
+  };
   let openRow = null;        // 当前滑开的行 (一次只开一行)
-  let sw = null;             // 进行中的滑动: { row, body, x0, y0, base, cur, mode }
+  let sw = null;             // 进行中的滑动: { row, body, x0, y0, base, cur, w, mode }
   let swClick = false;       // 刚滑完的收尾 click 别当成点按
 
   target.innerHTML = `
@@ -124,16 +131,21 @@ function renderCategoriesView(target) {
 
   const confirming = (parent, name) =>
     !!confirmKey && confirmKey.parent === parent && confirmKey.name === name;
-  function swDelBtn(parent, name) {   // 行身后的删除条 (左滑才见), 两击确认
-    return `<button type="button" class="sw-del${confirming(parent, name) ? " confirm" : ""}"` +
+  function swActs(parent, name, withEdit) {  // 行身后的动作条 (左滑才见):
+    const conf = confirming(parent, name);   // 删除两击确认 (第一击后就地变脸)
+    return `<div class="sw-acts">` +
+      (withEdit              // 大类条: 编辑+删除两枚 (1.10.0); 小类条只删除 —
+        ? `<button type="button" class="sw-act edit" data-act="edit-top"` +  // 小类的编辑口
+          ` data-parent="${esc(parent)}" data-name="${esc(name)}">编辑</button>` : "") +  // 在行身点按
+      `<button type="button" class="sw-act del${conf ? " confirm" : ""}"` +
       ` data-act="del" data-parent="${esc(parent)}" data-name="${esc(name)}"` +
-      ` aria-label="删除">${confirming(parent, name) ? "确认" : "删除"}</button>`;
+      ` aria-label="删除">${conf ? "确认" : "删除"}</button></div>`;
   }
 
   function kidRow(parent, name) {
     const key = `${parent}/${name}`;
     return `<div class="kid sw-wrap">` +
-      swDelBtn(parent, name) +
+      swActs(parent, name, false) +
       // 行身可点 (1.9.0): 点一下开编辑框; 色点仍是快改色的口 (closest 先
       // 摸到它自己的 data-act, 不会落进行身这枚)
       `<div class="sw-body" data-act="edit" data-parent="${esc(parent)}"` +
@@ -150,7 +162,7 @@ function renderCategoriesView(target) {
     const open = openTop === g.name;   // 没挂小类的大类也点得开 (展开就是添加行)
     return `<div class="grp${open ? " open" : ""}">` +
       `<div class="grp-top sw-wrap">` +
-      swDelBtn("", g.name) +
+      swActs("", g.name, true) +
       `<div class="sw-body">` +
       `<button type="button" class="head" data-act="toggle" data-parent="${esc(g.name)}">` +
       `<span class="ic">${catIcon(g.name, kind)}</span>` +
@@ -236,7 +248,10 @@ function renderCategoriesView(target) {
     modalFor = parent || null;
     mEditName = editName || "";
     mName = mEditName;
-    mIcon = mEditName ? iconSlugFor(`${parent}/${mEditName}`) : "";
+    // 图标按行上生效的那枚预填: 小类认全名, 大类认裸名 (1.10.0)
+    mIcon = mEditName
+      ? iconSlugFor(parent ? `${parent}/${mEditName}` : mEditName)
+      : "";
     mIconLocked = !!mEditName;   // 编辑开局锁当前图标: 可能是手挑的, 名字预选不许抢跑
     mColor = mEditName ? ownColor(parent, mEditName) : "";
     $("#cm-title").textContent = mEditName ? `编辑「${mEditName}」`
@@ -294,7 +309,7 @@ function renderCategoriesView(target) {
       if (confirmKey !== key) return;   // 只清旗, 钮还在 DOM 就地改回文案
       confirmKey = null;
       const btn = target.querySelector(
-        `#cat-list .sw-del[data-parent="${CSS.escape(key.parent)}"]` +
+        `#cat-list .sw-act.del[data-parent="${CSS.escape(key.parent)}"]` +
         `[data-name="${CSS.escape(key.name)}"]`);
       if (btn) { btn.textContent = "删除"; btn.classList.remove("confirm"); }
     }, 3000);
@@ -370,6 +385,12 @@ function renderCategoriesView(target) {
       if (wrap && wrap === staleRow()) { closeOpenRow(); return; }
       openModal(parent, name);
       return;
+    } else if (act === "edit-top") {
+      // 大类动作条上的编辑 (1.10.0): 条露着才点得到, 开框顺手收条;
+      // 大类的 parent 是空串, 编辑模式由名字认 (与小类同一枚框)
+      closeOpenRow();
+      openModal("", name);
+      return;
     } else if (act === "add-kid") {
       openModal(parent);
       return;
@@ -382,7 +403,8 @@ function renderCategoriesView(target) {
     const t = e.touches[0];
     const row = t.target instanceof Element && t.target.closest(".sw-wrap");
     sw = row ? { row, body: row.querySelector(".sw-body"), x0: t.clientX, y0: t.clientY,
-                 base: row === staleRow() ? -SW_W : 0, cur: 0, mode: "" } : null;
+                 base: row === staleRow() ? -swW(row) : 0, cur: 0, w: swW(row),
+                 mode: "" } : null;
   }, { passive: true });
 
   $("#cat-list").addEventListener("touchmove", e => {
@@ -403,7 +425,7 @@ function renderCategoriesView(target) {
     e.preventDefault();        // 横滑钉住页面 (别同时纵滚)
     let x = sw.base + dx;
     if (x > 0) x *= .25;                               // 右侧橡皮筋 (不许拉出行外)
-    if (x < -SW_W) x = -SW_W + (x + SW_W) * .25;       // 开到底再拉: 阻尼
+    if (x < -sw.w) x = -sw.w + (x + sw.w) * .25;       // 开到底再拉: 阻尼 (条几枚开多宽)
     sw.cur = x;
     sw.body.style.transform = `translateX(${x}px)`;
   }, { passive: false });
@@ -411,9 +433,9 @@ function renderCategoriesView(target) {
   function swFinish(e) {       // 松手: 过半开, 没过半收 (带弹簧回弹)
     if (!sw) return;
     if (sw.mode === "swipe") {
-      const open = sw.cur < -SW_W / 2;
+      const open = sw.cur < -sw.w / 2;
       sw.row.classList.remove("dragging");
-      sw.body.style.transform = open ? `translateX(${-SW_W}px)` : "";
+      sw.body.style.transform = open ? `translateX(${-sw.w}px)` : "";
       openRow = open ? sw.row : null;
       if (Math.abs(e.changedTouches[0].clientX - sw.x0) > 10)
         swClick = true;        // 这一下是滑不是点: 随后的 click 别当点按

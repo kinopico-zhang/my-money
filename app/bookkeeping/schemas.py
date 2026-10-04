@@ -149,8 +149,9 @@ class CategoryAddIn(BaseModel):
 
 
 class CategoryUpdateIn(CategoryAddIn):
-    """改一个小类 (1.9.0 点行开框): 名字/图标/颜色一起; new_name 与 name
-    相同 = 只改图标颜色。改名由接口迁账上的组合名 (含墓碑)。"""
+    """改一个类别 (1.9.0 小类 / 1.10.0 大类): 名字/图标/颜色一起;
+    new_name 与 name 相同 = 只改图标颜色。改名由接口迁账上的组合名
+    (含墓碑; 大类是整组迁)。"""
 
     new_name: str = Field(min_length=1, max_length=10)
 
