@@ -13,6 +13,14 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.11.1", date="2026-10-04", items=[
+        ChangelogItem(kind="改进", text="同步的提示只在你主动下拉时醒目: 打开应用、"
+                                       "联网恢复这些自动同步不再弹条子, 静悄悄做完; "
+                                       "断网/没连上仍会在顶上挂一条提醒 (账存本机,"
+                                       " 得有个交代), 但降成了小一号的弱化样式,"
+                                       " 不再亮堂堂一条横幅 — 问题解决它自己收,"
+                                       " 想看「已同步 · 时:分」下拉一下就有"),
+    ]),
     ChangelogVersion(version="1.11.0", date="2026-10-04", items=[
         ChangelogItem(kind="新增", text="主页下拉就能手动同步: 拉到头出橡皮筋的"
                                        "时候同步自己跑起来, 顶上滑下一条「已同步 ·"

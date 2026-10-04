@@ -81,7 +81,7 @@ button, a, summary { touch-action: manipulation; }
 
 /* ---------- 同步状态条 (1.11.0 起 transient, 用户点名不常驻顶端): 定在顶上
    盖着内容、不占文档流 — 平时收在顶沿外 (translateY(-101%), 101% 连底边线一起
-   带走), .show 滑下; 进页/主页下拉手动同步亮一下报「已同步 · 时:分」2.6 秒
+   带走), .show 滑下; 主页下拉手动同步亮一下报「已同步 · 时:分」2.6 秒
    退场 (退场闸在 bookkeeping-sync.js), 离线/没连上钉住提醒。垫高让开状态栏/
    刘海 (独立模式钉在 --top-clear 之下 —— 模糊带里不留常驻内容)。坐黑壳:
    磨砂深底 + 白字, 小圆点收绿 (暗底上亮色点才醒)。z 68: 压推入层 (65),
@@ -100,6 +100,10 @@ button, a, summary { touch-action: manipulation; }
 .sync-strip.pending { color: #f0b13d; }
 .sync-strip.pending .dot { background: #f0b13d; }
 .sync-strip.off .dot { background: var(--bg-ink); }
+/* 静默期的问题态 (1.11.1, 用户点名「其他同步的提示不要特别明显」): 离线/
+   没连上不再是亮堂堂一条 — 整条降半档挂着 (小一号再打六折), 不抢眼但低头
+   看得见; 问题解除自己收, 想看报时下拉就是 */
+.sync-strip.hush { font-size: 10.5px; opacity: .62; }
 
 /* ---------- 日历卡 (主页顶: 月份切换 + 每天收支, 点日子跳到瀑布流那天)。
    条子 1.11.0 起不占文档流, 顶衬由 main 自己吃 (原先靠条子的 padding 顶着) ---------- */
