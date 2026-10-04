@@ -197,4 +197,4 @@ def test_update_js_wiring():
     assert ".sw-act.edit { background: var(--accent); }" in css  # 非销毁性: 蓝
     assert ".sw-act.del { background: var(--red); }" in css
     html = _static("bookkeeping.html")
-    assert "bookkeeping-categories.js?v=8" in html and "css/bookkeeping-panes.css?v=3" in html
+    assert "bookkeeping-categories.js?v=9" in html and "css/bookkeeping-panes.css?v=4" in html

@@ -27,10 +27,10 @@ def test_quick_buttons_push_layers():
         'href="/bookkeeping/settings' not in html   # 跳页入口退役
     assert 'id="fab-stack"' in html and 'id="fab"' in html
     assert '<div id="push-stack"></div>' in html
-    for src in ("css/bookkeeping-panes.css?v=3",
+    for src in ("css/bookkeeping-panes.css?v=4",
                 "bookkeeping-settings.js?v=4", "bookkeeping-stats.js?v=3",
-                "bookkeeping-categories.js?v=8", "bookkeeping-push.js?v=1",
-                "bookkeeping-boot.js?v=6"):
+                "bookkeeping-categories.js?v=9", "bookkeeping-push.js?v=1",
+                "bookkeeping-boot.js?v=7"):
         assert f'src="/bookkeeping/static/{src}"' in html or \
             f'href="/bookkeeping/static/{src}"' in html, f"主页没装 {src}"
     boot = _static("bookkeeping-boot.js")

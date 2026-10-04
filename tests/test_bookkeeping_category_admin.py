@@ -175,7 +175,7 @@ def test_categories_js_wiring():
     assert js.count("nameError(") == 2     # 定义 + 弹框提交口 (守门在提交)
     assert 'ev.key !== "Enter"' in js and "mName = ev.target.value" in js  # 回车=添加; 名字随打换预览
     assert "mIconLocked" in js and 'icon: modalIcon(), color: mColor' in js  # 手选锁定; 所见=落库
-    assert "catIconBySlug" in js and "ICON_NAMES" in js and "ICON_HINTS" in js
+    assert "catIconBySlug" in js and "ICON_GROUPS" in js and "ICON_HINTS" in js  # 1.11.0 栅格分节
     assert '往「${modalFor}」加小类' in js  # 组尾进框带父类 (标题换)
     # 1.7.0 行左滑删除 (记账页账目行同一副手势): 滑开露红条, 两击确认
     assert "const SW_W = 72" in js and "swClick" in js and "closeOpenRow" in js
@@ -194,7 +194,7 @@ def test_categories_js_wiring():
     assert "setCatColors(catTree);" in _static("bookkeeping-boot.js")   # 开局缓存树先带色
     assert 'setCatColors(loadLS("bk-categories-v2"' in _static("bookkeeping-stats.js")
     html = _static("bookkeeping.html")      # 图标库/同步/开局脚本只随主页装 (层视图同吃)
-    assert "category-icons.js?v=17" in html and \
-           "bookkeeping-sync.js?v=3" in html and "bookkeeping-boot.js?v=6" in html
+    assert "category-icons.js?v=18" in html and \
+           "bookkeeping-sync.js?v=4" in html and "bookkeeping-boot.js?v=7" in html
     css = _static("css/bookkeeping-panes.css")
     assert "pointer-events: none" in css   # 1.7.1: 压暗层不挡点击 (1.7.0 丢了这句, 点大类点不动)

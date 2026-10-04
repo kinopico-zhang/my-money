@@ -9,11 +9,13 @@
 // 1.9.0 点小类行身开同一框编辑 (名字/图标/颜色, 提交走 update 口, 改名由
 // 服务端把账面上的组合名一并迁走)。1.10.0 大类左划的动作条多一枚「编辑」
 // (小类的编辑口在行身点按, 不占条), 开的是同一枚框 — 大类改名服务端整组迁。
+// 1.11.0 图标栅格扩到 550 枚按意义分 19 组 (ICON_GROUPS 分节铺小标),
+// 选中态照记账页磁贴 (圆底反白), 换掉蓝描圈。
 // 元素查找全收在 target 里 (my-music 的教训: 层滑出还挂着 DOM 的空档,
 // 全局找会抓错层); 渲染目标由调用方给。
 "use strict";
 /* global catIcon, catIconBySlug, setCatColors, CATEGORY_ICONS, CAT_ICONS,
-          ICON_NAMES, ICON_HINTS, FALLBACK_ICON */
+          ICON_GROUPS, ICON_HINTS, FALLBACK_ICON */
 /* exported renderCategoriesView */
 
 function renderCategoriesView(target) {
@@ -220,11 +222,14 @@ function renderCategoriesView(target) {
     $("#cm-icon").innerHTML = catIconBySlug(modalIcon(), mColor || dirColor());
   }
 
-  function paintGrid() {               // 图标栅格全量画 (开框/换色才走):
-    const color = mColor || dirColor();   // 143 枚, 选中那枚描圈
-    $("#cm-icons").innerHTML = ICON_NAMES.map(s =>
-      `<button type="button" class="cm-tile${s === modalIcon() ? " cur" : ""}"` +
-      ` data-icon="${s}" aria-label="${s}">${catIconBySlug(s, color)}</button>`).join("");
+  function paintGrid() {               // 图标栅格按组全量画 (开框/换色才走):
+    const color = mColor || dirColor();   // 550 枚分 19 节, 选中那枚磁贴反白
+    $("#cm-icons").innerHTML = ICON_GROUPS.map(g =>
+      `<div class="cm-group"><div class="cm-glabel">${g.label}</div>` +
+      `<div class="cm-gicons">` + g.icons.map(s =>
+        `<button type="button" class="cm-tile${s === modalIcon() ? " cur" : ""}"` +
+        ` data-icon="${s}" aria-label="${s}">${catIconBySlug(s, color)}</button>`).join("") +
+      `</div></div>`).join("");
   }
 
   function moveGridSel() {             // 选中圈搬运不重画栅格 (打字随选也轻)

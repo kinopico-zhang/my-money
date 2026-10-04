@@ -13,6 +13,22 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.11.0", date="2026-10-04", items=[
+        ChangelogItem(kind="新增", text="主页下拉就能手动同步: 拉到头出橡皮筋的"
+                                       "时候同步自己跑起来, 顶上滑下一条「已同步 ·"
+                                       "时:分」报完即退; 同步条不再常驻顶端, 平时"
+                                       "收起来 (离线/没连上仍会亮出来提醒)"),
+        ChangelogItem(kind="新增", text="挑图标的栅格扩到 550 枚, 按意义分成 19 组"
+                                       " (餐饮美食/交通出行/购物消费/医疗健康…), "
+                                       "翻到哪组挑哪组; 打字联想的词典也跟着扩了"
+                                       " (咖啡、蛋糕、水果这些原先只能近似的都有"
+                                       "本命图标了)"),
+        ChangelogItem(kind="改进", text="编辑类别时选中的图标换成记账页磁贴的选中"
+                                       "样式: 圆底灌上挑的颜色、图形翻白, 不再是"
+                                       "一圈蓝描边"),
+        ChangelogItem(kind="修复", text="「已同步」后面的时间改用手机本地的钟 — "
+                                       "原先打的是服务器时钟, 跟状态栏对不上"),
+    ]),
     ChangelogVersion(version="1.10.0", date="2026-10-04", items=[
         ChangelogItem(kind="新增", text="大类也能改了: 左划大类, 删除旁边多一枚"
                                        "「编辑」— 点开跟小类同一枚弹框, 改名字、图标、"

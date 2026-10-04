@@ -300,16 +300,24 @@
 .push-pane .cm-prev input::placeholder { color: var(--ink-3); }
 .push-pane .cm-label { flex: none; padding: 12px 2px 8px; font-size: 12.5px;
                        color: var(--ink-3); }
-.push-pane .cm-icons {
-  flex: 1; min-height: 120px; overflow-y: auto; overscroll-behavior-y: contain;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-  gap: 8px; padding: 2px;
-}
+/* 图标栅格 (1.11.0 分节): .cm-icons 只是滚动一层, 装若干 .cm-group (小标 +
+   自己的栅格) — 550 枚按意义分 19 组, 不分节翻不动 */
+.push-pane .cm-icons { flex: 1; min-height: 120px; overflow-y: auto;
+                       overscroll-behavior-y: contain; padding: 2px; }
+.push-pane .cm-glabel { padding: 12px 2px 6px; font-size: 11.5px;
+                        color: var(--ink-3); }
+.push-pane .cm-gicons { display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+                        gap: 8px; }
 .push-pane .cm-tile { display: flex; align-items: center; justify-content: center;
                       padding: 6px; border-radius: 12px; }
-.push-pane .cm-tile .ci { width: 40px; height: 40px; display: block; color: var(--cc); }
+.push-pane .cm-tile .ci { width: 40px; height: 40px; display: block; color: var(--cc);
+                          transition: color .3s ease; }
 .push-pane .cm-tile:active { background: var(--press); }
-.push-pane .cm-tile.cur { outline: 2.5px solid var(--accent); outline-offset: -2.5px; }
+/* 选中态照记账页磁贴 (1.11.0, 用户点名): 圆底灌深版自选色、图形翻白 —
+   跟 .cat-tiles .tile.on 一枚样式 (原先的蓝描圈退役) */
+.push-pane .cm-tile.cur .ci { --sel: color-mix(in srgb, var(--cc) 72%, #000);
+                              color: #fff; }
 .push-pane .cm-colors { flex: none; display: flex; align-items: center; gap: 9px;
                         flex-wrap: wrap; padding: 4px 2px 2px; }
 .push-pane .cm-cw { width: 27px; height: 27px; border-radius: 50%; border: 0;

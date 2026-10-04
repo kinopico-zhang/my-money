@@ -9,7 +9,7 @@
 setCatColors(catTree);          // 缓存树里的自选图标色先灌上 (刷新前也带色)
 render();
 loadCategories();
-syncNow();
+syncNow(true);   // 首同步亮条报一下 (1.11.0: 条子无常驻, 进页见一眼「已同步」即退场)
 
 // 全应用禁双指缩放 (跟 My Music / My Tesla 一致): body 的 touch-action: pan-y
 // 挡得住安卓/桌面, iOS Safari 的捏合缩放不吃 touch-action —— 非标准手势事件

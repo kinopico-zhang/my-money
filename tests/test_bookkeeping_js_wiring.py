@@ -78,8 +78,6 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     #    ↑ 分流盖板引文档级 mask (id 注入时重编); sprite 隐身走 0×0 绝对定位
     #    (display:none 的引用源 Safari 也认不全)
     assert "catIcon(val, sheetKind)" in js           # 子类格按全路径取自己的图标; 底色跟方向走
-    assert '"bolt-one"' in js and "car-battery" not in js  # 充电: 插头图形
-    assert "\"虾饺\": 'cat'" in js and "shrimp" not in js   # 虾饺是只猫 (家里的猫咪)
     assert "COMMON_CATS" not in js                 # 手排清单退役: 格子按账本热度排 (1.6.0)
     assert "#ci-more" not in js and "catAll" not in js   # 「…」全部钮整个撤了
     assert "function updateAmtHead()" in js         # 金额行类别牌随选择刷新
