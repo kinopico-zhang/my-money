@@ -1,0 +1,5 @@
+# 跨平台检出一致 (2026-10-07: my-home 的 CI 在 Windows 上红 —— 首厅 twin
+# 字节比对撞上 autocrlf 把子仓文本检出成 CRLF; 与根仓/my-tesla 同款钉 LF)
+* text=auto eol=lf
+# 图标字节精确, 不能被换行转换碰
+*.png binary
