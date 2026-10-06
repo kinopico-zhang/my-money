@@ -16,8 +16,13 @@
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
 cp .env.example .env      # 编辑: 至少设 AUTH_PASS (首启种子管理员)
-./run.sh                  # 默认 8500 端口; data/certs/ 有证书自动 HTTPS
+./run.sh                  # 默认 8500; 有证书 HTTPS/HTTP 双开, 没证书明文
 ```
+
+`run.sh` 有证书时 HTTPS 与 HTTP 双开 (两个端口两个进程): HTTPS 走
+`PORT` (默认 8500), HTTP 走 `HTTP_PORT` (默认 8501, 局域网 IP 直连);
+没证书只开 `PORT` 的明文 —— HTTPS 是可选的。会话 cookie 是无状态
+HMAC 签名, 两个口通用。
 
 打开 `http://<host>:8500/` → 自动进 `/bookkeeping` (未登录先到登录页,
 账密是 `.env` 里 `AUTH_USER`/`AUTH_PASS` 种下的管理员, 之后可在界面里改)。
