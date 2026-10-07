@@ -39,6 +39,11 @@
 > 账号体系 (登录/注册/账号管理) 内嵌在 `app/home/`, 单独 clone 本仓即可部署,
 > 不需要组合仓。
 
+<p align="center">
+<img src="docs/screenshot-home.png" width="300" alt="记账首页 · My Money (演示数据)">
+<img src="docs/screenshot-stats.png" width="300" alt="类别统计 · My Money (演示数据)">
+</p>
+
 ## ✨ 功能
 
 - 📱 **随手记一笔** — 手机优先, 打开即记
