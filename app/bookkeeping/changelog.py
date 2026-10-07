@@ -13,6 +13,11 @@ from .changelog_early import VERSIONS as EARLY_VERSIONS
 from .changelog_versions_1_4_to_1_5 import VERSIONS_1_4_TO_1_5
 
 VERSIONS: Final[list[ChangelogVersion]] = [
+    ChangelogVersion(version="1.13.0", date="2026-10-07", items=[
+        ChangelogItem(kind="新增", text="第一次部署不用再编辑配置文件: 打开页面就"
+                                       "进引导, 注册第一个管理员就能开始记账; 用惯"
+                                       "了的老部署一切照旧"),
+    ]),
     ChangelogVersion(version="1.12.0", date="2026-10-04", items=[
         ChangelogItem(kind="新增", text="小类左滑也能编辑了: 左划小类, 删除旁边"
                                        "多一枚「编辑」, 跟大类同一副动作条 — 点开"

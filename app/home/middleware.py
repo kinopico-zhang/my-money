@@ -21,7 +21,9 @@ _PUBLIC_PATHS = frozenset((
     "/bookkeeping/login",
     "/api/login", "/api/logout",
     "/api/register", "/api/invite-status",
-    "/bookkeeping/api/logout"))
+    "/bookkeeping/api/logout",
+    # 首启引导: 真开口的判据 (无管理员) 在页面/接口内部自验, 中间件不碰库
+    "/setup", "/api/setup-status", "/api/setup-admin"))
 _STATIC_PREFIXES = ("/static/", "/bookkeeping/static/")
 
 # 应用登录页 → 登录后回哪 (登录页在应用 scope 内, 已登录的访客直接回应用)

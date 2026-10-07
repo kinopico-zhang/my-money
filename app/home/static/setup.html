@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<!-- 1.7.0 全应用禁缩放: maximum-scale/user-scalable 掐双击放大/点输入框的自动放大;
-     iOS 两指捏合不吃 touch-action, 由 body 后第一条脚本 no-zoom.js 拦 gesture -->
+<!-- 首启引导页: 库里还没有管理员时才是入口 (服务端自判, 已初始化的部署
+     /setup 一律 302 回登录页); 页面本身免登录, 建管理员即种会话 cookie -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,24 +12,26 @@
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v=1">
   <link rel="manifest" href="/static/manifest.json">
-  <title>登录 · My Home</title>
-<link rel="stylesheet" href="/static/css/login-page.css?v=2">
+  <title>初始化 · My Money</title>
+<link rel="stylesheet" href="/static/css/setup-page.css?v=1">
 </head>
-<body>
+<body data-done="/bookkeeping">
 <script src="/static/no-zoom.js?v=2"></script>
 <div class="card" id="card">
-  <div class="icon">🔑</div>
-  <h1>My Home</h1>
-  <div class="sub" id="sub">请登录后查看</div>
-  <form id="form" autocomplete="on">
+  <div class="icon">💰</div>
+  <h1>My Money</h1>
+  <div class="sub">首次使用 · 建立管理员</div>
+  <form id="form1" autocomplete="on">
     <div class="field">
-      <label for="user">账号</label>
-      <input id="user" name="username" type="text" autocapitalize="off"
-             autocorrect="off" autocomplete="username" required>
+      <label for="su-name">名称</label>
+      <input id="su-name" name="name" type="text" autocapitalize="off"
+             autocorrect="off" autocomplete="nickname" maxlength="20"
+             placeholder="2~20 个字符" required>
     </div>
     <div class="field">
-      <label for="pass">密码</label>
-      <input id="pass" name="password" type="password" autocomplete="current-password" required>
+      <label for="su-pass">密码</label>
+      <input id="su-pass" name="new-password" type="password"
+             autocomplete="new-password" minlength="6" maxlength="64" required>
       <button type="button" class="eye-btn" id="eye" aria-label="显示密码">
         <svg id="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -43,10 +45,19 @@
         </svg>
       </button>
     </div>
-    <button class="btn" id="btn" type="submit">登 录</button>
-    <div class="err" id="err"></div>
+    <div class="field">
+      <label for="su-pass2">确认</label>
+      <input id="su-pass2" name="confirm-password" type="password"
+             autocomplete="new-password" minlength="6" maxlength="64" required>
+    </div>
+    <button class="btn" type="submit">建立管理员</button>
+    <div class="err"></div>
   </form>
+  <div class="done" id="done" hidden>
+    <div class="done-icon">✅</div>
+    <p>初始化完成, 正在进入…</p>
+  </div>
 </div>
-<script src="/static/login.js?v=3"></script>
+<script src="/static/setup.js?v=1"></script>
 </body>
 </html>
