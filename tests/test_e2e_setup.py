@@ -84,10 +84,10 @@ def client(server) -> Iterator[httpx.Client]:  # pylint: disable=redefined-outer
 
 
 def test_firstboot_status_needed(client):  # pylint: disable=redefined-outer-name
-    """首启: 匿名可查引导状态, needed=true。"""
+    """首启: 匿名可查引导状态, 缺口清单只有账号一步。"""
     r = client.get("/api/setup-status")
     assert r.status_code == 200, r.text[:200]
-    assert r.json() == {"needed": True}
+    assert r.json() == {"needed": True, "missing": ["account"]}
 
 
 def test_setup_page_renders(client):  # pylint: disable=redefined-outer-name
@@ -119,4 +119,5 @@ def test_setup_admin_full_flow(client):  # pylint: disable=redefined-outer-name
     gate = client.get("/setup", follow_redirects=False)
     assert gate.status_code == 302
     assert gate.headers["location"] == "/login"
-    assert client.get("/api/setup-status").json() == {"needed": False}
+    assert client.get("/api/setup-status").json() == {"needed": False,
+                                                      "missing": []}

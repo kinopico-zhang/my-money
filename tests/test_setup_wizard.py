@@ -25,15 +25,16 @@ def firstboot(usersdb):
 
 def test_setup_status_needed_on_firstboot(  # pylint: disable=redefined-outer-name
         firstboot, client):
-    """首启: needed=true (匿名可查, 只暴露这一个布尔)。"""
+    """首启: needed=true, 缺口清单只有账号一步 (匿名可查)。"""
     r = client.get("/api/setup-status")
     assert r.status_code == 200
-    assert r.json() == {"needed": True}
+    assert r.json() == {"needed": True, "missing": ["account"]}
 
 
 def test_setup_status_false_when_initialized(client):
-    """已初始化的部署 (isolate 的种子管理员即此口径): needed=false。"""
-    assert client.get("/api/setup-status").json() == {"needed": False}
+    """已初始化的部署 (isolate 的种子管理员即此口径): 全配齐。"""
+    assert client.get("/api/setup-status").json() == {"needed": False,
+                                                      "missing": []}
 
 
 def test_setup_admin_creates_and_logs_in(  # pylint: disable=redefined-outer-name
@@ -119,13 +120,17 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
     assert 'id="form1"' in html
     assert 'id="form2"' not in html and 'id="form3"' not in html
     assert 'id="steps"' not in html
-    js = client.get("/static/setup.js?v=1").text
+    js = client.get("/static/setup.js?v=2").text
     assert '"/api/setup-admin"' in js
     assert 'data-done' in js and "dataset.done" in js
+    assert ".skip" not in js and "setup-status" in js
+    assert 'missing.includes("account")' in js
 
 
 def test_login_js_probes_setup(client):
-    """登录页探测: login.js 进页查引导状态, needed 时让位给 /setup。"""
-    js = client.get("/static/login.js?v=3").text
+    """登录页探测: login.js 进页查引导状态, 只在账号步还缺 (真正的首启)
+    时让位给 /setup —— 已初始化的部署照常登录, 不被引导拦路。"""
+    js = client.get("/static/login.js?v=4").text
     assert '"/api/setup-status"' in js
+    assert 'missing.includes("account")' in js
     assert '"/setup"' in js
