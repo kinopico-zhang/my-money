@@ -1,6 +1,6 @@
 <div align="center">
 
-# 💰 My Money
+# My Money
 
 **家庭记账小应用** — 随手记 · 离线同步 · 类别报表
 
@@ -31,7 +31,7 @@
 <img src="docs/screenshot-stats.png" width="300" alt="类别统计 · My Money (演示数据)">
 </p>
 
-## ✨ 功能
+## 功能
 
 - 📱 **随手记一笔** — 手机优先, 打开即记
 - 🧮 **金额键盘算式输入** — 四则表达式求值, 除零 / 非法式子安全返回
@@ -39,7 +39,7 @@
 - 💰 **收支条目** — 收入 / 支出 · 类别 · 标签 · 备注 · 删除标记
 - 📊 **类别树报表**
 
-## 🚀 快速开始
+## 快速开始
 
 需要 Python 3.13+ (venv):
 
@@ -62,7 +62,7 @@ HMAC 签名, 两个口通用。
 
 数据都落在 `data/` (git 忽略): `bookkeeping.db` 账目 + `users.db` 账号。
 
-## ⚙️ 环境变量
+## 环境变量
 
 完整清单见 [.env.example](.env.example), 常用项:
 
@@ -73,7 +73,7 @@ HMAC 签名, 两个口通用。
 | `MYTESLA_BOOKKEEPING_DB` | `sqlite:///data/bookkeeping.db` | 账目库 (完整 URL 形式) |
 | `MYHOME_USERS_DB` / `MYHOME_SECRET_FILE` | `data/users.db` / `.session_secret` | 账号库与会话密钥 (组合部署指到共享文件) |
 
-## 🧪 测试与质量门禁
+## 测试与质量门禁
 
 ```sh
 npm install               # 前端工具链 (eslint/tsc/stylelint/html-validate/c8)
@@ -89,7 +89,7 @@ stylelint / html-validate / node --test · c8 覆盖率 ≥95% (合并逻辑 /
 从 My Home 组合仓的 `apps/my-money` 下跑时不用 npm install —— 脚本会
 软链组合仓根的 node_modules。
 
-## 📁 项目结构
+## 项目结构
 
 ```
 app/
@@ -105,7 +105,7 @@ tests/           pytest (真实 ORM + SQLite 临时库) + node --test (纯逻辑
 `/api/me`…): 组合部署时外层把 `MYHOME_USERS_DB` / `MYHOME_SECRET_FILE`
 指到共享的账号库与密钥文件, 三个应用就共用同一批账号单点登录。
 
-## 🔗 相关项目
+## 相关项目
 
 | 仓 | 说明 |
 |---|---|
@@ -113,6 +113,6 @@ tests/           pytest (真实 ORM + SQLite 临时库) + node --test (纯逻辑
 | [My Tesla](https://github.com/kinopico-zhang/my-tesla) | TeslaMate 可视化工具 |
 | [My Music](https://github.com/kinopico-zhang/my-music) | NAS 曲库听歌 (Service Worker 离线) |
 
-## 📄 许可证
+## 许可证
 
 [MIT](./LICENSE) © 2026 kinopico
