@@ -17,25 +17,31 @@
 // tab 退役 (明细内容批次 3 搬进推入页), 设置视图改名 mine (内容批次 4
 // 重排); 中央槽首页态是橘 ⊕ (开记一笔, 接线在 entry-sheet), 其他 tab
 // 态 morph 成「首页」跳回 — 栏上 .at-home 翻两副面孔 (CSS 管)。
+// 2.0 (批次 3): 明细 (ledger) 与账单日历 (bill-cal) 归首页 tab 的层级层
+// (右划/Esc 收, 明细还带自己的底栏 — updateTabs 的 own-bar 让主栏让位)。
 "use strict";
 /* global renderCategoriesView, renderChangelogView, renderSettingsView,
           renderStatsView, renderCatSubsView, renderCatEntriesView,
-          renderTagsView, renderCycView */
+          renderTagsView, renderCycView, renderLedgerView, renderBillCalView */
 /* exported closePushStack, pushView */
 
 const pushStack = [];   // [{view, pane}] — 设置→类别管理会叠两层
 
 // 视图 → 所属主 tab (2.0): 类别管理/更新日志/标签/周期账是我的页里再推的
-// 层, 高亮归我的; 下钻两层 (大类→小类→明细) 是报表页里再推的层, 高亮归报表
+// 层, 高亮归我的; 下钻两层 (大类→小类→明细) 是报表页里再推的层, 高亮归报表;
+// 明细/账单日历是首页里再推的层, 高亮归首页 (栈非空时中央槽已不是 ⊕)
 const TAB_OF = { stats: "stats", mine: "mine",
                  categories: "mine", changelog: "mine",
                  tags: "mine", cyc: "mine",
-                 "cat-subs": "stats", "cat-entries": "stats" };
+                 "cat-subs": "stats", "cat-entries": "stats",
+                 ledger: "home", "bill-cal": "home" };
 
 /** 按页铺内容 (渲染函数在各视图文件, 全局名字引用 — 加载序上它们都在本文件前)。 */
 function renderView(view, target) {
   if (view === "mine") renderSettingsView(target);   // 2.0: mine = 现设置页内容 (批次 4 重排)
   else if (view === "stats") renderStatsView(target);
+  else if (view === "ledger") renderLedgerView(target);
+  else if (view === "bill-cal") renderBillCalView(target);
   else if (view === "categories") renderCategoriesView(target);
   else if (view === "tags") renderTagsView(target);
   else if (view === "cyc") renderCycView(target);
@@ -48,10 +54,11 @@ function renderView(view, target) {
     内容随即铺 (数据各自现拉, 页面骨架先弹出 — 「先弹页面再慢慢加载数据」)。
     层级层 (1.15.0 定案): 子界面统一从右滑入, 回头路统一是右划/Esc — 返回
     圆钮全数退役, 怎么来怎么回去; tab 根层 (报表/设置) 当正经页面 — 无手势,
-    切换只走底部 tab 栏。instant = tab 换场: snap 关过渡直接落位, 不演滑入。 */
+    切换只走底部 tab 栏。instant = tab 换场: snap 关过渡直接落位, 不演滑入。
+    返回铺好的层元素 (推的人要往上挂东西 — 如明细层进账单日历挂 data-from)。 */
 function pushView(view, instant) {
   const top = pushStack[pushStack.length - 1];
-  if (top && top.view === view) return;   // 顶层已是它: 再点当没点 (不重开不复位)
+  if (top && top.view === view) return top.pane;   // 顶层已是它: 再点当没点 (不重开不复位)
   const pane = document.createElement("div");
   pane.className = "push-pane" + (instant ? " snap" : "");
   pane.dataset.view = view;
@@ -69,6 +76,7 @@ function pushView(view, instant) {
     pane.classList.add("open");
   }
   renderView(view, pane.querySelector(".pane-scroll"));
+  return pane;
 }
 
 /** 收走的层 420ms 后移除 DOM (滑出动画 .34s 走完)。焦点还在层里先摘 —
@@ -99,11 +107,14 @@ function topTab() {
 
 /** 刷新底部 tab 栏 (2.0 三槽中央 morph): 报表/我的亮栈顶所属的 tab;
     栏挂 .at-home = 栈收空回首页, 中央槽亮橘 ⊕ (CSS 翻面孔),
-    否则中央槽是「首页」跳回钮。 */
+    否则中央槽是「首页」跳回钮。明细层自带底栏 [日历|记一笔] — 栏在 69
+    压在层 (65) 上, 不藏会两副底栏叠着, 栈里压着明细就挂 .own-bar 整栏
+    让位 (从明细再进的账单日历也归它管 — 那层的垫底跟着不吃主栏的)。 */
 function updateTabs() {
   const cur = topTab();
   const bar = document.getElementById("tab-bar");
   bar.classList.toggle("at-home", cur === "home");
+  bar.classList.toggle("own-bar", pushStack.some(it => it.view === "ledger"));
   bar.querySelectorAll("button[data-tab]").forEach(
     b => b.classList.toggle("on", b.dataset.tab === cur));
 }

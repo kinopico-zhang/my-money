@@ -26,7 +26,7 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
                "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
                "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
-               "bookkeeping-amount-pad", "bookkeeping-boot")
+               "bookkeeping-amount-pad", "bookkeeping-ledger", "bookkeeping-boot")
     js = "".join((base / f"{name}.js").read_text(encoding="utf-8")
                  for name in modules)
     assert "evaluateAmount($(\"#f-amount\").value)" in js
@@ -108,7 +108,7 @@ def test_bookkeeping_sheet_gestures():
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
                "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
                "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
-               "bookkeeping-amount-pad", "bookkeeping-boot")
+               "bookkeeping-amount-pad", "bookkeeping-ledger", "bookkeeping-boot")
     js = "".join((base / f"{name}.js").read_text(encoding="utf-8")
                  for name in modules)
     assert "function switchKind(" in js and "document.body.dataset.kind" in js
@@ -149,7 +149,7 @@ def test_bookkeeping_js_selectors_all_exist():
     modules = ("bookkeeping-viewport", "bookkeeping-merge", "amount-calculator",
                "bookkeeping-categorizer", "bookkeeping-state", "category-icons",
                "bookkeeping-render", "bookkeeping-sync", "bookkeeping-entry-sheet",
-               "bookkeeping-amount-pad", "bookkeeping-boot")
+               "bookkeeping-amount-pad", "bookkeeping-ledger", "bookkeeping-boot")
     sel = re.compile(r'\$\("#([A-Za-z0-9_-]+)"\)'
                      r'|querySelector(?:All)?\("#([A-Za-z0-9_-]+)"\)')
     missing = []

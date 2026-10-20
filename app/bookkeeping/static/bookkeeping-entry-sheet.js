@@ -5,7 +5,9 @@
 //   它拨 — 收列换副面孔) + 标签列表层
 // (单选一枚选中即收, 创建时间新→旧, 顶部可打新标签) + 备注浮层输入
 // (点备注行弹, 从行原位升起 rides 系统键盘; 系统键盘回车/点别处收) + 整层手势
-// (左右划换收支 — 只换类别那一摊; 任意部位下拽关层) + 删除/点行改账。
+// (左右划换收支 — 只换类别那一摊; 任意部位下拽关层) + 删除/点行改账
+// (行机器 bindEntryList 绑在明细层的列表容器上 — 批次 3 瀑布流搬进推入层,
+// 确认框留在本页层顶压推入层)。
 // 类别聪明事 (逻辑在 bookkeeping-categorizer.js): 备注收起时按历史备注自动配类别,
 // 新记支出没选类别时按拨轮钟点预选一顿饭 — 手选/带出的绝不覆盖。
 // 金额键盘常驻吸底 (amount-pad), 键盘上的「完成」就是保存。
@@ -17,7 +19,7 @@
           refreshAmountPreview, matchNoteCategory, buildNoteIndex,
           rankCategories, mealCategoryByHour,
           resetCyclePanel, closeCycPick */
-/* exported closeSheet, fillChips, whenPicked */
+/* exported closeSheet, fillChips, whenPicked, bindEntryList */
 
 // ---------- 记/改一笔 (底部弹层) ----------
 let editingId = null;
@@ -751,8 +753,10 @@ $("#sheet-del").addEventListener("click", () => {
 });
 
 /* ---------- 账目行左滑删除: 滑出红条, 点了还要再确认一次 (防手滑误删) ----------
-   行身 (.sw-body) 整层挪、删除钮垫在身后右侧 (见 bookkeeping-page.css);
-   竖滚意图让给页面, 横滑才接 (preventDefault 钉住页面不让边滑边滚) */
+   行身 (.sw-body) 整层挪、删除钮垫在身后右侧 (见 bookkeeping-panes.css);
+   竖滚意图让给页面, 横滑才接 (preventDefault 钉住页面不让边滑边滚)。
+   批次 3 账目瀑布流搬进明细推入层: 行机器绑在传进来的列表容器上
+   (bindEntryList — 明细层每次铺层现绑, 层关了容器跟着拆, 不用解绑) */
 const SW_W = 72;             // 删除钮宽 (与 css .sw-del 的 width 一致)
 let openRow = null;          // 当前滑开的行 (一次只开一行)
 let sw = null;               // 进行中的滑动: { row, body, x0, y0, base, cur, mode }
@@ -770,49 +774,65 @@ function staleRow() {        // render() 整体重画会换掉行节点: 攥着�
   return openRow;
 }
 
-$("#entry-list").addEventListener("touchstart", e => {
-  swClick = false;                                   // 新的一下从零起算
-  const t = e.touches[0];
-  const row = t.target instanceof Element && t.target.closest(".entry");
-  sw = row ? { row, body: row.querySelector(".sw-body"), x0: t.clientX, y0: t.clientY,
-               base: row === staleRow() ? -SW_W : 0, cur: 0, mode: "" } : null;
-}, { passive: true });
+function bindEntryList(el) { // 账目行机器: 左滑删除 + 点行改账 (绑在明细层的
+                             // 列表容器上; 状态 (openRow/sw) 是全局单份 —
+                             // 一次只开一行, 跨容器也只开一行)
+  el.addEventListener("touchstart", e => {
+    swClick = false;                                   // 新的一下从零起算
+    const t = e.touches[0];
+    const row = t.target instanceof Element && t.target.closest(".entry");
+    sw = row ? { row, body: row.querySelector(".sw-body"), x0: t.clientX, y0: t.clientY,
+                 base: row === staleRow() ? -SW_W : 0, cur: 0, mode: "" } : null;
+  }, { passive: true });
 
-$("#entry-list").addEventListener("touchmove", e => {
-  if (!sw) return;
-  const t = e.touches[0];
-  const dx = t.clientX - sw.x0, dy = t.clientY - sw.y0;
-  if (!sw.mode) {            // 先辨意图: 竖着滚还给页面, 横着才接
-    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-      sw = null; closeOpenRow(); return;             // 滚列表: 滑开的行顺手收掉
+  el.addEventListener("touchmove", e => {
+    if (!sw) return;
+    const t = e.touches[0];
+    const dx = t.clientX - sw.x0, dy = t.clientY - sw.y0;
+    if (!sw.mode) {            // 先辨意图: 竖着滚还给页面, 横着才接
+      if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+        sw = null; closeOpenRow(); return;             // 滚列表: 滑开的行顺手收掉
+      }
+      if (Math.abs(dx) > 12) {                   // 12 起才当滑 (点按的手指微晃不开门)
+        sw.mode = "swipe"; sw.row.classList.add("dragging");
+        if (openRow && openRow !== sw.row) closeOpenRow();
+      } else return;
     }
-    if (Math.abs(dx) > 12) {                   // 12 起才当滑 (点按的手指微晃不开门)
-      sw.mode = "swipe"; sw.row.classList.add("dragging");
-      if (openRow && openRow !== sw.row) closeOpenRow();
-    } else return;
-  }
-  e.preventDefault();        // 横滑钉住页面 (别同时纵滚)
-  let x = sw.base + dx;
-  if (x > 0) x *= .25;                               // 右侧橡皮筋 (不许拉出行外)
-  if (x < -SW_W) x = -SW_W + (x + SW_W) * .25;       // 开到底再拉: 阻尼
-  sw.cur = x;
-  sw.body.style.transform = `translateX(${x}px)`;
-}, { passive: false });
+    e.preventDefault();        // 横滑钉住页面 (别同时纵滚)
+    let x = sw.base + dx;
+    if (x > 0) x *= .25;                               // 右侧橡皮筋 (不许拉出行外)
+    if (x < -SW_W) x = -SW_W + (x + SW_W) * .25;       // 开到底再拉: 阻尼
+    sw.cur = x;
+    sw.body.style.transform = `translateX(${x}px)`;
+  }, { passive: false });
 
-function swFinish(e) {       // 松手: 过半开, 没过半收 (带弹簧回弹)
-  if (!sw) return;
-  if (sw.mode === "swipe") {
-    const open = sw.cur < -SW_W / 2;
-    sw.row.classList.remove("dragging");
-    sw.body.style.transform = open ? `translateX(${-SW_W}px)` : "";
-    openRow = open ? sw.row : null;
-    if (Math.abs(e.changedTouches[0].clientX - sw.x0) > 10)
-      swClick = true;        // 这一下是滑不是点: 随后的 click 别当点开
+  function swFinish(e) {       // 松手: 过半开, 没过半收 (带弹簧回弹)
+    if (!sw) return;
+    if (sw.mode === "swipe") {
+      const open = sw.cur < -SW_W / 2;
+      sw.row.classList.remove("dragging");
+      sw.body.style.transform = open ? `translateX(${-SW_W}px)` : "";
+      openRow = open ? sw.row : null;
+      if (Math.abs(e.changedTouches[0].clientX - sw.x0) > 10)
+        swClick = true;        // 这一下是滑不是点: 随后的 click 别当点开
+    }
+    sw = null;
   }
-  sw = null;
+  el.addEventListener("touchend", swFinish);
+  el.addEventListener("touchcancel", swFinish);
+
+  el.addEventListener("click", e => {
+    const t = e.target;
+    if (!(t instanceof Element) || !t.isConnected) return;   // 重渲染脱链防误触
+    if (swClick) { swClick = false; return; }          // 滑完的收尾点击: 不当点开
+    const row = t.closest(".entry");
+    if (!row) return;
+    if (t.closest(".sw-del")) { askDelRow(row); return; }   // 点的是删除钮: 走二次确认
+    if (staleRow()) { closeOpenRow(); return; }        // 有行开着: 这一下先收它, 不点开
+    const entry = entries.find(x => x.id === row.dataset.id);
+    if (entry) openSheet(entry);
+  });
 }
-$("#entry-list").addEventListener("touchend", swFinish);
-$("#entry-list").addEventListener("touchcancel", swFinish);
 
 document.addEventListener("touchstart", e => {        // 滑开的行: 点到行外任何地方收掉
   if (staleRow() && e.target instanceof Element && !e.target.closest(".entry"))
@@ -856,16 +876,4 @@ $("#dc-ok").addEventListener("click", () => {        // 确认: 行上与弹层�
   openRow = null;            // 行随重画没了, 别攥着旧元素
   render();
   scheduleSync();
-});
-
-$("#entry-list").addEventListener("click", e => {
-  const t = e.target;
-  if (!(t instanceof Element) || !t.isConnected) return;   // 重渲染脱链防误触
-  if (swClick) { swClick = false; return; }          // 滑完的收尾点击: 不当点开
-  const row = t.closest(".entry");
-  if (!row) return;
-  if (t.closest(".sw-del")) { askDelRow(row); return; }   // 点的是删除钮: 走二次确认
-  if (staleRow()) { closeOpenRow(); return; }        // 有行开着: 这一下先收它, 不点开
-  const entry = entries.find(x => x.id === row.dataset.id);
-  if (entry) openSheet(entry);
 });

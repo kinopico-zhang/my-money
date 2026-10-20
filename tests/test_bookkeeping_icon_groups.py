@@ -59,4 +59,4 @@ def test_grouped_grid_and_tile_selection():
     html = (_BASE / "bookkeeping.html").read_text(encoding="utf-8")
     assert "category-icons.js?v=21" in html \
         and "bookkeeping-categories.js?v=11" in html \
-        and "css/bookkeeping-panes.css?v=36" in html
+        and "css/bookkeeping-panes.css?v=38" in html

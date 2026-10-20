@@ -48,17 +48,18 @@ def test_sync_strip_quiet_unless_pulled():
     assert "syncNow();" in _static("bookkeeping-boot.js")  # 进页静默 (1.11.1)
     assert 'addEventListener("online", () => syncNow());' in js  # 联网恢复静默
     html = _static("bookkeeping.html")
-    assert "bookkeeping-sync.js?v=7" in html and "bookkeeping-boot.js?v=10" in html \
-        and "css/bookkeeping-page.css?v=66" in html
+    assert "bookkeeping-sync.js?v=8" in html and "bookkeeping-boot.js?v=10" in html \
+        and "css/bookkeeping-page.css?v=67" in html
 
 
 def test_pull_to_sync_gesture():
-    """下拉手势: 只认主页本体 (main/日历胶囊) 的起手 + 起手那刻已在顶
-    (scrollY <= 0 — 页面中途滚到顶的接力不算); 拖动中过 70 即触发 (拉丝的
-    同时条子滑下报「同步中…」), 一触只发一次; passive 监听 (不拦系统
-    橡皮筋)。层/弹层/弹框里的起手 closest 不中, 天然不参与。"""
+    """下拉手势: 只认主页本体 (main) 的起手 + 起手那刻已在顶 (scrollY <= 0 —
+    页面中途滚到顶的接力不算); 拖动中过 70 即触发 (拉丝的同时条子滑下报
+    「同步中…」), 一触只发一次; passive 监听 (不拦系统橡皮筋)。层/弹层/
+    弹框里的起手 closest 不中, 天然不参与 (日历胶囊批次 3 退役, 起手只剩
+    main — 主页批次 3 后就封面/快捷行/日历卡三段, 全在 main 里)。"""
     js = _static("bookkeeping-sync.js")
     assert "let pullY = null;" in js and "let pullFired = false;" in js
-    assert 'e.target.closest("main, #cal-bar") && window.scrollY <= 0' in js
+    assert 'e.target.closest("main") && window.scrollY <= 0' in js
     assert "e.touches[0].clientY - pullY > 70) { pullFired = true; syncNow(true); }" in js
     assert "{ passive: true });" in js

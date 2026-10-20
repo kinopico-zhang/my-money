@@ -119,13 +119,13 @@ setInterval(syncNow, 60000);
 
 // 主页下拉刷新 (1.11.0): 拉到头顶出橡皮筋就是手动同步的口 — 过 70px 在拖动中
 // 就触发 (拉丝的同时条子滑下来报「同步中…」, 系统橡皮筋就是拉丝反馈, 不另画
-// 菊花)。只认主页本体的起手 (main/日历胶囊; 层/弹层/弹框各是各的地盘),
-// 页面中途滚到顶的接力不算 (起手那刻 scrollY 已 > 0)。
+// 菊花)。只认主页本体的起手 (main; 2.0 批次 3 起日历胶囊退役, 层/弹层/弹框
+// 各是各的地盘), 页面中途滚到顶的接力不算 (起手那刻 scrollY 已 > 0)。
 let pullY = null;
 let pullFired = false;
 document.addEventListener("touchstart", (e) => {
   pullY = e.target instanceof Element &&
-    e.target.closest("main, #cal-bar") && window.scrollY <= 0
+    e.target.closest("main") && window.scrollY <= 0
     ? e.touches[0].clientY : null;
   pullFired = false;
 }, { passive: true });

@@ -55,9 +55,13 @@
 /* tab 根层 (报表/我的) 内容上沿 (1.15.0): 钉 --content-top — 与
    my-music/my-tesla 根页同一条线 (安全区+36 / 独立模式磨砂带底沿);
    层级层照旧 env+14, 那是页顶大标题的顶衬, 根层没标题, 沿用它会让
-   内容钻进模糊带 (2026-10-08 用户报)。2.0 设置根层改名 mine (批次 4 重排) */
+   内容钻进模糊带 (2026-10-08 用户报)。2.0 设置根层改名 mine (批次 4 重排)。
+   明细/账单日历 (批次 3) 虽是层级层, 顶上没大标题 (chips 行/月头步进器
+   就是控件) — 同样钉 --content-top, 独立模式别让控件钻带 */
 .push-pane[data-view="stats"] .pane-scroll,
-.push-pane[data-view="mine"] .pane-scroll {
+.push-pane[data-view="mine"] .pane-scroll,
+.push-pane[data-view="ledger"] .pane-scroll,
+.push-pane[data-view="bill-cal"] .pane-scroll {
   padding-top: var(--content-top);
 }
 /* 报表页顶大标题 (10-19 用户点名「标题放在最上面, 不要进浏览器的模糊区
@@ -712,3 +716,172 @@
 .push-pane .rc-track { position: relative; touch-action: pan-y; will-change: transform; }
 .push-pane .rc-ghost { position: absolute; top: 0; left: -100%; width: 100%; }
 .push-pane .rc-ghost.next { left: 100%; }
+
+/* ---------- 明细层 (2.0 批次 3): 账目瀑布流从主页整条搬进层里 ----------
+   挖财账单明细版式: chips [全部|年|月] + ‹ › 步进器 + 三统计块 + 月汇总卡
+   + 日组头 (收·支) + 账目行 (行样式从 bookkeeping-page.css 原样迁来, 收进
+   .push-pane 下 — 主页不再有列表); 懒加载只剩往下展开 (单向窗口)。
+   底部 [日历|记一笔] 是层自带的栏 (几何贴 #tab-bar), 主栏挂 .own-bar 让位
+   (bookkeeping-push.js updateTabs) */
+.push-pane .lg-tools {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px;
+}
+.push-pane .lg-chips {            /* 分段 chips: 页底灰上白卡容器, 选中段白底浮起 */
+  display: flex; background: var(--surface-3);
+  border-radius: 999px; padding: 3px;
+}
+.push-pane .lg-chips button {
+  padding: 5px 16px; border-radius: 999px;
+  font-size: 13px; color: var(--ink-2);
+}
+.push-pane .lg-chips button.on {
+  background: var(--surface); color: var(--ink-1); font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);   /* 选中段从容器里浮起一线 */
+}
+/* ‹ › 步进器复用 .month-nav (报表范围同款); 全部档没有段可步进, JS 整块收起 */
+.push-pane .lg-stats {             /* 三统计块: 白卡三等分, 发丝线隔开 */
+  display: flex; background: var(--surface); border-radius: 14px;
+  padding: 12px 0; margin-bottom: 14px;
+}
+.push-pane .lg-st { flex: 1; text-align: center; }
+.push-pane .lg-st + .lg-st { border-left: 1px solid var(--hairline); }
+.push-pane .lg-st i { display: block; font-style: normal; font-size: 11px; color: var(--ink-2); }
+.push-pane .lg-st b {              /* 结余/支出/收入大数: 负结余红、正绿, 支出恒红收入恒绿 */
+  display: block; margin-top: 3px; font-size: 16px; font-weight: 650;
+  color: var(--ink-1); font-variant-numeric: tabular-nums;
+}
+.push-pane .lg-st b.e { color: var(--red); }
+.push-pane .lg-st b.i { color: var(--green); }
+.push-pane .lg-mon {               /* 月汇总卡 (全部/年档跨月处垫): 比日组头重一档的月份行;
+                                      标题「10月 2026」(月大年小), 右侧收/结余/支三值 */
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 2px 4px 6px; font-size: 12px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.push-pane .lg-mon b { font-weight: 650; color: var(--ink-1); font-size: 13px; }
+.push-pane .lg-mon .yr { font-size: 11px; color: var(--ink-3); }
+.push-pane .lg-mon .sums { margin-left: auto; display: flex; gap: 12px; }
+.push-pane .lg-mon .e { color: var(--red); }
+.push-pane .lg-mon .i { color: var(--green); }
+/* 日组 + 账目行 (自 bookkeeping-page.css 迁来, 原样收进层里) */
+.push-pane .day-group { margin-bottom: 14px; }
+.push-pane .day-head {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--bg-ink); padding: 0 4px 6px;
+}
+.push-pane .entries {              /* 账目卡: 挖财白卡平贴灰底 (与日历卡同规矩) */
+  background: var(--surface); border-radius: 18px;
+  overflow: hidden;                /* 圆角裁住滑出的行身/删除钮 (钮在行内右侧, 不许露角) */
+}
+.push-pane .entry {                /* 左滑删除: 行只是裁剪框, 行身 (.sw-body) 与身后的删除钮分层 */
+  position: relative; border-bottom: 1px solid var(--hairline);
+}
+.push-pane .entry:last-child { border-bottom: 0; }
+.push-pane .entry .sw-del {        /* 左滑露出的红条: 压在行身右端身后, 行身滑开才见 */
+  position: absolute; top: 0; right: 0; bottom: 0; width: 72px;
+  background: var(--red); color: #fff; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.push-pane .entry .sw-body {       /* 行身: 左滑的就是这层 (铺白底盖住身后的删除钮);
+                                       位移过渡吃通用 .sw-body 基础规则 (类别管理同款) */
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+}
+.push-pane .entry.dragging .sw-body { transition: none; }   /* 拖动中实时跟手 */
+.push-pane .entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (压暗层吃通用 ::after) */
+.push-pane .entry .cat-dot {       /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
+  flex: none; width: 34px; height: 34px;
+}
+.push-pane .entry .cat-dot .ci { width: 100%; height: 100%; display: block; }
+.push-pane .entry .mid { flex: 1; min-width: 0; }
+.push-pane .entry .l1 {
+  font-size: 15px; font-weight: 600; height: 19px; line-height: 19px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.push-pane .entry .l1 .sub {       /* 备注和标签跟在类别后面: 灰字小一号同一行排完 */
+  font-size: 11.5px; font-weight: 400; color: var(--ink-3);
+}
+.push-pane .entry .l2 {
+  font-size: 10.5px; color: var(--ink-3); height: 13px; line-height: 13px; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.push-pane .entry .amt {
+  flex: none; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums;
+  color: var(--red);               /* 支出红; 收入 .in 盖绿 */
+}
+.push-pane .entry .amt.in { color: var(--green); }
+.push-pane .lg-more { height: 44px; }   /* 懒加载哨兵: 滚进视野就再展开一段 (观察器盯它) */
+.push-pane .lg-end { text-align: center; color: var(--bg-ink); font-size: 12px; padding: 18px 0 8px; }
+.push-pane .lg-empty { text-align: center; color: var(--bg-ink); font-size: 13px; padding: 44px 0; }
+/* 层自带的底栏 [日历|记一笔]: 几何贴 #tab-bar (高 = --tab-h, 居中列宽对齐
+   pane-scroll 的 640), 白面发丝线, 安全区自垫 — 主栏让位后它就是层的栏 */
+.push-pane .lg-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  display: flex; max-width: 640px; margin: 0 auto;
+  background: var(--surface);
+  border-top: 1px solid var(--hairline);
+  padding: 5px 8px calc(env(safe-area-inset-bottom) + 5px);
+}
+.push-pane .lg-bar button {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 3px 0 1px; color: var(--ink-2); font-size: 10.5px; font-weight: 500;
+}
+.push-pane .lg-bar button:active svg { transform: scale(.88); }
+.push-pane .lg-bar button svg {
+  width: 24px; height: 24px; display: block;
+  transition: transform .15s ease; color: var(--ink-2);
+}
+.push-pane .lg-bar button.add { color: var(--accent); }   /* 记一笔 = 挖财橘 (⊕ 同语义) */
+.push-pane .lg-bar button.add svg { color: var(--accent); }
+
+/* ---------- 账单日历层 (2.0 批次 3): 首页月头点开的独立日历页 ----------
+   ‹ 月头 › 翻月 + 大日历 (白卡 42 格恒高, 金额给足位数不缩写) + 底部
+   总结余/日均结余; 从明细层进的 (data-from=ledger) 不吃主栏的垫底 —
+   主栏正让位给明细的底栏, 再垫 --tab-h 就空出一截 */
+.push-pane .bc-head { margin-bottom: 2px; }
+.push-pane .bc-week {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  text-align: center; font-size: 10.5px; color: var(--ink-3); padding: 6px 0 4px;
+}
+.push-pane .bc-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  background: var(--surface); border-radius: 14px; padding: 8px 6px;
+}
+.push-pane .bc-day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 62px; padding: 2px 1px; border-radius: 9px;
+}
+.push-pane .bc-day:active { background: var(--press); }
+.push-pane .bc-day .d { font-size: 13px; font-weight: 600; height: 18px; line-height: 18px; }
+.push-pane .bc-day .e, .push-pane .bc-day .i {
+  font-size: 9.5px; height: 12px; line-height: 12px; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}              /* 槽位行高钉死且常驻 (没数也占行) — 主页日历同款, 整列对得齐 */
+.push-pane .bc-day .e { color: var(--red); }
+.push-pane .bc-day .i { color: var(--green); }
+.push-pane .bc-day.today .d {     /* 今天 = 橘胶囊压白字 (主页日历同款) */
+  background: var(--accent); color: var(--accent-ink);
+  border-radius: 999px; padding: 0 5px;
+}
+.push-pane .bc-day.blank { min-height: 0; }
+.push-pane .bc-day.after { color: var(--ink-3); justify-content: flex-start; }
+.push-pane .bc-grid.cal-l { animation: cal-in-l .26s ease; }   /* 翻月滑入: 报表日历
+                                        (rc-grid) 同一副方向约定与帧律 */
+.push-pane .bc-grid.cal-r { animation: cal-in-r .26s ease; }
+.push-pane .bc-foot {             /* 总结余/日均结余: 与明细三统计块同一副白卡两分 */
+  display: flex; background: var(--surface); border-radius: 14px;
+  margin-top: 12px; padding: 12px 0;
+}
+.push-pane .bc-foot > div { flex: 1; text-align: center; }
+.push-pane .bc-foot > div + div { border-left: 1px solid var(--hairline); }
+.push-pane .bc-foot i { display: block; font-style: normal; font-size: 11px; color: var(--ink-2); }
+.push-pane .bc-foot b {
+  display: block; margin-top: 3px; font-size: 16px; font-weight: 650;
+  color: var(--ink-1); font-variant-numeric: tabular-nums;
+}
+.push-pane .bc-foot b.e { color: var(--red); }
+.push-pane .bc-foot b.i { color: var(--green); }
+.push-pane[data-view="bill-cal"][data-from="ledger"] .pane-scroll {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+}

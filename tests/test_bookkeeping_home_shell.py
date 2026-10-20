@@ -1,7 +1,8 @@
 """2.0 挖财复刻批次 1 (底座换血) 的钉子: 首页蓝渐变封面 (填 iOS 27 顶带) +
 快捷行 + 底栏三槽中央 morph 的橘 ⊕。封面数字/预算条由 renderCover 现算
 (feedMonths 当月口径), 预算读 localStorage bk-budget-v1 (设置输入批次 4 落);
-快捷行明细/日历过渡期滚页内锚点 (批次 3 换推入页), 周期账已推层。"""
+批次 3 起快捷行明细/日历/周期账全走推入层 (明细 = 账目瀑布流层, 日历 = 账单
+日历层 — 挖财首页不翻月, 月头点开的就是它)。"""
 from pathlib import Path
 
 _BASE = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
@@ -41,16 +42,17 @@ def test_home_cover_skeleton():
 def test_render_cover_and_quick_row_wiring():
     """封面数字现算 (renderCover, render 每趟带着画): feedMonths 当月口径,
     结余 = 收-支 (负数带负号); 预算条读 bk-budget-v1, 超支挂 .over + 槽宽
-    封顶 100%; 快捷行周期账推层, 明细/日历滚页内锚点 — 直落不演 smooth
-    (全应用程序动画一副弹簧, 系统 smooth 全撤, calendar_collapse 钉)。"""
+    封顶 100%; 快捷行三格全走推入层 (batch 3: ledger/bill-cal/cyc —
+    scrollIntoView 过渡期锚点跳退役, 直落不演 smooth 的老规矩跟着不需要)。"""
     render = _static("bookkeeping-render.js")
     assert "function renderCover()" in render and "renderCover();" in render
     assert "feedMonths.get(curMonth())" in render
     assert 'localStorage.getItem("bk-budget-v1"' in render
     assert 'box.classList.toggle("over", st.expense > budget);' in render
     assert 'Math.min(st.expense / budget, 1) * 100 + "%";' in render  # 槽宽封顶
-    assert 'if (cell.dataset.q === "cyc") { pushView("cyc"); return; }' in render
-    assert ".scrollIntoView();" in render and '"smooth"' not in render
+    assert 'pushView(cell.dataset.q === "ledger" ? "ledger"' in render
+    assert ': cell.dataset.q === "calendar" ? "bill-cal" : "cyc");' in render
+    assert "scrollIntoView" not in render   # 页内锚点跳退役 (全走推入层)
     # ⊕ 接线在 entry-sheet (原 #fab 的活): 中央钮开记一笔
     sheet = _static("bookkeeping-entry-sheet.js")
     assert '$("#tab-add")' in sheet and "openSheet(null)" in sheet

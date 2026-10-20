@@ -41,18 +41,12 @@
    矮了 — 64 的读数仍糊, 80 起清楚 (读数字顶 ~72 即净), 96 白让 16px,
    下限收到 80。只在中招形态 (独立模式 + 竖屏 + 触屏) 生效 ——
    浏览器、横屏、桌面没有那条带子, 下限恒 0。
-   --cal-floor 是气泡自己的卡线 (1.3.1): 不躲 80 安全线, 顶边贴着带底沿 72
-   停 — 同步条那行字仍走 80 (字沾糊看不清), 胶囊顶这张装饰面贴着带沿无妨,
-   顶上少空一截 */
-:root { --top-floor: 0px; --cal-floor: 0px; }
+   (--cal-top/--cal-floor 是日历胶囊的卡线, 批次 3 胶囊退役跟着撤了) */
+:root { --top-floor: 0px; }
 @media (display-mode: standalone) and (orientation: portrait)
        and (pointer: coarse) {
-  :root { --top-floor: 80px; --cal-floor: 72px; }
+  :root { --top-floor: 80px; }
 }
-/* 气泡的落位上边界: 浏览器 = 安全区+10 (原落位不动), 独立模式取两者深者
-   (卡在系统模糊带的边界上) */
-:root { --cal-top: max(calc(env(safe-area-inset-top, 0px) + 10px),
-                       var(--cal-floor)); }
 /* 全局上边界 (my-music music-base.css --top-clear 同款): 模糊带里不许常驻
    任何控件 —— 不只气泡, 页面内容 (同步条) 的上沿也钉在带子下头。
    浏览器 = 安全区+7 (原样), 独立模式取深者 */
@@ -118,7 +112,7 @@ button, a, summary { touch-action: manipulation; }
 
 /* ---------- 主页骨架 (2.0 挖财版式): 蓝渐变封面 (铺到 y=0 填 iOS 27 顶带 —
    系统黑条压在深蓝上成「深蓝状态栏」观感, 带下内容钉在 --top-clear 之下)
-   + 快捷行 + 日历卡 + (过渡期) 账目瀑布流 ---------- */
+   + 快捷行 + 日历卡 (批次 3 起账目瀑布流住明细推入层, 主页就这三段) ---------- */
 main {
   flex: 1; width: 100%; max-width: 560px; margin: 0 auto;
   padding: 0 16px calc(env(safe-area-inset-bottom) + var(--tab-h) + 40px);
@@ -157,7 +151,7 @@ main {
   font-variant-numeric: tabular-nums;
 }
 /* 快捷行: 三枚白卡骑在封面下沿 (负 margin 压上封面), 图标 + 一行字;
-   周期账走推入层, 明细/日历 (过渡期) 先滚到页内锚点 */
+   明细/日历/周期账全走推入层 (bookkeeping-render.js 快捷行接线) */
 .quick-row {
   display: flex; gap: 10px;
   margin: -22px 0 12px;
@@ -172,18 +166,23 @@ main {
 }
 .q-cell:active { background: var(--surface-2); }
 .q-cell svg { width: 26px; height: 26px; display: block; color: var(--accent); }
-/* ---------- 日历卡 (快捷行下: 月份切换 + 每天收支, 点日子跳到瀑布流那天) ---------- */
+/* ---------- 日历卡 (快捷行下: 恒当前月 + 每天收支, 点日 = 记一笔预填该日;
+   月头整行是按钮 — 点开账单日历推入层 (‹ › 翻月在那)) ---------- */
 .cal-card {
   background: var(--surface); border-radius: 18px; padding: 8px 10px 10px;
   margin-bottom: 12px;
 }              /* 挖财白卡平贴灰底不加边 (jz_list_bg_color): 层次交给底色差 */
-.cal-head { display: flex; align-items: center; gap: 4px; }
-.cal-head button {
-  flex: none; width: 30px; height: 30px; border-radius: 50%;
-  color: var(--ink-2); background: var(--surface-2); font-size: 16px;
+.cal-head { display: flex; align-items: center; }
+.cal-title {   /* 月头: 整行一枚大按钮 (挖财月头就是账单日历的入口), 按下压暗 */
+  flex: 1; display: block; text-align: center; font-size: 15px; font-weight: 700;
+  padding: 2px 0; border-radius: 9px;
 }
-.cal-head button:active { background: var(--press); }
-.cal-title { flex: 1; text-align: center; font-size: 15px; font-weight: 700; }
+.cal-title:active { background: var(--press); }
+.cal-title .cal-caret {   /* 月头小箭头: 提示整行可点 (SVG 线段箭头几何居中,
+                            字形的 ‹ 光学偏心对不齐 — 原胶囊箭头同款考量) */
+  width: 13px; height: 13px; color: var(--ink-2);
+  vertical-align: -1.5px; margin-left: 2px;
+}
 .cal-title .msum {
   display: block; font-size: 10.5px; font-weight: 400; color: var(--ink-3);
   margin-top: 1px; font-variant-numeric: tabular-nums;
@@ -210,300 +209,21 @@ main {
 /* 月尾补位的下月日子: 灰字不可点只管补足六行恒高; 日期数字与真日子同一道槽
    (顶对齐, 三个槽位让给真日子的水平线) */
 .cal-day.after { color: var(--ink-3); justify-content: flex-start; }
-/* 换月滑入: ‹ › 与左右划共用 (shiftCal), 新月份顺着切换方向进 —— 下月从右进/
-   上月从左进, 标题连小计跟着格一起走; 重放式 class+reflow (1.3.0 类别格同款) */
-.cal-in-r { animation: cal-in-r .28s ease; }
-.cal-in-l { animation: cal-in-l .28s ease; }
-@keyframes cal-in-r { from { transform: translateX(26px); opacity: 0; } }
-@keyframes cal-in-l { from { transform: translateX(-26px); opacity: 0; } }
-/* 左右划翻月 — 跟手拖拽: 上月/下月两页候场页 (cal-fly) 垫在卡内两侧, 月份内容
-   贴指尖 1:1 平移, 松手弹簧定去留 (上头 canned 滑入仍归 ‹ › 那类离散点击);
-   拖拽期卡挂 .cal-x 变身裁形窗 (候场页不出卡外; 顺手当定位包含块 — 卡平时
-   不定位, 不挂的话候场页会锚到整页上去) */
-.cal-card.cal-x { overflow: hidden; position: relative; }
-.cal-fly {
-  position: absolute; inset: 0; padding: inherit;   /* 与卡同一副内衬 — 网格逐线对上 */
-  background: var(--surface); pointer-events: none; /* 自带卡面拼成整片滑的面; 不接点击 */
-  will-change: transform;
-}
-.cal-fly .cal-hpad { flex: none; width: 30px; height: 30px; }   /* 假箭头占位 = .cal-head
-   button 的身量: 候场页标题框与本月一行宽, 字落得同一个位 */
+/* (‹ › 翻月/左右划跟手翻月/顶部磨砂胶囊, 批次 3 全数退役: 主页日历恒当前月,
+   想看别的月走月头进账单日历推入层 — 胶囊机器 (calBarShell/calSync/
+   cal-track 时间线那摊) 随 #cal-bar 一起拆了; 换月滑入动画迁去 panes.css
+   的 bc-grid (账单日历翻月) 与 rc-grid (报表日历) 各自的 cal-in) */
 
-/* 日历的顶部胶囊 (列表滚上来了): 磨砂胶囊浮在顶上 (my-music 播放气泡同款
-   质感), 落位卡在 --cal-top —— 独立模式 iOS 26+ 的系统磨砂带比安全区深一截,
-   胶囊顶边贴着带底沿停 (88, 不再躲到 96 安全线)。收拢/长回全程跟手 (bookkeeping-render.js calSync:
-   日历卡顶一碰到落位线, 这里化身日历分身接管 —— 上边界钉死, 下边界逐帧
-   跟着滚动收, 滚到头正好退化成这枚胶囊; 分身是定格快照, 外壳只当裁形
-   窗口 —— 日历网格全程零重排, 滚停多高就停多高), 形变期 transform 恒
-   none —— 静止居中才用 left:50%+translateX。overflow 裁形: 定格的日历顺着
-   收拢的壳裁掉; 形变期壳只裁不画 (矩形硬裁 — 圆角裁合成层子元素要挂 mask
-   逐帧重画), 圆角脸在 .cb-skin 皮肤层, 分身自带静态圆角。闲时 visibility
-   隐身 (占位不拆): 落位静止位随时量得到 */
-#cal-bar {
-  position: fixed; z-index: 7;
-  top: var(--cal-top);
-  left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center;
-  height: 36px; padding: 3px;              /* ‹ › 与胶囊左/右/上/下各距 3px (三边等距:
-                                              36 = 3+28+3+2 边框, 钉死两端位置恒定) */
-  width: min(calc(100vw - 24px), 528px);   /* 定宽 (不跟内容伸缩忽宽忽窄); 528 = 日历卡
-                                              同一上限 (main 560 - 16×2), 宽屏上不比卡宽 */
-  overflow: hidden;
-  contain: layout;                  /* 形变期尺寸逐帧变: 布局圈死在自己这棵子树里
-                                        (分身是定格快照本就不重排, 再圈一道, 外面
-                                        一并少脏) — 帧率 */
-  font-size: 12.5px; font-weight: 700; color: var(--ink-1);   /* 磨砂底随卡面淡, 月份/收支提到主文字色 (玻璃上仍读得清) */
-  background: rgba(255,255,255,.78);   /* 磨砂玻璃: 白卡同源的玻璃底, blur(20) 把底下
-                                        划过的账糊成浅影透上来; 色值跟卡面同源 —
-                                        歇着的胶囊与展开的日历同一副材料,
-                                        收拢落位不换脸 */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--hairline); border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(105,140,200,.16);   /* 浮层档软影: 白胶囊浮在
-                                        灰底上, 影子说话但轻声 */
-  visibility: hidden;
-}
-#cal-bar .cb-in {         /* 胶泡里子: ‹ 月份+收支 › — 收拢后段从分身内容交叉淡入
-                            (行内逐帧驱动, 跟手); 内容实时跟列表走 — 滚到哪个月
-                            就报哪个月和那月的收支 (calViewMon 认视线线上的日组,
-                            月份换了才重写一次); ‹ › 歇在气泡上也能翻月
-                            (明细跟着联动挪过去); flex:1 吃满胶囊 — ‹ › 顶到
-                            两端, 中间窗口恒居中 */
-  flex: 1; min-width: 0;
-  display: flex; align-items: center; gap: 6px;
-  white-space: nowrap;
-  opacity: 0;
-  will-change: opacity;   /* 常驻合成层: 交叉淡入淡出逐帧改 opacity 不再重画文字;
-                            壳的高度逐帧变时这层跟着重排中心 (flex 居中) — 合成层
-                            挪窝是免费的层位移, 不是重画 (帧率) */
-}
-#cal-bar .cb-nav {        /* 气泡上的 ‹ ›: 钉死在胶囊两端 (定宽 — 位置恒定不跟内容
-                            挪), 画成 SVG 线段箭头 (字形的 ‹ 在字形框里光学偏心,
-                            跟旁边文字对不齐; 线段箭头几何居中); 裸箭头不套圈
-                            (胶囊里再嵌灰底圆钮一层套一层太重), 按下点亮当回应 */
-  flex: none; width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--ink-2);
-}
-#cal-bar .cb-nav svg { width: 15px; height: 15px; display: block; }
-#cal-bar .cb-nav:active { color: var(--ink-1); }
-#cal-bar .cb-mid {        /* 月份+收支的窗口: ‹ › 钉死两端后这块吃满剩余宽度,
-                            里头那层字恒居中; 换月对滑就在这格演 (窗口裁形) */
-  flex: 1; min-width: 0; position: relative; align-self: stretch;
-}
-#cal-bar .cb-mv {         /* 窗口里那层字: 铺满窗口居中排; 月份/支出/收入之间留一样宽
-                            的空隙 (gap — 分隔不再靠往串里拼 ·); 换月对滑时新旧各一层 */
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-}
-#cal-bar .cb-mv .cm { flex: none; }   /* 月份不参与收缩: 放不下时收的是收支那头 (省略号
-                                        收尾), 月份整词不动 */
-/* 换月对滑 (‹ › 翻月才演): 新月顺着翻的方向进 (‹ 从左/› 从右 — 日历格 cal-in
-   同一套方向约定), 旧月被顶到对面出去; 重放式 class + reflow (1.3.0 类别格同款) */
-#cal-bar .cb-mv.cb-mv-in-l { animation: cb-mv-in-l .3s ease; }
-#cal-bar .cb-mv.cb-mv-in-r { animation: cb-mv-in-r .3s ease; }
-#cal-bar .cb-mv.cb-mv-out-l { animation: cb-mv-out-l .3s ease; }
-#cal-bar .cb-mv.cb-mv-out-r { animation: cb-mv-out-r .3s ease; }
-@keyframes cb-mv-in-l { from { transform: translateX(-100%); opacity: 0; } }
-@keyframes cb-mv-in-r { from { transform: translateX(100%); opacity: 0; } }
-@keyframes cb-mv-out-l { to { transform: translateX(-100%); opacity: 0; } }
-@keyframes cb-mv-out-r { to { transform: translateX(100%); opacity: 0; } }
-#cal-bar .cb-card {       /* 日历分身: 接管那刻搬真身内容进来 (挂 .cal-card 拿全套
-                            标题/网格样式), 行内把宽高钉死成定格快照 —— 外壳一路
-                            收拢只当裁形窗口裁它, 日历网格全程零重排 (帧率就丢在
-                            逐帧重排); 皮肤/圆角由外壳行内给; 字面撤掉胶泡容器的
-                            设定, 回日历卡的排印 */
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  margin: 0;
-  background: none; border: 0;
-  border-radius: 18px; overflow: hidden;   /* 自带静态圆角: 壳的裁剪归了矩形 (挂
-                            mask 太贵), 顶上两角露不露头归自己管 — 尺寸恒定, 圆角
-                            跟着定格快照只渲染进纹理一次 (‹ › 钮的圆弧恰好探进
-                            18px 角弧里, 没这层裁会露角); 底边裁在中腰, 那两角的
-                            角弧带落在卡的留白上 (胶囊定宽从不少于卡宽, 侧边永远
-                            裁不进字), 露不了头 */
-  font-size: 14px; font-weight: 400; color: var(--ink-1);
-  will-change: opacity;   /* 常驻合成层: 外壳逐帧改裁形窗口时, 快照纹理不再跟着逐帧
-                            重画 (帧率另一半丢在逐帧重画 — 日历网格一大张; 分身只在
-                            接管期存在, 这层不常驻页面) */
-  pointer-events: none;   /* 分身只管看: 点穿它落到胶泡自己的 ‹ › / 胶囊身上
-                             (没有这句, 隐身的定格快照永远压在按钮上面吃点击) */
-}
-#cal-bar.float .cb-card {  /* 悬浮日历面板期: 分身开着点 — 日子格/‹ › 都是它身上的
-                             (分身没了 id, 点击走 #cal-bar 的委托)。面板浮在列表上,
-                             底下列表照滚 — 竖着划面板就是划列表, 滚了面板就收 */
-  pointer-events: auto;
-}
-#cal-bar .msum {
-  min-width: 0;
-  font-variant-numeric: tabular-nums;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}              /* 收支与月份同一副字号粗细 (继承 #cal-bar — 不再小一号细一档, 一行
-                  齐整、上下也齐); min-width:0 让省略号真生效 (flex 项默认不缩)。
-                  金额走紧凑写法 (千/万): 中间窗口宽度有限, 长数字缩成 1.2千/1.2万
-                  不硬挤; 真放不下才省略号收尾 */
-#cal-bar .msum .e { color: var(--red); }    /* 支出柔红/收入柔绿: 与日历格子/账目行 */
-#cal-bar .msum .i { color: var(--green); margin-left: 9px; }  /* 同一副方向色; 支↔收的
-                  空隙与 .cb-mv 的 gap (月份↔收支) 一样宽 */
-#cal-bar.morph {          /* 运动期 (收拢/长回/面板开合) 壳只裁不画: 矩形裁剪合成层
-                             子元素 (分身/胶泡字) 是 GPU 硬件裁, 不要钱; 圆角裁剪
-                             要在壳上挂 mask 层, 壳的几何逐帧变 = mask 逐帧重栅格化
-                             — 掉帧大头就这一条 (my-music 流体形变期内容全退场只动
-                             空壳, 才一路丝滑)。皮肤 (底色/圆角/影子) 全班搬去
-                             .cb-skin; 磨砂暂撤照旧 (变换层从磨砂件底下扫过是
-                             WebKit 吐重影的配方, my-music body.pane-anim 同规矩) */
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  background: none;                /* 壳褪成透明裁剪窗 (画的事全在皮肤层) */
-  border-color: transparent;       /* 不拆边框只褪色: 2px 边框占着布局 (36 = 3+28+3+2),
-                                      拆了内容盒会长 2px — 起步/落位文字要跳 1px */
-  border-radius: 0;                /* 裁剪归矩形 (圆角在皮肤层): 钉 0 不是美学 — 是
-                                      不给圆角裁剪挂 mask 的机会 */
-  box-shadow: none;
-}
-#cal-bar .cb-skin {        /* 皮肤层: 运动期/面板期的底色+发丝线+圆角+影子。空壳
-                            (没有合成层子元素), 圆角只是普通画一笔, 跟着壳逐帧
-                            重画也就一个圆角矩形 — 空壳形变 my-music 验过丝滑。
-                            z-index: -1 垫到壳自己的底色之上、胶泡文字与分身之下 */
-  display: none;                   /* 歇着 (胶囊位) 不上屏: 胶囊的磨砂玻璃脸在壳自己身上 */
-  position: absolute; inset: 0;
-  z-index: -1;
-  border-radius: 18px;             /* 与胶囊静止位同值 (999px 在 36px 盒上等效 18):
-                                      起步/落位接缝无感; 全程钉死这一档 */
-  background: var(--surface);       /* 途中磨砂暂撤, 卡面实色顶上 (到站还磨砂) */
-  border: 1px solid var(--hairline);
-  pointer-events: none;            /* 只管看 */
-}
-#cal-bar.morph .cb-skin { display: block; }   /* 形变期/面板期: 皮肤上屏 */
-@supports (animation-timeline: scroll()) {   /* 收拢的几何交给滚动时间线 (帧间过渡的根治):
-                                   脚本驱动的固定元素天生慢一拍 — 滚动事件回来再写样式,
-                                   下一帧才上屏, 快滚时分身下边界与底下内容差一整帧的
-                                   滚距, 看着就是一顿一顿; 时间线在渲染时按当帧滚位采样,
-                                   零延迟, 主线程忙也照走 (淡入淡出更是纯合成器活)。
-                                   s0/s1 = 接管起步/收到头的滚位 (js 接管那刻量卡烤进
-                                   变量), 高度全程线性, 收窄与交叉淡化 45% 之后走
-                                   smoothstep (linear() 采样, 与 calSmooth 同一条曲线)。
-                                   老环境不认时间线时这整块不生效, js 退回脚本逐帧
-                                   老底盘 (calDraw) — 行为不缺, 只慢一拍 */
-  #cal-bar.track {
-    transform: none;         /* 形变期不吃样式表的 translateX 居中: 横位归动画的 left 管
-                                (挂 .track 期间恒生效 — 收窄中/面板期都钉得住) */
-    animation: cal-track-h linear both, cal-track-x linear both;
-    animation-timeline: scroll(root block);
-    animation-range: var(--col-s0) var(--col-s1);   /* 滚位区间: 卡顶进线 → 收成胶囊 */
-  }
-  #cal-bar.track .cb-card {  /* 分身淡出: 45%→80% (与脚本路 fade 同一段同一条曲线) */
-    animation: cal-track-twin linear both;
-    animation-timeline: scroll(root block);
-    animation-range: var(--col-s0) var(--col-s1);
-  }
-  #cal-bar.track .cb-in {    /* 胶泡文字淡入: 同一段 (opacity 是合成器属性 — 忙帧也照走) */
-    animation: cal-track-in linear both;
-    animation-timeline: scroll(root block);
-    animation-range: var(--col-s0) var(--col-s1);
-  }
-  #cal-bar.float,
-  #cal-bar.float .cb-card,
-  #cal-bar.float .cb-in {    /* 面板开合是弹簧的事 (calDraw 行内逐帧): 这几百毫秒时间线
-                                让位, 不然两副手抢同一批属性 */
-    animation: none;
-  }
-  @keyframes cal-track-h {   /* 高度: 卡高 → 胶囊高, 全程线性 (滚多远收多高, 跟手) */
-    from { height: var(--col-h); }
-    to { height: 36px; }
-  }
-  @keyframes cal-track-x {   /* 收窄: 45% 之前保持卡宽, 之后 smoothstep 收成胶囊定宽;
-                                卡/胶囊的横位与宽都接管那刻烤在变量里 */
-    0%, 45% {
-      left: var(--col-cl); width: var(--col-cw);
-      animation-timing-function: linear(0, .028 10%, .104 20%, .216 30%, .352 40%,
-                                        .5 50%, .648 60%, .784 70%, .896 80%, .972 90%, 1);
-    }
-    100% { left: var(--col-sl); width: var(--col-sw); }
-  }
-  @keyframes cal-track-twin {   /* 交叉淡化与收窄同一条 smoothstep (calSmooth 的采样版) */
-    0%, 45% {
-      opacity: 1;
-      animation-timing-function: linear(0, .028 10%, .104 20%, .216 30%, .352 40%,
-                                        .5 50%, .648 60%, .784 70%, .896 80%, .972 90%, 1);
-    }
-    80%, 100% { opacity: 0; }
-  }
-  @keyframes cal-track-in {
-    0%, 45% {
-      opacity: 0;
-      animation-timing-function: linear(0, .028 10%, .104 20%, .216 30%, .352 40%,
-                                        .5 50%, .648 60%, .784 70%, .896 80%, .972 90%, 1);
-    }
-    80%, 100% { opacity: 1; }
-  }
-}
+/* (批次 3: 日历顶部胶囊 (磨砂分身/滚动时间线收拢那摊 #cal-bar 机器) 整块
+   退役 — 瀑布流搬进明细推入层后主页没有列表可滚, 胶囊没有存在的前提;
+   样式与机器 (render.js 的 calBarShell/calSync/cal-track) 一并拆净) */
 
-/* ---------- 账目列表 (按日分组) ---------- */
-.day-group { margin-bottom: 14px; }
-.day-head {          /* 日子行坐在黑壳上 (卡外): 亮白字 */
-  display: flex; justify-content: space-between;
-  font-size: 12px; color: var(--bg-ink); padding: 0 4px 6px;
-}
-.entries {                /* 账目卡: 挖财白卡平贴灰底 (与日历卡同规矩) */
-  background: var(--surface); border-radius: 18px;
-  overflow: hidden;       /* 圆角裁住滑出的行身/删除钮 (钮在行内右侧, 不许露角) */
-}
-.entry {                  /* 左滑删除: 行只是裁剪框, 行身 (.sw-body) 与身后的删除钮分层 */
-  position: relative; border-bottom: 1px solid var(--hairline);
-}
-.entry:last-child { border-bottom: 0; }
-.sw-del {                 /* 左滑露出的红条: 压在行身右端身后, 行身滑开才见 */
-  position: absolute; top: 0; right: 0; bottom: 0; width: 72px;
-  background: var(--red); color: #fff; font-size: 14px; font-weight: 600;
-  display: flex; align-items: center; justify-content: center;
-}
-.sw-body {                /* 行身: 左滑的就是这层 (铺白底盖住身后的删除钮) */
-  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
-  background: var(--surface); position: relative;
-  transition: transform .25s ease;   /* 松手回弹/滑开走弹簧, 拖动中 .dragging 关掉 */
-}
-.entry.dragging .sw-body { transition: none; }   /* 拖动中实时跟手 */
-.sw-body::after {            /* 按下的压暗层: 盖在行身之上 — 行身底色不能换半透明
-                                (var(--press) 是透的, 一换就漏出身后的删除钮,
-                                点一下删除就"显形"了), 默认隐身 */
-  content: ""; position: absolute; inset: 0; background: var(--press);
-  opacity: 0; pointer-events: none;
-}
-.entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (拖动中不糊脸) */
+/* (账目瀑布流批次 3 整条搬进明细推入层: 日组/账目行样式随迁
+   bookkeeping-panes.css (.push-pane .day-group/.entries/.entry/...), 主页
+   不再有列表; .ci 图标基脸是全局件 (记一笔弹层也吃), 留在这) */
 .ci { color: var(--cc); }   /* 类别图标: 浅圆底 (svg 自带, 不描边) 上坐本色线稿
                           (stroke=currentColor); 记一笔弹层里另有收口 — 未选中
                           灰线稿, 选中翻本色圆底压白线稿 (entry-sheet.css) */
-.entry .cat-dot {      /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
-  flex: none; width: 34px; height: 34px;
-}
-.entry .cat-dot .ci { width: 100%; height: 100%; display: block; }
-.entry .mid { flex: 1; min-width: 0; }
-.entry .l1 {
-  font-size: 15px; font-weight: 600; height: 19px; line-height: 19px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-/* 备注和标签跟在类别后面: 灰字小一号同一行排完 (没写不占字), 整行一个省略号收尾 */
-.entry .l1 .sub { font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
-.entry .l2 { font-size: 10.5px; color: var(--ink-3); height: 13px; line-height: 13px; margin-top: 2px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* ↑ 两行槽位高度钉死: 每笔同高 (高度归 height 钉 —— 空 div 没行盒, line-height
-   只撑得起有字的行, 日历格子 .e/.i 同款双钉), 两行也紧凑 */
-.entry .amt { flex: none; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums;
-  color: var(--red); }              /* 支出柔红; 收入 .in 下面盖成绿 */
-.entry .amt.in { color: var(--green); }
-
-/* (月份头横幅 1.3.1 撤了: 月份和整月收支气泡一个人报, 瀑布流不再插横幅 —
-   日子行的日期自带月份, 视线线上那条日组就是当前月) */
-#feed-more { height: 44px; }    /* 瀑布流哨兵: 滚进视口就再展开一段 (观察器盯它) */
-#feed-top {
-  display: flex; align-items: center; justify-content: center;
-  height: 36px; color: var(--bg-ink); font-size: 15px;
-}                               /* 往上展开的哨兵: 日历跳走后窗口上沿之上还有 (点了也展开) */
-#feed-top[hidden] { display: none; }
-.feed-end { text-align: center; color: var(--bg-ink); font-size: 12px; padding: 18px 0 8px; }
-.list-empty { text-align: center; color: var(--bg-ink); font-size: 13px; padding: 44px 0; }
 
 /* ---------- 删除的二次确认 (左滑删除点下才弹): iOS 警示框样 — 章在页面正中,
    标题+这笔是啥, 取消在上删除在下 (红字), 发丝线隔开; 点遮罩也是取消 ---------- */
@@ -570,3 +290,7 @@ main {
 .tb-add:active { transform: scale(.94); }
 #tab-bar.at-home .tb-home { display: none; }
 #tab-bar:not(.at-home) .tb-add { display: none; }
+/* 明细层自带底栏 [日历|记一笔] (lg-bar, bookkeeping-panes.css): 主栏整个
+   让位 (push.js updateTabs 挂 .own-bar) — 栏在 69 压在层 (65) 上, 不藏会
+   两副底栏叠着; 明细退了栏自己回来 */
+#tab-bar.own-bar { display: none; }

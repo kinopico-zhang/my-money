@@ -4,7 +4,7 @@
 "use strict";
 /* exported $, esc, WEEK, entries, dirty, lastSync, catTree,
             persist, saveLS, pad, todayStr, curMonth, nowTime, parseTags,
-            uuid, creatorName, fmtMoney */
+            uuid, creatorName */
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
@@ -69,4 +69,3 @@ function uuid() {
 
 // 记账人: 服务器回声带名字; 本地刚记还没同步的暂时标"我"
 function creatorName(e) { return e.createdByName || "我"; }
-function fmtMoney(n) { return "¥" + Number(n).toFixed(2); }

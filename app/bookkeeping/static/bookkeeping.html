@@ -16,10 +16,10 @@
 <link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/bookkeeping/static/manifest.json">
   <title>My Money</title>
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=66">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=67">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=45">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=12">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=36">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=38">
 </head>
 <body data-kind="expense">
 <script src="/static/no-zoom.js?v=2"></script>
@@ -27,8 +27,6 @@
 <div class="sync-strip" id="sync-strip">
   <span class="dot"></span><span id="sync-text">本地账本</span>
 </div>
-
-<div id="cal-bar"></div>
 
 <main>
   <!-- 封面 (2.0 挖财版式): 蓝渐变铺到 y=0 (iOS 27 顶带 = 深蓝状态栏观感),
@@ -46,7 +44,8 @@
       <div class="cb-txt"><span id="cb-used"></span><span id="cb-total"></span></div>
     </div>
   </section>
-  <!-- 快捷行 (2.0): 明细/日历 过渡期滚到页内锚点 (批次 3 换推入页), 周期账走推入层 -->
+  <!-- 快捷行 (2.0): 明细/日历/周期账全走推入层 (明细 = 账目瀑布流, 日历 = 账单
+       日历独立页 — 挖财首页不翻月, 月头点开的就是它) -->
   <div class="quick-row" id="quick-row">
     <button type="button" class="q-cell" data-q="ledger">
       <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11"/><circle cx="4.6" cy="6.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17.5" r="1.4" fill="currentColor" stroke="none"/></g></svg><span>明细</span>
@@ -58,19 +57,15 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5a7.5 7.5 0 0 1 13.2-3.4"/><path d="M17.5 4.5v3h-3"/><path d="M19.5 13.5a7.5 7.5 0 0 1-13.2 3.4"/><path d="M6.5 19.5v-3h3"/></g></svg><span>周期账</span>
     </button>
   </div>
+  <!-- 日历卡 (2.0 批次 3): 恒当前月 (‹ › 翻月退役 — 想看别的月点月头进账单
+       日历推入页); 点日 = 记一笔预填该日 (快捷记账主入口)。账目瀑布流整条
+       搬去了明细推入页 (bookkeeping-ledger.js), 主页不再有列表 -->
   <div class="cal-card" id="cal-card">
     <div class="cal-head">
-      <button type="button" id="cal-prev" aria-label="上月">‹</button>
-      <div class="cal-title" id="cal-title"></div>
-      <button type="button" id="cal-next" aria-label="下月">›</button>
+      <button type="button" class="cal-title" id="cal-title" aria-label="打开账单日历"></button>
     </div>
     <div class="cal-grid" id="cal-grid"></div>
   </div>
-  <div id="feed-top" hidden>︿</div>
-  <div id="entry-list"></div>
-  <div id="feed-more"></div>
-  <div class="list-empty" id="list-empty" hidden>还没有账目</div>
-  <div class="feed-end" id="feed-end" hidden></div>
 </main>
 
 <div id="sheet-mask" hidden></div>
@@ -202,19 +197,20 @@
 <script src="/bookkeeping/static/bookkeeping-merge.js?v=4"></script>
 <script src="/bookkeeping/static/amount-calculator.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-categorizer.js?v=1"></script>
-<script src="/bookkeeping/static/bookkeeping-state.js?v=4"></script>
+<script src="/bookkeeping/static/bookkeeping-state.js?v=5"></script>
 <script src="/bookkeeping/static/category-icons.js?v=21"></script>
-<script src="/bookkeeping/static/bookkeeping-render.js?v=46"></script>
-<script src="/bookkeeping/static/bookkeeping-sync.js?v=7"></script>
+<script src="/bookkeeping/static/bookkeeping-render.js?v=48"></script>
+<script src="/bookkeeping/static/bookkeeping-sync.js?v=8"></script>
 <script src="/bookkeeping/static/bookkeeping-recurring.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=32"></script>
+<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=33"></script>
 <script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=11"></script>
 <script src="/bookkeeping/static/bookkeeping-settings.js?v=9"></script>
 <script src="/bookkeeping/static/bookkeeping-stats.js?v=33"></script>
 <script src="/bookkeeping/static/bookkeeping-report-shot.js?v=4"></script>
 <script src="/bookkeeping/static/bookkeeping-categories.js?v=11"></script>
 <script src="/bookkeeping/static/bookkeeping-tags.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-push.js?v=13"></script>
+<script src="/bookkeeping/static/bookkeeping-ledger.js?v=2"></script>
+<script src="/bookkeeping/static/bookkeeping-push.js?v=14"></script>
 <script src="/bookkeeping/static/bookkeeping-boot.js?v=10"></script>
 </body>
 </html>

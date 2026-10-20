@@ -22,7 +22,8 @@ def test_tab_bar_push_layers():
     morph 成「首页」跳回 (栏挂 .at-home 翻面孔, CSS 管); 明细 tab 退役
     (明细内容批次 3 搬进推入页), 右下悬浮加号 fab 一并退役 (记一笔入口
     全归中央 ⊕); 层挂点 #push-stack 在主页骨架里, 层样式/层机制/视图脚本
-    随主页一起装 (点开零网络零编译 — 「先弹页面再慢慢加载数据」的终极形态)。"""
+    随主页一起装 (点开零网络零编译 — 「先弹页面再慢慢加载数据」的终极
+    形态); 明细层自带底栏 (主栏 own-bar 让位 — 钉在 ledger 测试)。"""
     html = _static("bookkeeping.html")
     css = _static("css/bookkeeping-page.css")
     assert 'id="tab-bar"' in html and 'aria-label="主导航"' in html
@@ -33,12 +34,12 @@ def test_tab_bar_push_layers():
         and '<div id="push-stack"></div>' in html   # fab 退役 (⊕ 进中央槽), 层挂点在骨架
     assert 'href="/bookkeeping/stats' not in html and \
         'href="/bookkeeping/settings' not in html   # 跳页入口退役
-    for src in ("css/bookkeeping-panes.css?v=36",
+    for src in ("css/bookkeeping-panes.css?v=38",
                 "bookkeeping-recurring.js?v=2",
                 "bookkeeping-settings.js?v=9", "bookkeeping-stats.js?v=33",
                 "bookkeeping-report-shot.js?v=4", "bookkeeping-categories.js?v=11",
-                "bookkeeping-tags.js?v=2", "bookkeeping-push.js?v=13",
-                "bookkeeping-boot.js?v=10"):
+                "bookkeeping-tags.js?v=2", "bookkeeping-ledger.js?v=2",
+                "bookkeeping-push.js?v=14", "bookkeeping-boot.js?v=10"):
         assert f'src="/bookkeeping/static/{src}"' in html or \
             f'href="/bookkeeping/static/{src}"' in html, f"主页没装 {src}"
     boot = _static("bookkeeping-boot.js")
@@ -67,11 +68,14 @@ def test_tab_bar_push_layers():
     # 1.15.0 根层 (报表/我的) 内容上沿 = 全局上边界同线 (安全区+36 / 独立模式
     # 80 磨砂带底沿, my-tesla 同款 --content-top): 层级层大标题的 env+14 线
     # 不归根层用 — 标题退役后内容顶头就上, 会钻进模糊带 (2026-10-08 用户报);
-    # 2.0 设置根层改名 mine (data-view 钉要跟上 — 漏改根层垫顶就丢)
+    # 2.0 mine 根层 + 批次 3 明细/账单日历 (顶上无大标题, 控件就是第一行)
+    # 同钉 --content-top — env+14 会让 chips 行/月头步进器钻带
     assert "--content-top: max(calc(env(safe-area-inset-top, 0px) + 36px)," in css
-    assert '.push-pane[data-view="stats"] .pane-scroll,' in panes \
-        and '.push-pane[data-view="mine"] .pane-scroll {' in panes \
-        and "padding-top: var(--content-top);" in panes
+    assert ('.push-pane[data-view="stats"] .pane-scroll,\n'
+            '.push-pane[data-view="mine"] .pane-scroll,\n'
+            '.push-pane[data-view="ledger"] .pane-scroll,\n'
+            '.push-pane[data-view="bill-cal"] .pane-scroll {\n'
+            '  padding-top: var(--content-top);') in panes
 
 
 def test_push_layer_mechanics():
@@ -126,6 +130,8 @@ def test_push_layer_mechanics():
     # 嵌套层与手势
     assert "const TAB_OF = {" in js and 'categories: "mine"' in js \
         and '"cat-subs": "stats"' in js
+    # 批次 3: 明细/账单日历归首页 tab 的层级层, own-bar 让位主栏 — 钉在
+    # test_bookkeeping_ledger (那是明细层的接线家)
     assert "function topTab()" in js and "function updateTabs()" in js
     assert 'classList.toggle("on"' in js and 'getElementById("tab-bar")' in js
     assert "function switchTab(" in js and "closePushStack(idx + 1)" in js \
@@ -177,24 +183,5 @@ def test_settings_view_wiring():
     # 1.9.0 修二: 层顶衬与 my-music 根页首段标题同一高度 (env+14, 不吃
     # --top-clear 的 96 下限 — 用户点名对齐 my-music 根页)
     assert "padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px" in css
-
-
-def test_tags_management_view():
-    """标签管理 (1.15.0, 10-10 用户点名「设置页面新增一个标签管理页面, 可以
-    添加修改标签」): 全量榜 = 本地字典 (手动添的, 还没上账也在册) + 账上在用
-    + 挖财种子, 按字典倒序排 (与筛选的标签页同一把尺); 行内改名是真改 —
-    字典/种子/账上每一笔的标签数组全换新名, 走脏名单照常上行; 记一笔的
-    标签选择列表同吃字典 (添了就能挑到)。"""
-    js = _static("bookkeeping-tags.js")
-    sheet = _static("bookkeeping-entry-sheet.js")
-    push = _static("bookkeeping-push.js")
-    assert "function renderTagsView(target)" in js
-    assert '"bk-tags-v1"' in js and "function tagList()" in js \
-        and "return [...m].sort().reverse();" in js   # 字典倒序 (10-10 用户改口径)
-    assert '<div class="pane-title">标签管理</div>' in js and 'id="tg-new"' in js \
-        and "名字不能是空的" in js and "已经有「" in js   # 同记账一副清洗 + 查重
-    # 改名三步落账: 字典 → 种子 (catTree.tags 兼串/对象) → 账上每笔 e.tags
-    assert "dirty.add(e.id);" in js and "persist();" in js \
-        and "scheduleSync();" in js and "\n    render();" in js   # 主页账目行跟着换
-    assert '"bk-tags-v1"' in sheet           # 记一笔的选择列表同吃字典
-    assert 'tags: "mine"' in push and 'view === "tags") renderTagsView(target)' in push
+# 标签管理视图 (1.15.0) 的钉子在 test_bookkeeping_tags_view.py — subpages
+# 顶满 200 行帽 (家规拆新文件, 别往顶上摞)
