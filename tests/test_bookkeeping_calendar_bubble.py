@@ -52,17 +52,15 @@ def test_bookkeeping_calendar_float_panel():
     assert "if (calFloat) {" in render and "if (calFloatT) {" in render \
         and "calFloatT.to === 1 && r.top > calSlot.top + CAL_H" in render
     assert 'bar.classList.remove("float");' in render
-    # 面板里的点击: 分身没了 id, 全走 #cal-bar 委托 — 点日子面板留着 (只有用户
-    # 亲手滑列表才收), 列表顺着滑到那天 (这就是"去", 点击器里不再 calFloatClose);
-    # 自己这趟滑屏/挪窗口的视口补偿发的滚动事件不算用户滚动 (calGlide 在途 +
-    # calJumpT 短窗双保险); 落点让开整张面板 (calGap 面板期按卡高让位, 目标日组
-    # 从面板底下钻出来才看得见); ‹ › 认结构 (头一枚是 ‹) 只翻日历的月, 列表不去;
-    # 点在面板别处不动 (滑列表才收)
+    # 面板里的点击: 分身没了 id, 全走 #cal-bar 委托 — 点日子 = 记一笔预填该日
+    # (2.0 挖财交互, 快捷记账主入口) — 层盖满屏, 面板在底下候着, 收层接着用;
+    # 点了日子不再跳位 (点击器里不 calFloatClose 也不挪列表, 滑列表才收面板);
+    # ‹ › 认结构 (头一枚是 ‹) 只翻日历的月, 列表不去; 点在面板别处不动 (滑列表才收)
     assert 'e.target.closest("button[data-date]")' in render \
-        and "jumpToDate(day.dataset.date);" in render
+        and "openSheet(null, day.dataset.date);" in render
     day_fn = render.split('$("#cal-bar").addEventListener("click"')[1].split("});")[0]
     assert "calFloatClose();" not in day_fn \
-        and "calJumpT = performance.now();" in day_fn
+        and "openSheet(null, day.dataset.date);" in day_fn
     assert "if (calGlide || performance.now() - calJumpT < 350) return;" in render
     gap_fn = render.split("function calGap(")[1].split("}")[0]
     assert "if (calFloat)" in gap_fn \

@@ -6,8 +6,8 @@ import re
 
 
 def test_bookkeeping_js_wires_calculator_and_categories():
-    """接线: 完成走 saveEntry (evaluateAmount 求值, 不再 parseFloat), ⌫ 走
-    pointerdown (长按清空), 改账带出的旧金额首个数字键重打 (运算键仍接着原金额算), 类别树服务器拿 + 缓存本地 (5×3 热度格:
+    """接线: 保存/再记都走 saveEntry (evaluateAmount 求值, 不再 parseFloat),
+    ⌫ 走 pointerdown (长按清空), 改账带出的旧金额首个数字键重打 (运算键仍接着原金额算), 类别树服务器拿 + 缓存本地 (4×4 热度格:
     时间窗频率倒排 → 窗外 LRU → 树序垫底; 没选类别时没写备注按钟点预选餐段),
     全部类别点「选类别」弹树选层: 大类手风琴 (标题带图标), 点开才见小类; 没子类的
     大类带图标铺成一级行点一下直选), 时间走 iOS 闹钟式
@@ -33,7 +33,7 @@ def test_bookkeeping_js_wires_calculator_and_categories():
     assert "applyAmountKey(base, btn.dataset.k)" in js   # base: 改账首键重打时是空串
     assert "parseFloat($(\"#f-amount\").value)" not in js
     assert 'btn.dataset.k === "done"' in js
-    assert "again" not in js                       # 再记整个撤了
+    assert 'btn.dataset.k === "again"' in js   # 再记 (2.0 挖财) 回来了 — 链钉在 test_bookkeeping_amount_pad
     assert 'dataset.fresh' in js and '/^[0-9]$/.test(btn.dataset.k)' in js
     #    ↑ 改账带出的旧金额: 首个数字键 = 整个重打 (⌫/运算键则正常接着编辑)
     assert "function saveEntry()" in js

@@ -68,13 +68,13 @@ def test_categories_api_requires_login(usersdb):
 
 
 def test_bookkeeping_page_has_amount_keyboard():
-    """金额键盘 (常驻吸底 iOS 扁平风): 右列 ⌫/完成 两枚大键, 完成就是保存
-    (无另设保存钮); 顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框, 只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 5×3 热度排
-    (时间窗内频率倒排 → 窗外 LRU → 没记过的树序垫底; 没选类别时没写备注按钟点预选餐段)
+    """金额键盘 (2.0 挖财版式): 数字区 3 列 + 右列 ⌫/再记/保存 (保存双高橘; 再记 = 存盘+金额清零+层保持
+    开着 — 挖财实测), 四则运算收进数字区上方细条 (计算器功能不丢 — 版式/行为链钉在 test_bookkeeping_amount_pad);
+    顶部收入/支出是标签页不是按钮; 金额行类别牌 (readonly 金额框, 只由键盘写入; 不带人民币符号, 类别牌选上亮本色线稿); 类别格 4×4 热度排
+    (时间窗内频率倒排 → 窗外 LRU → 没记过的树序垫底; 没选类别时没写备注按钟点预选餐段; 全量类别走「选类别」树)
     (全部类别点「选类别」弹类别树手风琴选层 (大类标题带图标), 没子类的大类带图标铺成一级行直选),
     图标圆底平时暗井, 线稿未选中灰、选中翻本色圆底压白线稿 (1.5.2 改款); 备注独占一行 (无边框样, 点开弹 rides 系统键盘的浮层输入:
-    从行原位升起、数字键盘让位、页面不动、贴键盘上方垫不透底, 无完成钮 —
-    系统键盘回车/点别处收),
+    从行原位升起、数字键盘让位、页面不动、贴键盘上方垫不透底, 无完成钮 — 系统键盘回车/点别处收),
     时间/标签并一行收瘦 (胶囊不描边, 底色自分), 时间点开是 iOS 闹钟式拨轮 (日期/时/分),
     标签收进牌里点开弹列表 (单选一枚, 选中即收; 创建时间倒排); 全程禁双指缩放;
     把手下拉关闭 + 整层手势 (左右划换收支只换类别, 任意部位下拽关层);
@@ -98,7 +98,7 @@ def test_bookkeeping_page_has_amount_keyboard():
     for k in ("back", "done", "7", "8", "9", "/", "4", "5",
               "6", "*", "1", "2", "3", "-", "0", ".", "+"):
         assert f'data-k="{k}"' in html, f"键盘缺键 {k}"
-    assert 'data-k="again"' not in html           # 再记键撤了 (完成一记到底)
+    assert 'data-k="again"' in html            # 再记回来 (2.0 挖财右列: 存盘+清零+层保持)
     assert 'data-k="clear"' not in html          # 清空改长按 ⌫
     assert 'id="sheet-save"' not in html and 'id="sheet-calc"' not in html
     assert 'save-row' not in html and 'save-row' not in css   # 大保存钮退场, 键盘完成就是保存
@@ -136,10 +136,9 @@ def test_bookkeeping_page_has_amount_keyboard():
     assert "width: 34px; height: 34px;" in css.split(".cp-ic {")[1].split("}")[0]
     assert "padding-left: 42px;" in css
     assert ".cp-row.cp-solo {" in css            # 没子类的大类: 铺成一级行直选
-    assert "max-height: calc(var(--shell-h, 100dvh) - 24px)" in css   # 弹层高吃真满高
     assert "min-height: var(--shell-h, 100dvh);" in css   # 页高吃 --shell-h (冻矮补偿)
     assert "overflow-x: hidden; touch-action: pan-y" in css   # 拨轮只上下拨, 横向死锁
-    assert 'max-height: 34dvh' not in css         # 格子不再自带内滚 (默认 5×3 就一屏)
+    assert 'max-height: 34dvh' not in css         # 格子不再自带内滚 (默认 4×4 就一屏)
     # 时间: 与标签并一行 (备注独占上一行, 点开弹 rides 系统键盘的浮层输入), 名字缩进提示字; 点时间牌弹 iOS 闹钟式拨轮 (日期/时/分)
     assert 'class="row2 one"' in html
     assert 'id="when-btn"' in html and 'id="when-label"' in html
@@ -182,14 +181,15 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     #    ↑ 选中翻本色圆底压白线稿 (1.5.2 续: 底 = 行内 --cc 压深一档, 休眠 --sel 钩子启用)
     assert "--icon-tint: #F6F6F6;" in css \
         and ".ci-ring" not in css   # 未选中圆底 = 浅井一枚 (红/绿淡底撤), 边框规则整个撤掉
-    assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
+    assert "margin-left: max(0px, calc((100% + 16px) / 8 - 36px));" in css   # 圆心对齐格子第一列 (2.0 四列)
     assert ".cal-day .e { color: var(--red); }" in css   # 日历每天支出柔红
     assert "font-weight: 650; font-variant-numeric: tabular-nums;\n  color: var(--red);" in css
     #    ↑ 日历格/账目行支出柔红 (收入 .in/.i 盖绿) — 与记一笔同一个色路
     assert "background: var(--surface-2); border-radius: 999px; padding: 8px 14px;" in css
     #    ↑ 时间/标签胶囊牌不描边 (底色自分)
-    assert "height: 52px; border-radius: 0; font-size: 22px;" in css   # 键盘方正
-    assert "repeat(5, 1fr); gap: 1px;" in css    # 键贴键 1px 发丝缝, 满铺
+    assert "height: 52px; border-radius: 0; font-size: 22px;" in css   # 数字键方正
+    assert "repeat(4, 1fr); gap: 1px;" in css    # 2.0 键贴键 1px 发丝缝, 数字 3 列 + 右列功能键
+    #    ↑ 右列 ⌫/再记/保存 的版式与全屏层几何拆在 test_bookkeeping_amount_pad
     assert ".amt-name { font-size: 17px;" in css   # 金额左边的类别名字调大 (原 14px)
     assert 'id="note-done"' not in html          # 备注浮层完成钮撤了 (键盘回车/点别处收)
     assert '<body data-kind="expense">' in html  # 方向配色挂 body (默认支出)

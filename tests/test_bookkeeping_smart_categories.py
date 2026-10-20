@@ -44,20 +44,20 @@ def test_note_match_wiring():
 
 
 def test_tiles_ranking_wiring():
-    """格子排序接线: chipsHtml 消费 rankCategories 全排序切前 15 格 (5×3),
+    """格子排序接线: chipsHtml 消费 rankCategories 全排序切前 16 格 (2.0 四列 4×4 整满),
     影子页同走 chipsHtml 一副排序; 手排清单退役 (wiring 测试另钉 not in)。"""
     assert "function catOptions(kind)" in _JS
     assert "rankCategories(entries, kind, new Set(byKey.keys()), todayStr())" in _JS
-    assert ".slice(0, 15)" in _JS
+    assert ".slice(0, 16)" in _JS
 
 
 def test_meal_preselect_and_load_order():
     """钟点预选: 新记支出且没选类别时按拨轮钟点点亮一顿饭 (树里没那餐作罢);
     装载序: categorizer 在 amount-calculator 之后、state 之前 (先定义后消费),
-    entry-sheet 版本 25→26 (内容变了必须 bump — immutable 缓存教训)。"""
+    entry-sheet 版本 31→32 (内容变了必须 bump — immutable 缓存教训)。"""
     assert "mealCategoryByHour(whenVal.hh)" in _JS
     assert "if (sheetCats().has(meal)) sheetCat = meal;" in _JS
     assert 'bookkeeping-categorizer.js?v=1' in _HTML
     assert _HTML.index("amount-calculator.js?v=1") < _HTML.index("bookkeeping-categorizer.js?v=1")
     assert _HTML.index("bookkeeping-categorizer.js?v=1") < _HTML.index("bookkeeping-state.js")
-    assert 'bookkeeping-entry-sheet.js?v=31' in _HTML
+    assert 'bookkeeping-entry-sheet.js?v=32' in _HTML

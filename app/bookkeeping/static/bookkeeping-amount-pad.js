@@ -1,12 +1,14 @@
 // bookkeeping-amount-pad — My Money 金额键盘: 表达式实时预览 + ⌫ 长按清空
-// + 改账带出的旧金额首个数字键直接重打 (不追加) + 完成 (saveEntry 求值落本地账本, 待同步)。
-// 纯计算在 amount-calculator.js。设了周期账的, 完成 = 存账 + 规则上服务端 (bookkeeping-recurring)。
+// + 改账带出的旧金额首个数字键直接重打 (不追加) + 保存/再记 (saveEntry 求值落
+// 本地账本, 待同步)。2.0 挖财键盘: 保存 = 存盘+收层; 再记 = 存盘+金额清零+层
+// 保持开着 (挖财实测, 连记同一天/同类别不用回头)。
+// 纯计算在 amount-calculator.js。设了周期账的, 保存 = 存账 + 规则上服务端 (bookkeeping-recurring)。
 // 拆自 bookkeeping.js (结构化重构: 代码逐字节未动, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
 /* global $, entries, dirty, persist, render, scheduleSync,
-          uuid, sheetKind, sheetCat, sheetTags, editingId, closeSheet,
+          uuid, sheetKind, sheetCat, sheetTags, editingId: writable, closeSheet,
           whenPicked, evaluateAmount, applyAmountKey, treeFor,
-          cyc, submitCycle */
+          cyc, submitCycle, resetCyclePanel */
 /* exported refreshAmountPreview, saveEntry */
 
 function refreshAmountPreview() {      // 表达式 (含运算符) 的实时结果, 裸数字不打扰
@@ -19,12 +21,24 @@ function refreshAmountPreview() {      // 表达式 (含运算符) 的实时结�
 $("#amt-pad").addEventListener("click", e => {
   const btn = e.target.closest("button[data-k]");
   if (!btn || btn.dataset.k === "back") return;   // ⌫ 在 pointerdown 处理 (要区分长按)
-  if (btn.dataset.k === "done") {
+  if (btn.dataset.k === "done") {                 // 保存 = 存盘 + 收层
     const wasEdit = !!editingId;    // 改的是老账: 它还在下面原地, 不拉着人跑
     if (saveEntry()) {
       closeSheet();
       if (!wasEdit) window.scrollTo(0, 0);   // 新记的在瀑布流最顶上, 翻上去给它看
     }
+  } else if (btn.dataset.k === "again") {
+    // 再记 = 存盘 + 金额清零 + 层保持开着 (挖财实测): 类别/备注/标签/时刻都
+    // 留着 (连记同一天/同类别的顺手); 周期面板回零 (规则跟着刚存的那笔走了,
+    // 这笔要不要周期重新说); 改账按下再记 = 存下改笔, 下一笔从新账起头
+    if (!saveEntry()) return;
+    editingId = null;
+    $("#sheet-del").hidden = true;
+    resetCyclePanel(null);
+    const input = $("#f-amount");
+    input.value = "";
+    delete input.dataset.fresh;
+    refreshAmountPreview();
   } else {
     const input = $("#f-amount");
     // 改账带出的旧金额 (fresh): 按数字 = 整个重打; 运算键仍接着原金额算 (顺手 ×2 这种)

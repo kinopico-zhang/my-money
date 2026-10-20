@@ -1,6 +1,6 @@
 // bookkeeping-entry-sheet — My Money 记/改一笔 (底部弹层):
 // 顶部收入/支出标签页 + 金额行类别牌 (点开弹类别树选层: 大类手风琴, 点开才见小类)
-// + 5×3 类别格 (热度排: 时间窗内频率倒排 → 窗外 LRU → 树序垫底)
+// + 4×4 类别格 (2.0 挖财四列; 热度排: 时间窗内频率倒排 → 窗外 LRU → 树序垫底)
 // + 时间 iOS 闹钟式拨轮 (日期/时/分三列; 周期账的开始/结束/入账时刻也借
 //   它拨 — 收列换副面孔) + 标签列表层
 // (单选一枚选中即收, 创建时间新→旧, 顶部可打新标签) + 备注浮层输入
@@ -156,7 +156,7 @@ function chipsHtml(kind, cat) {     // 格子页 html (真页与横划跟手的�
   // 热度排 (2026-10-02 用户点名「lru + 时间窗, 窗口内按频率倒排」): 近 90 天记得多
   //的在前, 窗外但最近用过的随后, 从没记过的树序垫底 — 手排清单退役, 常用的自己会升上来
   return rankCategories(entries, kind, new Set(byKey.keys()), todayStr())
-    .slice(0, 15).map(val =>
+    .slice(0, 16).map(val =>     // 4×4 整满 (2.0 四列格); 全量类别走「选类别」树
       `<button class="tile${cat === val ? " on" : ""}" data-cat="${esc(val)}">` +
       `<span class="ti">${catIcon(val, kind)}</span><span class="tn">${esc(byKey.get(val))}</span></button>`).join("");
 }
@@ -400,7 +400,7 @@ function autoPickCat() {          // 备注收起: 历史备注对上号就替�
   updateAmtHead();                // 类别牌翻亮 — 彩色圆底就是反馈
 }
 
-function openSheet(entry) {
+function openSheet(entry, dayPrefill) {
   noteKbOpened = false;           // 程序化收起: 不触发备注匹配 (在 sheetCat 重播前清, 不写脏)
   closeNoteKb();                  // 备注浮层若还开着, 先收 (键盘跟着落)
   editingId = entry ? entry.id : null;
@@ -413,8 +413,9 @@ function openSheet(entry) {
   $("#f-amount").value = entry ? entry.amount : "";
   if (entry) $("#f-amount").dataset.fresh = "1";   // 带出的旧金额: 首个数字键 = 重打 (amount-pad 里消费)
   else delete $("#f-amount").dataset.fresh;
-  // 时间拨轮的初值: 新记一笔默认此刻, 旧账没记时刻的按 00:00 露出来 (改存就补上)
-  const day = (entry && entry.date) || todayStr();
+  // 时间拨轮的初值: 新记一笔默认此刻, 旧账没记时刻的按 00:00 露出来 (改存就补上);
+  // dayPrefill (2.0 日历点日子开层): 那一天 + 此刻的钟点 (挖财同款 — 快捷记历史日)
+  const day = (entry && entry.date) || dayPrefill || todayStr();
   const clock = entry ? (entry.time || "00:00") : nowTime();
   const [y, mo, da] = day.split("-").map(Number);
   whenVal.d = new Date(y, mo - 1, da);
@@ -451,7 +452,7 @@ function closeSheet() {
   closeNoteKb();                // 备注浮层同理 (键盘落, 数字键盘回位)
   const mask = $("#sheet-mask"), sheet = $("#sheet");
   mask.classList.remove("on"); sheet.classList.remove("on");
-  setTimeout(() => { mask.hidden = true; sheet.hidden = true; }, 250);
+  setTimeout(() => { mask.hidden = true; sheet.hidden = true; }, 320);   /* 滑降 .3s 走完再隐身 */
   document.body.style.overflow = "";
   editingId = null;
 }
@@ -618,6 +619,19 @@ function closeSheet() {
 $("#tab-add").addEventListener("click", () => openSheet(null));
 $("#sheet-mask").addEventListener("click", closeSheet);
 $("#sheet-close").addEventListener("click", closeSheet);
+// Esc 收层 (键鼠路, 2.0 挖财 BACK=收层的桌面对应): 选层/备注浮层开着先收
+// 它们 (它们是层里更顶上的东西, 与推入层 Esc 同一套礼数), 都没开才收整层;
+// 层开着这一下归层 — stopImmediatePropagation 拦住推入层的 Esc (它俩同挂
+// document, 同一节点上 stopPropagation 拦不住兄弟监听, 必须即刻这枚)
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Escape" || $("#sheet").hidden) return;
+  ev.stopImmediatePropagation();
+  const pick = document.querySelector(
+    "#cat-pick.on .cp-x, #when-pick.on .cp-x, #tag-pick.on .cp-x, #cyc-pick.on .cp-x");
+  if (pick) { pick.click(); return; }             // 顶上的选层先收 (各带 .cp-x)
+  if (!$("#note-kb").hidden) { closeNoteKb(); return; }   // 备注浮层 (没有 x 钮)
+  closeSheet();
+});
 
 // 类别牌点开 = 类别树选层 (全部类别都在树里); 树里大类点开亮小类, 小类点一下选好即收
 $("#amt-cat").addEventListener("click", openCatPick);

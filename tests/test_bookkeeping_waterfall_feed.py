@@ -37,7 +37,10 @@ def test_bookkeeping_page_waterfall_feed():
     assert "feedStart" in render and "window.scrollBy(0, grew)" in render
     #    ↑ 窗口上沿: 往上补时视线钉在原来看的那行 (scrollHeight 差量补偿)
     assert "function jumpToDate(" in render and "findIndex(g => g[0] <= date)" in render
-    #    ↑ 日历点日子: 没账的日子落到最近的有账日
+    #    ↑ 跳位机器 (jumpToDate): 胶囊翻月/明细联动用, 没账的日子落到最近的有账日;
+    #      点日子改开记一笔 (2.0 挖财交互) — 触发口不在日格上了
+    assert 'if (btn) openSheet(null, btn.dataset.date);' in render
+    #    ↑ 日历点日 = 记一笔预填该日 (快捷记账主入口); openSheet 借自 entry-sheet (全局)
     assert 'data-date="${date}"' in render     # 日组带日期, 跳位查得着
     assert 'visibleEntries(entries)' in render      # 全月份一条流, 不带月份/筛选参数
     assert "shiftMonth" not in render and "renderMonth" not in render
@@ -73,7 +76,7 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert "function renderCalendar(" in render and "function calAmt(" in render
     assert "万" in render and "todayStr()" in render
     assert "function shiftCal(" in render
-    # 日子个个能点: 没账的落到最近的有账日 (jumpToDate 兜底), 不留死格子
+    # 日子个个能点 (2.0 挖财交互: 点 = 记一笔预填该日), 不留死格子
     assert '<button type="button" class="${cls}" data-date="${date}">${inner}</button>' in render \
         and '${inner}</div>' not in render
     assert "grid-template-columns: repeat(7, 1fr);" in page_css

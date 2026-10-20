@@ -1,5 +1,5 @@
-// bookkeeping-render — My Money 渲染: 日历卡 (每天收支, 点日子跳位 — 没账的
-// 日子也点得动, 落到最近的有账日; 升到顶被按住, 收拢成顶上一枚磨砂胶囊 —
+// bookkeeping-render — My Money 渲染: 日历卡 (每天收支, 点日子 = 记一笔预填该日
+// (2.0 挖财交互, 快捷记账主入口) — 跳位机器 (jumpToDate) 留给胶囊翻月/明细联动; 升到顶被按住, 收拢成顶上一枚磨砂胶囊 —
 // 缩放全程跟手: 收拢跟长回一样跟着滚动走 (滚到哪停到哪 — 任意高度都是稳态,
 // 分身下边界贴着列表内容的头, 没有空档可言; 圆角全程钉死 18px 一分不变 —
 // 高度缩到胶囊那截自然就是胶囊); 几何交给浏览器的滚动时间线 — 渲染时按当帧
@@ -21,7 +21,7 @@
 "use strict";
 /* global $, esc, WEEK, entries, pad, todayStr,
           catIcon, creatorName, fmtMoney, renderSyncStrip, curMonth,
-          visibleEntries, pushView */
+          visibleEntries, pushView, openSheet */
 /* exported render */
 
 // ---------- 账目瀑布流 ----------
@@ -433,7 +433,7 @@ $("#cal-next").addEventListener("click", () => shiftCal(1));
 
 $("#cal-grid").addEventListener("click", e => {
   const btn = e.target.closest("button[data-date]");
-  if (btn) jumpToDate(btn.dataset.date);
+  if (btn) openSheet(null, btn.dataset.date);   // 2.0 挖财交互: 点日 = 记一笔预填该日
 });
 $("#feed-top").addEventListener("click", drawLess);
 // 快捷行 (2.0): 周期账推入层; 明细/日历过渡期滚到页内锚点 (批次 3 换推入页)。
@@ -1089,10 +1089,9 @@ for (const ev of ["touchstart", "pointerdown", "wheel"])
 $("#cal-bar").addEventListener("click", e => {
   if (calFloat) {                 // 悬浮日历开着: 这一下落在面板身上
     const day = e.target.closest("button[data-date]");
-    if (day) {                    // 点了日子: 面板留着, 列表顺着滑到那天 (这就是"去") —
-                                    // 只有用户亲手滑列表, 面板才收 (起步记时刻, 见 calJumpT)
-      calJumpT = performance.now();
-      jumpToDate(day.dataset.date);
+    if (day) {                    // 点了日子: 记一笔预填该日 (2.0 挖财交互, 快捷记账主
+                                    // 入口) — 层盖满屏, 面板在底下候着, 收层接着用
+      openSheet(null, day.dataset.date);
       return;
     }
     const head = e.target.closest(".cal-head button");

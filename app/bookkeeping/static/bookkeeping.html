@@ -17,8 +17,8 @@
   <link rel="manifest" href="/bookkeeping/static/manifest.json">
   <title>My Money</title>
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=66">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=44">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=11">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=45">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=12">
 <link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=36">
 </head>
 <body data-kind="expense">
@@ -99,13 +99,18 @@
     <!-- 周期账 (1.15.0): 新记才亮出来 (改账不带周期), 点开周期设置层; 设上了亮蓝写重复法 -->
     <button type="button" class="field cyc" id="cyc-btn" hidden><span class="cyc-t" id="cyc-label">周期</span></button>
   </div>
+  <!-- 键盘 (2.0 挖财版式): 数字区 3 列 + 右列 ⌫/再记/保存 (保存双高橘);
+       四则运算收进数字区上方细条 (计算器功能不丢 — 挖财键盘没有运算键) -->
   <div class="amt-pad" id="amt-pad" role="group" aria-label="金额键盘">
-    <button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k op" data-k="/">÷</button>
-    <button type="button" class="k util" data-k="back">⌫</button>
-    <button type="button" class="k" data-k="4">4</button><button type="button" class="k" data-k="5">5</button><button type="button" class="k" data-k="6">6</button><button type="button" class="k op" data-k="*">×</button>
-    <button type="button" class="k" data-k="1">1</button><button type="button" class="k" data-k="2">2</button><button type="button" class="k" data-k="3">3</button><button type="button" class="k op" data-k="-">−</button>
-    <button type="button" class="k done" data-k="done">完成</button>
-    <button type="button" class="k zero" data-k="0">0</button><button type="button" class="k" data-k=".">.</button><button type="button" class="k op" data-k="+">＋</button>
+    <div class="calc-strip" role="group" aria-label="运算">
+      <button type="button" class="k op" data-k="/">÷</button><button type="button" class="k op" data-k="*">×</button><button type="button" class="k op" data-k="-">−</button><button type="button" class="k op" data-k="+">＋</button>
+    </div>
+    <div class="pad-keys">
+      <button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k util" data-k="back">⌫</button>
+      <button type="button" class="k" data-k="4">4</button><button type="button" class="k" data-k="5">5</button><button type="button" class="k" data-k="6">6</button><button type="button" class="k again" data-k="again">再记</button>
+      <button type="button" class="k" data-k="1">1</button><button type="button" class="k" data-k="2">2</button><button type="button" class="k" data-k="3">3</button><button type="button" class="k done" data-k="done">保存</button>
+      <button type="button" class="k zero" data-k="0">0</button><button type="button" class="k" data-k=".">.</button>
+    </div>
   </div>
 </div>
 
@@ -199,11 +204,11 @@
 <script src="/bookkeeping/static/bookkeeping-categorizer.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-state.js?v=4"></script>
 <script src="/bookkeeping/static/category-icons.js?v=21"></script>
-<script src="/bookkeeping/static/bookkeeping-render.js?v=45"></script>
+<script src="/bookkeeping/static/bookkeeping-render.js?v=46"></script>
 <script src="/bookkeeping/static/bookkeeping-sync.js?v=7"></script>
 <script src="/bookkeeping/static/bookkeeping-recurring.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=31"></script>
-<script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=10"></script>
+<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=32"></script>
+<script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=11"></script>
 <script src="/bookkeeping/static/bookkeeping-settings.js?v=9"></script>
 <script src="/bookkeeping/static/bookkeeping-stats.js?v=33"></script>
 <script src="/bookkeeping/static/bookkeeping-report-shot.js?v=4"></script>
