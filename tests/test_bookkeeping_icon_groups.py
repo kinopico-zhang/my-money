@@ -57,6 +57,6 @@ def test_grouped_grid_and_tile_selection():
     assert "--sel: color-mix(in srgb, var(--cc) 72%, #000);" in css
     assert ".cm-tile.cur { outline:" not in css    # 蓝描圈退役
     html = (_BASE / "bookkeeping.html").read_text(encoding="utf-8")
-    assert "category-icons.js?v=18" in html \
+    assert "category-icons.js?v=21" in html \
         and "bookkeeping-categories.js?v=10" in html \
-        and "css/bookkeeping-panes.css?v=4" in html
+        and "css/bookkeeping-panes.css?v=35" in html

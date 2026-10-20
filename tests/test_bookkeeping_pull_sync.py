@@ -43,8 +43,8 @@ def test_sync_strip_quiet_unless_pulled():
     assert "syncNow();" in _static("bookkeeping-boot.js")  # 进页静默 (1.11.1)
     assert 'addEventListener("online", () => syncNow());' in js  # 联网恢复静默
     html = _static("bookkeeping.html")
-    assert "bookkeeping-sync.js?v=5" in html and "bookkeeping-boot.js?v=8" in html \
-        and "css/bookkeeping-page.css?v=57" in html
+    assert "bookkeeping-sync.js?v=7" in html and "bookkeeping-boot.js?v=10" in html \
+        and "css/bookkeeping-page.css?v=65" in html
 
 
 def test_pull_to_sync_gesture():

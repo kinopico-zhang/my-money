@@ -90,12 +90,12 @@ def test_bookkeeping_calendar_and_top_bubble():
     assert 'rootMargin: "-40px 0px 0px 0px"' in render   # 观察器只当开机一脚 (恢复滚位没有 scroll 事件)
     assert "calFloatOpen();" in render   # 点胶囊: 就地展开成悬浮日历面板 (列表不动, 不再滚回顶)
     assert "top: var(--cal-top);" in page_css   # 落位钉在顶带下限之下
-    assert "--top-floor: 96px;" in page_css     # 独立模式系统磨砂带下限 (my-music 同款)
+    assert "--top-floor: 80px;" in page_css     # 独立模式系统磨砂带下限 (10-19 iOS 27 标定尺实测从 96 收上来)
     assert "--cal-top: max(calc(env(safe-area-inset-top, 0px) + 10px)," in page_css \
         and "var(--cal-floor));" in page_css   # 落位 = 浏览器安全区+10 / 独立模式取深者
-    assert "--top-floor: 96px; --cal-floor: 88px;" in page_css
-    #    ↑ 气泡卡在模糊带底沿 (88, 实测最深糊到的线): 不躲 96 安全线, 顶边贴着
-    #    带沿停 — 同步条那行字仍走 96 (字沾糊看不清)
+    assert "--top-floor: 80px; --cal-floor: 72px;" in page_css
+    #    ↑ 气泡卡在模糊带底沿 (72, 10-19 实测 80 读数清楚、64 仍糊 → 带底 ~72):
+    #    不躲 80 安全线, 顶边贴着带沿停 — 同步条那行字仍走 80 (字沾糊看不清)
     # 模糊带里不许常驻任何控件 (my-music --top-clear 同款全局上边界):
     # 不只气泡, 同步条的上沿也钉在带子下头
     assert "--top-clear: max(calc(env(safe-area-inset-top, 0px) + 7px)," in page_css

@@ -11,7 +11,7 @@
 "use strict";
 /* global $, entries: writable, dirty: writable, lastSync: writable,
           catTree: writable, persist, saveLS, loadLS, pad, render, fillChips,
-          mergeEntries, entriesToUpload, setCatColors */
+          mergeEntries, entriesToUpload, setCatColors, flushCycleQueue */
 /* exported renderSyncStrip, syncNow, scheduleSync, loadCategories */
 
 // ---------- 同步 ----------
@@ -94,6 +94,7 @@ async function syncNow(show) {   // show 真值 = 下拉手动同步, 亮条报�
     saveLS("bk-synced-at", String(syncedAt));
     persist();
     render();
+    flushCycleQueue();   // 连上了: 断网时排队的周期账规则一并补交 (bookkeeping-recurring)
   } catch (_e) {
     syncFailed = true;        // 没连上/失败: 如实记下, 条子统一在 finally 画
   } finally {

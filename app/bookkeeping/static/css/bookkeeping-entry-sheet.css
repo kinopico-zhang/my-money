@@ -149,8 +149,17 @@ body[data-kind="income"] { --kind: var(--green); }
 }
 .tag-t.empty { color: var(--ink-3); }
 .field.tags:active { background: var(--press); }
+/* 周期牌 (1.15.0): 与时间/标签同一排的第三枚胶囊, 新记才亮出来 (hidden 要
+   补一刀 — .field 的 display:flex 会盖掉它); 设上了翻蓝写重复法 */
+.row2 .field[hidden] { display: none; }
+.row2.one .field.cyc { flex: 0 0 auto; }
+.cyc-t { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
+.field.cyc.on .cyc-t { color: var(--accent); font-weight: 600; }
+.field.cyc:active { background: var(--press); }
 /* ---------- 底部弹选层 (类别树 / 时间拨轮 / 标签列表共用骨架, 盖在记一笔弹层 71 之上) ---------- */
 .pick { position: fixed; inset: 0; z-index: 80; }
+#when-pick { z-index: 85; }   /* 拨轮压一头: 周期设置层 (同为 .pick/80, DOM 在后)
+                                  借调它拨日期时刻 — 借来的层要盖过借出方的面板 */
 .pick .cp-mask {
   position: absolute; inset: 0; background: rgba(0,0,0,.55);
   opacity: 0; transition: opacity .2s;
@@ -252,6 +261,47 @@ body[data-kind="income"] { --kind: var(--green); }
   background: rgba(255,255,255,.12);   /* 高亮带: 暗底上一道白 (拨到哪格哪格入带) */
   border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
 }
+/* 拨轮的另两副面孔 (1.15.0 周期账借调, #when-pick 的 data-mode 换): date 模式
+   只日期一列 (周期账的开始/结束), time 模式只时分两列 (入账时刻) */
+#when-pick[data-mode="date"] .wp-col:not(.wp-date) { display: none; }
+#when-pick[data-mode="time"] .wp-col.wp-date { display: none; }
+
+/* ---------- 周期账设置层 (点「周期」牌弹: 重复周期/入账日期/入账时刻/开始·结束) ---------- */
+#cyc-pick .cp-panel { height: auto; }     /* 按内容取高 (不必占 76% 屏), 层自己会滚 */
+.cyp-body {
+  max-height: calc(var(--shell-h, 100dvh) - 140px);   /* 小屏整层滚 (头 + 安全区让位) */
+  overflow-y: auto; overscroll-behavior-y: contain;
+}
+.cy-row { display: flex; align-items: center; gap: 10px; padding: 11px 0;
+  border-bottom: 1px solid var(--hairline); }
+.cy-lbl { flex: none; width: 62px; font-size: 14px; color: var(--ink-2); }
+.cy-chips { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cy-sub { flex: none; align-self: center; padding: 0 3px; font-size: 12px; color: var(--ink-3); }
+.cy-chip {                              /* 选项片 (周期/周几/几号/几月): 暗井胶囊, 选中翻蓝 */
+  padding: 4px 11px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-2); font-size: 12.5px;
+}
+.cy-chip:active { background: var(--press); }
+.cy-chip.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.cy-pill {                              /* 时刻/日期牌: 与弹层的时间牌同一副面孔 */
+  flex: 1; padding: 6px 14px; border-radius: 999px; text-align: left;
+  background: var(--surface-2); color: var(--ink-1); font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.cy-pill.empty { color: var(--ink-3); }  /* 结束还没定: 灰字「不限」占位 */
+.cy-pill:active { background: var(--press); }
+.cy-clear {                             /* 结束时间旁的「不限」: 收回无期限 */
+  flex: none; padding: 6px 10px; font-size: 12px; color: var(--ink-3);
+  text-decoration: underline;
+}
+.cy-msg { padding: 9px 0 0; font-size: 12.5px; color: var(--red); }
+.cy-go {                                /* 设为周期账 = 蓝底主钮; 取消周期翻暗井红字 */
+  width: 100%; margin: 14px 0 4px; padding: 12px 0; border-radius: 14px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 15px; font-weight: 600;
+}
+.cy-go:active { filter: brightness(.92); }
+.cy-go.off { background: var(--surface-2); color: var(--red); }
 
 /* ---------- 标签列表层 (点「标签」弹: 创建时间新→旧, 顶部可打新标签) ---------- */
 .tp-new {

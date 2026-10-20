@@ -32,19 +32,23 @@
   的粉彩档 #d18f8f 坐 #2c2c2e 发灰 — 2026-10-02 用户点名「图标颜色没适配暗黑」) */
   --icon-green: #5fd47f;           /* 方向绿 (= 主页收入绿, 同上) */
   --icon-tint: #2c2c2e;            /* 未选中圆底: 暗井 (控件静止档; 白井在黑底上太炸) */
+  --tab-h: 56px;                   /* 底部常驻 tab 栏高 (1.15.0): 主内容/推入层/悬浮加号
+                                       都拿它垫底, 安全区另算 */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
-   env(safe-area-inset-top) 谎报成 0; 393x852 实测 CSS 60-88 仍被栅糊,
-   96 才躲开强糊带)。只在中招形态 (独立模式 + 竖屏 + 触屏) 生效 ——
+   env(safe-area-inset-top) 谎报成 0)。带深按真机实测走: 10-08 旧系统
+   393x852 量到 88 仍糊、96 才躲开; 10-19 升 iOS 27 后标定尺复测, 带子
+   矮了 — 64 的读数仍糊, 80 起清楚 (读数字顶 ~72 即净), 96 白让 16px,
+   下限收到 80。只在中招形态 (独立模式 + 竖屏 + 触屏) 生效 ——
    浏览器、横屏、桌面没有那条带子, 下限恒 0。
-   --cal-floor 是气泡自己的卡线 (1.3.1): 不躲 96 安全线, 顶边贴着带底沿 88
-   停 — 同步条那行字仍走 96 (字沾糊看不清), 胶囊顶这张装饰面贴着带沿无妨,
+   --cal-floor 是气泡自己的卡线 (1.3.1): 不躲 80 安全线, 顶边贴着带底沿 72
+   停 — 同步条那行字仍走 80 (字沾糊看不清), 胶囊顶这张装饰面贴着带沿无妨,
    顶上少空一截 */
 :root { --top-floor: 0px; --cal-floor: 0px; }
 @media (display-mode: standalone) and (orientation: portrait)
        and (pointer: coarse) {
-  :root { --top-floor: 96px; --cal-floor: 88px; }
+  :root { --top-floor: 80px; --cal-floor: 72px; }
 }
 /* 气泡的落位上边界: 浏览器 = 安全区+10 (原落位不动), 独立模式取两者深者
    (卡在系统模糊带的边界上) */
@@ -55,6 +59,14 @@
    浏览器 = 安全区+7 (原样), 独立模式取深者 */
 :root { --top-clear: max(calc(env(safe-area-inset-top, 0px) + 7px),
                          var(--top-floor)); }
+/* tab 根层 (报表/设置) 内容的上起点 (1.15.0): 原与 my-music/my-tesla 的
+   全局上边界同一条线 (tesla 2026-09-27 同款报修的 --content-top);
+   10-19 升 iOS 27 后标定尺实测带子变矮, 本仓独立模式下限收到 80
+   (music/tesla 仍 96 — 同一台机同一条带, 要跟齐另说)。层顶 env+14 是
+   层级层大标题的线, 根层没标题, 沿用它内容会钻进模糊带 (2026-10-08
+   用户报「最上层进入模糊区域」) */
+:root { --content-top: max(calc(env(safe-area-inset-top, 0px) + 36px),
+                           var(--top-floor)); }
 /* app 思路: 全程不画滚动条 (手机本来就不画, 电脑上也干净) —— 能滚, 只是不显示
    (my-music music-base.css 同款; 记一笔弹层/时间拨轮的内滚条也一并盖住) */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent;
@@ -470,22 +482,40 @@ main {
 #dc-ok { color: #ff6961; font-weight: 600; }   /* 删除钮红字提亮一档 (暗卡上的销毁位,
                                    my-music 暗底错误红同款 — 深红在深面上发闷) */
 
-/* ---------- 记一笔 (悬浮) ---------- */
-/* 右下角一竖排: 顶上统计/设置两枚暗井圆钮 (页面级导航, 纯链接), 底下蓝加号 */
+/* ---------- 底部常驻菜单 (1.15.0) ---------- */
+/* 明细/报表/设置三枚主 tab; tab 不另起导航, 直接驱动推入层栈
+   (bookkeeping-push.js switchTab)。常驻在层之上 (z 69), 记一笔弹层起
+   (70) 才让位 —— 报表/设置页里也能随手切 tab, 加号任何页面都点得到 */
+#tab-bar {
+  position: fixed; left: 0; right: 0;
+  bottom: 0; z-index: 69;
+  display: flex; max-width: 560px; margin: 0 auto;   /* 跟 main 同宽, 宽屏居中不摊大饼 */
+  background: var(--bg);
+  border-top: 1px solid var(--hairline);
+  padding: 5px 8px calc(env(safe-area-inset-bottom) + 5px);   /* 安全区往里垫 (PWA 底横条) */
+}
+#tab-bar button {              /* 单枚 tab: 图标 + 一行小字, 平时弱字, 选中提亮变蓝 */
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 3px 0 1px;
+  color: var(--ink-3); font-size: 10.5px; font-weight: 500;
+}
+#tab-bar button.on { color: var(--accent); font-weight: 600; }
+#tab-bar button:active svg { transform: scale(.88); }
+/* 图标描边吃不透明弱灰 (1.6.1 类别图标同款教训): 直接吃 --ink-3 的半透明,
+   笔画交点 (报表的柱脚垫着底线、设置的滑轨接圆) 两笔叠色会深一截 — 32% 白
+   先在壳底纯黑上算成不透明, 观感与 rgba 版分毫不差, 交点与单根线条同色 */
+#tab-bar svg { width: 24px; height: 24px; display: block; transition: transform .15s ease;
+               color: color-mix(in srgb, #ebebf5 32%, var(--bg)); }
+#tab-bar button.on svg { color: var(--accent); }   /* 选中态整枚提蓝 (本就不透明) */
+
+/* ---------- 记一笔 (全局悬浮) ---------- */
+/* 右下角一枚蓝加号, 任何页面都在 (垫在 tab 栏上头一截); 统计/设置的入口
+   1.15.0 起搬去底部 tab 栏, 这里不再放暗井圆钮 */
 #fab-stack {
   position: fixed; right: 18px;
-  bottom: calc(env(safe-area-inset-bottom) + 22px);
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  z-index: 60;                       /* 压得住列表; 记一笔弹层起 (70) 就让位 */
+  bottom: calc(env(safe-area-inset-bottom) + var(--tab-h) + 18px);
+  z-index: 69;                       /* 压得住层 (65) 和同步条 (68); 记一笔弹层起 (70) 就让位 */
 }
-.quick-btn {                    /* 统计/设置: 暗井圆钮坐次级白图形 (弹层头那排圆钮同一副) */
-  width: 46px; height: 46px; border-radius: 50%;
-  background: var(--surface-2); color: var(--ink-2);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);   /* 浮钮档黑影 (my-music 底部坞键同款) */
-}
-.quick-btn:active { transform: scale(.94); }
-.quick-btn svg { width: 22px; height: 22px; display: block; }
 #fab {
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--accent);                   /* 蓝球压白加号 (my-music 登录钮

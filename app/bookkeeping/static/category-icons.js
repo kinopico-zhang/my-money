@@ -12,7 +12,7 @@
 // 一起挑, slug 落库随树下发 (CAT_ICONS, 解析排在名字映射前), 没自选的
 // 照旧按名字映射、没映射到的兜底 notes、方向没传按支出红兜底 (默认页)。
 "use strict";
-/* exported catIcon, setCatColors, catIconBySlug, ICON_NAMES, ICON_GROUPS, ICON_HINTS */
+/* exported catIcon, setCatColors, catIconBySlug, catIconSvg, ICON_NAMES, ICON_GROUPS, ICON_HINTS */
 
 const CATEGORY_ICONS = {
   "餐饮": 'noodles',
@@ -992,4 +992,22 @@ function catIconBySlug(name, color) {
       ? `<path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ci-m-${name})" ${GLYPH_INSET}/>`
       : `<use href="#ci-${name}" ${GLYPH_INSET}/>`) +
     `</svg>`;
+}
+
+// 自足版图标 (1.15.0 报表海报): 画布里的 <img> 是独立文档, <use> 引不着页
+// 内 sprite — 这版把本体整个内联进来 (挑图与 catIcon 同一条链); 长相跟页
+// 面同一副: 暗井圆底 + 本色线稿 (自选色盖方向色)。var() 在独立文档里没根
+// (10-11 用户报「截图里图标的颜色不对」— 方向色圆底整枚失效) — 圆底/线稿
+// 都直填字面值: 底 #2c2c2e (--icon-tint), 方向色 #e5666a/#5fd47f (--icon-
+// red/--icon-green, 改主题两处同步)
+function catIconSvg(cat, kind) {
+  const key = String(cat || "");
+  const name = CAT_ICONS.get(key) || CATEGORY_ICONS[key] ||
+    CAT_ICONS.get(key.split("/")[0]) || CATEGORY_ICONS[key.split("/")[0]] ||
+    FALLBACK_ICON;
+  const own = CAT_COLORS.get(key) || CAT_COLORS.get(key.split("/")[0]);
+  const tint = own || (kind === "income" ? "#5fd47f" : "#e5666a");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">` +
+    `<circle cx="24" cy="24" r="24" style="fill:#2c2c2e"/>` +
+    `<g color="${tint}" ${GLYPH_INSET}>${ICON_BODIES[name]}</g></svg>`;
 }

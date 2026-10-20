@@ -229,9 +229,10 @@ let calFloatT = null;           // 面板开合的弹簧 {to, v, t0, last, raf} 
 let calP = 1;                   // 最近画过的收拢进度 (0 卡原样 ↔ 1 胶囊) — 弹簧
                                 // 从这接着走 (半路改道也从眼下的样子续)
 
-function calAmt(n) {            // 紧凑金额 (日历格子/胶泡里子同一副): 上万缩 1.2万,
-                                // 上千缩 1.2千, 否则至多一位小数 — 中间那块宽度有限,
-                                // 长数字简写不硬挤
+function calAmt(n) {            // 紧凑金额 (日历格子那块宽度有限, 长数字简写不硬挤;
+                                // 胶泡原先同用这副, 10-11 用户点名「不要缩写」改走
+                                // fmtMoney — 只剩格子还在缩): 上万缩 1.2万,
+                                // 上千缩 1.2千, 否则至多一位小数
   if (n >= 10000) return `${(n / 10000).toFixed(1).replace(/\.0$/, "")}万`;
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}千`;
   return String(Math.round(n * 10) / 10);
@@ -240,14 +241,16 @@ function calAmt(n) {            // 紧凑金额 (日历格子/胶泡里子同一
 function calCapHtml(mon) {         // 胶泡文字: 某年某月 + 整月收支 — 月份/支出/收入同一副
                                    // 字号粗细 (都继承 #cal-bar, 不再收支小一号细一档),
                                    // 内容之间的空隙交给布局 (.cb-mv 的 gap 与 .i 的
-                                   // margin 一样宽 — 不往串里拼 ·); 金额走紧凑写法 千/万
-                                   // (与日历标题同一副面孔, 中间窗口宽度有限不硬挤);
-                                   // 收支带方向色 — 支出柔红/收入柔绿, 磨砂里一眼分得清
+                                   // margin 一样宽 — 不往串里拼 ·); 金额给足位数 (10-11
+                                   // 用户点名「缩小日历的支出收入数字不要缩写」): 与
+                                   // 日历标题同一副 fmtMoney, 不再缩 千/万 — 真放不下
+                                   // 由 .msum 省略号收尾 (月份整词恒不动); 收支带方向
+                                   // 色 — 支出柔红/收入柔绿, 磨砂里一眼分得清
   const t = feedMonths.get(mon) || { expense: 0, income: 0 };
   const [y, m] = mon.split("-");
   return `<span class="cm">${y}年${+m}月</span><span class="msum">` +
-    `<span class="e">支 ${calAmt(t.expense)}</span>` +
-    `<span class="i">收 ${calAmt(t.income)}</span></span>`;
+    `<span class="e">支 ${fmtMoney(t.expense)}</span>` +
+    `<span class="i">收 ${fmtMoney(t.income)}</span></span>`;
 }
 
 // ‹ › 画成 SVG 线段箭头: 字形的 ‹ 在自己的字形框里光学偏心, 跟旁边的文字

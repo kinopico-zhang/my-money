@@ -7,6 +7,10 @@
 
 /* ---------- 层壳 (my-music music-push-panes.css 同一副) ---------- */
 #push-stack { position: fixed; inset: 0; z-index: 65; pointer-events: none; }
+/* 弹框抬栈 (1.15.0 修): 栈 (65) 本该让位 tab 栏 (69), 但层里的底装弹框
+   (筛选/日历) 脚上的确定/取消被栏挡住点不到 — 框开着把整栈抬到 75
+   (栏 69 之上, 类别选择 80 之下), 遮罩连 tab 栏一起罩住, 关框落回 */
+#push-stack.over { z-index: 75; }
 /* z 序: 压得住快捷钮竖排 (60), 让位给记一笔弹层 (70 起) — 层开着时快捷钮
    盖在底下点不着, 加号本来也不该从设置/统计里起 */
 .push-pane {
@@ -19,11 +23,21 @@
   will-change: transform;   /* 层滑出结束不降级合并: 合并瞬间 WebKit 会把旁边
                                的固定元素复印进来 (my-music 1.8.x 踩过的元凶) */
   pointer-events: auto;
-  touch-action: pan-y;      /* 竖滚留给层内滚动器, 横向全让给右划返回手势
-                               (行左滑删除走 JS 手势 + preventDefault, 不受影响) */
+  touch-action: pan-x pan-y;   /* 断触根治 (10-17, my-music 同款): touch-action
+                               只裁原生滚动、不派发事件 — 层内横向本没有原生
+                               滚动器 (纵向滚动器全配 overflow-x: hidden),
+                               放行 pan-x 后横拖没有原生目标可接管, 全程归
+                               JS 右划返回。先前 pan-y 的字面直觉是「横向让
+                               给手势」, 实效正相反: 链上 (层身 + button 的
+                               manipulation) 处处拒掉横向平移, iOS 一认出横移
+                               就地 pointercancel — 右划跟到一半被掐死 */
   user-select: none; -webkit-user-select: none;   /* 键鼠拖层时不糊一脸选蓝 */
 }
+.push-pane img { -webkit-user-drag: none; }   /* 右划别拖出图片幽灵 (my-music 同款) */
 .push-pane.open { transform: translateX(0); }
+/* tab 换场即切 (1.15.0): 平级跳转不放「从右进入」的滑入 — 那是往层级深处
+   走的语义; push.js 落位后即摘这枚类, 后续滑出手势/动画照常 */
+.push-pane.snap { transition: none; }
 .push-pane .pane-scroll {
   width: 100%; max-width: 640px; height: 100%;
   overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -32,15 +46,34 @@
   /* 顶衬与 my-music 的 pane-scroll 同款 (env+14): 页顶大标题由此落在
      my-music 根页首段标题的同一高度 (2026-10-04 用户点名对齐 — 此前吃
      --top-clear 的 96 下限, 独立模式矮了小半寸; 层顶没有磨砂钉顶件,
-     用不着那条带子的边界); 左右 16px 比子页的 14px 略宽, 贴 my-music */
+     用不着那条带子的边界); 左右 16px 比子页的 14px 略宽, 贴 my-music;
+     底衬 1.15.0 加垫 --tab-h — 底部常驻 tab 栏 (69) 压在层 (65) 上,
+     内容尾得让出栏高才不会被盖住最后一截 */
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px
-           calc(env(safe-area-inset-bottom) + 24px);
+           calc(env(safe-area-inset-bottom) + var(--tab-h) + 24px);
 }
-/* 页顶大标题 (my-music .pane-title 同款, iOS 设置式): 随内容一起滚走 */
+/* tab 根层 (报表/设置) 内容上沿 (1.15.0): 钉 --content-top — 与
+   my-music/my-tesla 根页同一条线 (安全区+36 / 独立模式磨砂带底沿);
+   层级层照旧 env+14, 那是页顶大标题的顶衬, 根层没标题, 沿用它会让
+   内容钻进模糊带 (2026-10-08 用户报) */
+.push-pane[data-view="stats"] .pane-scroll,
+.push-pane[data-view="settings"] .pane-scroll {
+  padding-top: var(--content-top);
+}
+/* 报表页顶大标题 (10-19 用户点名「标题放在最上面, 不要进浏览器的模糊区
+   域」): 根层内容上沿本就钉在 --content-top (浏览器 = 安全区+36 / 独立
+   模式 = 80 带底沿, 10-19 标定尺实测后从 96 收上来), 大标题自带的 22px 顶衬清零 — 文字直接落在这条
+   线上, 与层级层大标题 (env+14 + 自衬 22) 同一条线, 怎么换形态也不越带;
+   标题随层壳钉住 (版面身才滚), 最上面永远有它 */
+.push-pane[data-view="stats"] .pane-title { padding-top: 0; }
+/* 页顶大标题 (my-music .pane-title 同款, iOS 设置式): 随内容一起滚走;
+   1.14.0 起左边让出 46px 给常驻返回钮 (每层左上角一枚) */
 .push-pane .pane-title {
   font-size: 26px; font-weight: 700; letter-spacing: -.5px;
   padding: 22px 0 12px;
 }
+/* 层顶返回钮 (1.14.0 加, 1.15.0 退役): 子界面统一从右滑入, 回头路统一是
+   全局右划收回 (键鼠 Esc) — 怎么来怎么回去, 左上角那枚钮连样式一起拆干净 */
 
 /* ---------- 通用件: 卡片行 / 加载态 / 重试 ---------- */
 .push-pane .card { background: var(--surface); border: 1px solid var(--hairline);
@@ -103,60 +136,305 @@
 .push-pane .cl-entries .k-fix { color: #6fce8e; background: rgba(31,163,73,.16); }
 .push-pane .cl-entries .t { flex: 1; min-width: 0; }
 
-/* ---------- 统计 ---------- */
-.push-pane .card-t { padding: 13px 14px 4px; font-size: 13px;
-                     font-weight: 600; color: var(--ink-2); }
+/* ---------- 统计 (1.14.0 大改: 时间范围/筛选/大小类两档/圆环+条形榜) ---------- */
+.push-pane .card-t { padding: 13px 14px 4px; font-size: 17px;
+                     font-weight: 650; color: var(--ink-1); }
 .push-pane .empty { padding: 22px 14px 26px; text-align: center;
                     color: var(--bg-ink); font-size: 13px; }
 .push-pane .src-note { text-align: center; color: var(--bg-ink); font-size: 11.5px;
                        padding: 2px 0 6px; }
-/* 月份导航: 日历头同一副 (‹ 2026年9月 ›) */
+/* 时间快捷段: flex-wrap 换行, 不做横向滚动 — 横滚区与层的右划返回手势打架
+   (层上起手就是横向, 一滚一划分不了家) */
+/* 顶上控件 (2026-10-09 用户点名「全部/年/季…都收到子菜单里」): 范围六枚
+   收进时间范围弹层 (与日历同框), 顶上只剩一行 — 标题导航 (点时间标题弹
+   时间范围, 恒报起止日期) 靠左, 漏斗守右上角 (2026-10-10 用户点名); 标题
+   长短随档走, 靠左钉住不晃。箭头是 svg — 文字 ‹ › 的字形重心天生偏上,
+   svg 块化后 flex 居中就是真居中 */
+.push-pane .stats-tools .flt-btn { flex: none; }
+.push-pane .stats-tools { display: flex; align-items: center; gap: 10px;
+                          margin-bottom: 12px; }
 .push-pane .month-nav { display: flex; align-items: center;
-                        justify-content: center; gap: 18px; margin-bottom: 14px; }
+                        justify-content: center; gap: 18px; }
+.push-pane .stats-tools .month-nav { flex: 1; justify-content: flex-start; }
+                                        /* 标题靠左, 行尾留给漏斗 */
 .push-pane .month-nav button {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--surface-2); color: var(--ink-1);
-  font-size: 20px; line-height: 1; display: flex; align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
+.push-pane .month-nav button svg { width: 16px; height: 16px; display: block; }
 .push-pane .month-nav button:active { background: var(--press); }
-.push-pane .month-nav button:disabled { opacity: .35; }  /* 下月封顶 (未来没账) */
+.push-pane .month-nav button:disabled { opacity: .35; }  /* 封顶现在 (未来没账) */
 .push-pane .m-title { min-width: 96px; text-align: center; font-size: 17px;
-                      font-weight: 650; font-variant-numeric: tabular-nums; }
-/* 当月总账: 支出/收入两半, 金额跟方向走 */
-.push-pane .sums { display: flex; }
-.push-pane .sum { flex: 1; padding: 13px 14px 15px; display: flex;
-                  flex-direction: column; align-items: center; gap: 3px; }
-.push-pane .sum + .sum { border-left: 1px solid var(--hairline); }
-.push-pane .sum .k { font-size: 12px; color: var(--ink-3); }
-.push-pane .sum .v { font-size: 24px; font-weight: 700;
-                     font-variant-numeric: tabular-nums; }
-.push-pane .sum .v.out { color: var(--red); }
-.push-pane .sum .v.in { color: var(--green); }
-/* 分类榜: 图标 + 名字金额 + 占比条 */
-.push-pane .cat-row { display: flex; align-items: center; gap: 11px; padding: 8px 14px; }
+                      font-weight: 650; font-variant-numeric: tabular-nums;
+                      overflow: hidden; text-overflow: ellipsis;
+                      white-space: nowrap; }
+/* 时间标题钮 (2026-10-09): 点开时间范围弹层 — 光杆文字 + 小尖角, 不做
+   圆底 (与两侧的翻段圆钮分得出谁是标题谁是钮) */
+.push-pane .month-nav .m-btn {
+  width: auto; height: auto; min-width: 96px; padding: 6px 10px;
+  border-radius: 12px; background: none;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+}
+.push-pane .month-nav .m-btn:active { background: var(--press); }
+.push-pane .month-nav .m-btn .m-car { width: 13px; height: 13px;
+                                      color: var(--ink-3); display: block; }
+/* 筛选钮: 光杆漏斗 + 徽记 (选中的条件数, 0 个不亮), 行尾常驻 (relative
+   只为托住徽记) */
+.push-pane .flt-btn {
+  position: relative;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink-1);
+  display: flex; align-items: center; justify-content: center;
+}
+.push-pane .flt-btn:active { background: var(--press); }
+.push-pane .flt-btn svg { width: 14px; height: 14px; display: block; }
+.push-pane .flt-btn .flt-n {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 10.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+/* 药丸分段器 (iOS 式) — 时间范围弹层里的档位行 */
+.push-pane .seg { display: flex; width: max-content; margin: 0 auto 14px;
+                  background: var(--surface-2); border-radius: 999px; padding: 3px; }
+.push-pane .seg button { padding: 6px 24px; border-radius: 999px;
+                         font-size: 13.5px; color: var(--ink-2); }
+.push-pane .seg button.on { background: var(--surface-3); color: var(--ink-1);
+                            font-weight: 600; }
+/* 时间范围五枚 (2026-10-09 收进时间范围弹层, 与日历同框; 10-10 收口成
+   全部/年/季/月/周): 弹层身里五等分一排; 快捷档静态高亮 (草稿在框里攒
+   着, 确定 才生效) */
+.push-pane .bk-sheet .rg-seg { width: 100%; margin: 12px 0 4px; }
+.push-pane .bk-sheet .rg-seg button { flex: 1; padding: 6px 0; }
+/* 筛选两页签 (10-10 用户点名: 类别/标签分两页): 与范围弹层的档位行同一副
+   药丸长相 — 弹层身里两等分一排 */
+.push-pane .bk-sheet .flt-seg { width: 100%; margin: 12px 0 4px; }
+.push-pane .bk-sheet .flt-seg button { flex: 1; padding: 6px 0; }
+/* 大类/小类切换 (1.15.0): 10-10 药丸开关试了一天又撤, 10-15 横滑分页也退
+   役 (用户点名「左上角的标题可点, 展开下拉菜单选视图」) — 版面单页常驻,
+   切视图只换内容不换容器 */
+/* 报表层列布局 (1.15.0): 层身不再纵滚, 头两行钉住; 版面身吃满余下高度自己
+   滚 — 翻范围/改筛选只填卡片内容, 版面身的 scrollTop 原样保留 */
+.push-pane[data-view="stats"] .pane-scroll {
+  display: flex; flex-direction: column; overflow: hidden;
+  /* 底衬退役 (2026-10-09 用户报「下面有一个黑边」): 版面身钉在层身里,
+     80px 底衬常露一条黑带 — 清 tab 栏的垫底挪进版面身 (滚到尾才见) */
+  padding-bottom: 10px;
+}
+.push-pane .gran-view {
+  flex: 1; min-height: 0;              /* 吃满层余高, 自己滚 */
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;                  /* 只写 overflow-y 时 x 按 auto 算 — iOS
+                                          给单向滚动器也配横向橡皮筋, 橡皮筋一
+                                          接管横拖就 pointercancel (断触第二元凶) */
+  overscroll-behavior: contain;        /* 页内回弹, 不牵层外 */
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--tab-h) + 18px);
+}
+/* 版面卡: 头行 (标题钮 + 笔数) + 圆环 + 条形榜; 卡题钮化 (10-15) — 光杆
+   文字 + 小尖角 (时间标题 m-btn 同款语感), 两张卡的标题都是同一状态的
+   把手; relative 托住垂下的菜单 */
+.push-pane .board-h { display: flex; align-items: baseline;
+                      justify-content: space-between; padding: 13px 14px 2px;
+                      position: relative; }
+.push-pane .gran-btn { display: inline-flex; align-items: center; gap: 3px;
+                       /* 卡题 padding 从 .card-t 清零, 换成指尖余量: 上下
+                          4px 外扩 + 等量负 margin 抵回 — 基线与行高一寸不动,
+                          点按面却大一圈 (按压提亮也照着大面走) */
+                       padding: 4px 9px 4px 0; margin: -4px 0;
+                       border-radius: 8px; }
+.push-pane .gran-btn:active { background: var(--press); }
+.push-pane .gran-btn .gran-car { width: 13px; height: 13px; color: var(--ink-3);
+                                 display: block;
+                                 transition: transform .22s cubic-bezier(.32,.72,.35,1); }
+.push-pane .gran-btn.on .gran-car { transform: rotate(180deg); }
+.push-pane .board-n { font-size: 11.5px; color: var(--ink-3);
+                      font-variant-numeric: tabular-nums; }
+/* 下拉菜单 (10-15): 从被点那张卡的卡头垂下 (menu 一枚, 开时挪进 board-h);
+   悬浮件破例带投影 — 平贴黑底的卡不投影是卡的规矩, 菜单压在卡上得有深度;
+   当前视图亮蓝 */
+.push-pane .gran-menu {
+  position: absolute; left: 14px; top: calc(100% + 4px); z-index: 30;
+  min-width: 132px; border-radius: 12px; overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--hairline);
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.push-pane .gran-menu button { display: block; width: 100%; text-align: left;
+                               padding: 9px 16px; font-size: 14px;
+                               color: var(--ink-2); }
+.push-pane .gran-menu button:active { background: var(--press); }
+.push-pane .gran-menu button.on { color: var(--accent); font-weight: 600; }
+/* 1.15.0 圆环顶留呼吸 (10-11 用户点名「并状图被标题挡住」): 引标顺着梯子
+   顶到画布上沿, 只隔 4px 贴着卡头 — 顶垫 20px, 引标最高的那行跟标题分得开 */
+.push-pane .donut-box { padding: 20px 0 2px; }
+/* 1.15.0 圆环画布放大 (用户点名「半径太小、宽度也小」): 吃满卡面封顶 440
+   (原 370) — 环本体也加大了 (见 stats.js 双层几何), 宽屏壳 640 不会摊大饼 */
+.push-pane .donut-box svg { display: block; width: min(100%, 440px); margin: 0 auto; }
+.push-pane .dn-total { fill: var(--ink-1); font-size: 17px; font-weight: 650;
+                       font-variant-numeric: tabular-nums; }
+/* 1.15.0 金额给足位数 (不缩万) 后环心可能很长: 按位数降档, 不撑出环心 */
+.push-pane .dn-total.sm { font-size: 13px; }    /* 8~10 字 (¥1234.56 级) */
+.push-pane .dn-total.xs { font-size: 10.5px; }  /* 11 字以上 (¥1234567.89 级) */
+.push-pane .dn-label { fill: var(--ink-3); font-size: 10.5px; }
+/* 1.15.0 折线引标: 线色跟段走 (行内 stroke), 字穿字色不穿段色 */
+.push-pane .dn-lead { fill: none; stroke-width: 1; }
+.push-pane .dn-lbl { fill: var(--ink-2); font-size: 11px; }
+/* 1.15.0 换档进场动画 (用户点名「切换时间要有动画」): 圆环从零扫开、条子
+   从零长出 (行内 animation-delay 按榜位错峰)、折线/标签/合计晚一拍淡入 —
+   renderBoard 每次整片重建, 换一档自动重放一遍。keyframe 只写 from, 落点
+   就是行内/属性的本值 (宽是 inline width, 弧长是 dasharray 属性) */
+@keyframes dn-arc-in { from { stroke-dasharray: 0 100; } }
+@keyframes bar-in { from { width: 0; } }
+@keyframes dn-fade-in { from { opacity: 0; } }
+.push-pane .dn-arc { animation: dn-arc-in .55s cubic-bezier(.25, .1, .25, 1) both; }
+.push-pane .cat-row .bar i { animation: bar-in .5s cubic-bezier(.25, .1, .25, 1) both; }
+.push-pane .dn-lead, .push-pane .dn-lbl, .push-pane .dn-total,
+.push-pane .dn-label { animation: dn-fade-in .35s ease-out .25s both; }
+/* 分类榜: 每行 [图标][三行两列主区], 大类小类同一副行式 (1.15.0 小类页
+   去大类分组 — 平铺, 无组头无缩进) */
+.push-pane .cat-row { display: flex; align-items: center; gap: 11px; padding: 8px 14px;
+                      cursor: pointer; }   /* 1.15.0 行可点: 下钻小类/具体明细 */
+.push-pane .cat-row:active { background: var(--press); }
 .push-pane .cat-ic { flex: none; width: 34px; height: 34px; }
 .push-pane .cat-ic .ci { width: 100%; height: 100%; display: block; color: var(--cc); }
 .push-pane .cat-main { flex: 1; min-width: 0; }
-.push-pane .cat-top { display: flex; align-items: baseline; justify-content: space-between;
-                      gap: 8px; margin-bottom: 5px; }
-.push-pane .cat-name { font-size: 13.5px; color: var(--ink-1);
-                       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 1.15.0 行内三行两列: 上 类别…金额 / 中 整条分类色条 / 下 笔数…占比。
+   色跟实体走 — 条子吃圆环同色 (行内 inline: 前 7 名槽色, 榜外灰「其他」,
+   收入支出同规), 方向红绿与行首色点都退役 (颜色进了条子) */
+.push-pane .cat-top { display: flex; align-items: baseline; gap: 8px;
+                      margin-bottom: 5px; }
+.push-pane .cat-nm { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink-1);
+                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .push-pane .cat-amt { flex: none; font-size: 13px; font-weight: 600;
                       color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.push-pane .bar { height: 6px; border-radius: 3px; background: var(--surface-2);
-                  overflow: hidden; }
+.push-pane .bar { display: block; height: 6px; border-radius: 3px;
+                  background: var(--surface-2); overflow: hidden; }
 .push-pane .bar i { display: block; height: 100%; border-radius: 3px;
-                    background: var(--red); transition: width .3s ease; }
-.push-pane #by-cat-in .bar i { background: var(--green); }
-/* 按记账人 */
-.push-pane .who-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; }
-.push-pane .who-row + .who-row { border-top: 1px solid var(--hairline); }
-.push-pane .who-name { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-1);
-                       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.push-pane .who-amt { flex: none; font-size: 13px; font-variant-numeric: tabular-nums; }
-.push-pane .who-amt.out { color: var(--red); }
-.push-pane .who-amt.in { color: var(--green); }
+                    transition: width .3s ease; }   /* 颜色行内 inline: 圆环同色 */
+.push-pane .cat-bot { display: flex; align-items: baseline;
+                      justify-content: space-between; margin-top: 4px; }
+.push-pane .cat-n { flex: none; font-size: 11.5px; font-weight: 400;
+                    color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.push-pane .pct { flex: none; font-size: 11.5px; color: var(--ink-3);
+                  font-variant-numeric: tabular-nums; }
+/* 下钻层 (1.15.0): 标题下的一行小计 (N笔 · ¥合计 + 归属说明) */
+.push-pane .dr-sum { display: flex; align-items: baseline; gap: 8px;
+                     padding: 2px 2px 12px; font-size: 13px; font-weight: 600;
+                     color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.push-pane .dr-sum span { font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+
+/* ---------- 层内弹框 (统计的筛选/日历, 1.14.0): 底部上滑卡, 同 #cat-modal
+   的机制 — 层有 transform, fixed 会退化成认层, 不如明写 absolute ---------- */
+.push-pane .bk-sheet { position: absolute; inset: 0; z-index: 5; }
+.push-pane .bk-sheet .bs-mask {
+  position: absolute; inset: 0; background: rgba(0,0,0,.55);
+  opacity: 0; transition: opacity .2s;
+}
+.push-pane .bk-sheet.on .bs-mask { opacity: 1; }
+.push-pane .bk-sheet .bs-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  max-width: 560px; margin: 0 auto;
+  max-height: min(82dvh, 660px); display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--hairline);
+  transform: translateY(102%); transition: transform .25s;
+  padding: 8px 18px calc(env(safe-area-inset-bottom) + 12px);
+  box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+}
+.push-pane .bk-sheet.on .bs-panel { transform: translateY(0); }
+.push-pane .bk-sheet .bs-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  font-size: 15px; font-weight: 600; color: var(--ink-1);
+  padding: 8px 0 10px; border-bottom: 1px solid var(--hairline);
+}
+.push-pane .bk-sheet .bs-body { flex: 1; min-height: 0; overflow-y: auto;
+                                overflow-x: hidden;   /* 同 gran-view: 掐横向橡皮筋 */
+                                overscroll-behavior-y: contain; padding: 2px 0 8px; }
+.push-pane .bk-sheet .bs-foot { flex: none; display: flex; gap: 10px;
+                                padding-top: 10px; }
+.push-pane .bk-sheet .bs-foot button { flex: 1; padding: 8px 0;   /* 2026-10-09 用户点名「四个按钮太大了」: 紧凑一排 */
+                                       border-radius: 10px; font-size: 13.5px;
+                                       font-weight: 600; }
+.push-pane .bk-sheet .bs-foot .ghost { background: var(--surface-2);
+                                       color: var(--ink-1); }
+.push-pane .bk-sheet .bs-foot .main { background: var(--accent);
+                                      color: var(--accent-ink); }
+.push-pane .bk-sheet .bs-foot .main:disabled { opacity: .4; }
+/* 筛选两页 (10-10 用户点名): 类别一页 (树) + 标签一页 (复选行), 页签在
+   .flt-seg; bs-sec 只管页身的呼吸边 (10-10 成员节/芯片排随成员维度退役) */
+.push-pane .bs-sec { padding: 12px 0 4px; }
+/* 类别树 (1.15.0 用户点名): 一行 = 复选框 + 图标 + 名字 (+ 行尾展开钮);
+   收入支出同树, 图标颜色分方向; 小类行缩进、默认折叠 */
+.push-pane .ft-row { display: flex; align-items: center; gap: 10px;
+                     padding: 6px 2px; }
+.push-pane .ft-row.sub { padding-left: 32px; }
+.push-pane .ft-chk { flex: none; width: 22px; height: 22px; border-radius: 7px;
+                     background: var(--surface-2); color: transparent;
+                     display: flex; align-items: center; justify-content: center; }
+.push-pane .ft-chk.on { background: var(--accent); color: var(--accent-ink); }
+/* 半选 (部分小类在选): 同选中色, 横杠代勾 — 摘大类里单颗小类后大类落这态,
+   点它一键勾满整类 (2026-10-15 大类勾子类自动勾上配套) */
+.push-pane .ft-chk.some { background: var(--accent); color: var(--accent-ink); }
+.push-pane .ft-chk svg { width: 13px; height: 13px; display: block; }
+.push-pane .ft-ic { flex: none; width: 23px; height: 23px; }
+.push-pane .ft-ic svg { width: 100%; height: 100%; display: block; }
+.push-pane .ft-nm { flex: 1; min-width: 0; font-size: 14.5px; color: var(--ink-1);
+                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.push-pane .ft-exp { flex: none; width: 28px; height: 28px; border-radius: 50%;
+                     color: var(--ink-3); display: flex; align-items: center;
+                     justify-content: center; }
+.push-pane .ft-exp svg { width: 14px; height: 14px; display: block;
+                         transition: transform .2s; }
+.push-pane .ft-exp.open svg { transform: rotate(90deg); }   /* 摊开: 箭头转正向下 */
+/* 日历: ‹范围› 步进器与范围显示合一 (10-10 定案) — 复用 .month-nav, 当中
+   m-title 恒报段起止 (两头全到年月日), ‹› 按档平移整段 (全部收起, 自定义
+   兼职翻月); 周头 + 7 列格子 (可左右划翻月, 下头一行报年月); 两点选区间;
+   格子恒 6 行 (月尾垫空格) — 换月面板不忽高忽低 (10-10 用户点名) */
+.push-pane .rs-nav { padding: 2px 0; }
+.push-pane .rs-nav .m-title { min-width: 0; font-size: 15px; }   /* 范围字串偏长, 收一号 */
+.push-pane .rc-week { display: grid; grid-template-columns: repeat(7, 1fr);
+                      text-align: center; font-size: 11px; color: var(--ink-3);
+                      padding: 6px 0; }
+.push-pane .rc-grid { display: grid; grid-template-columns: repeat(7, 1fr); position: relative;
+                      gap: 2px; touch-action: pan-y; }   /* 横划翻月归 JS (竖划不拦);
+                                                relative 锚住自家的大月份水印 */
+/* 大月份水印 (10-11 用户点名「当月的时间, 放大占满整个日历, 放在日期的下
+   面, 日期都是半透明的, 透过日期可以按到当前月份. 月份格式 yyyy/mm」): 每
+   张月格一枚, gridOf 里自带 (划月跟着各自的月走)。z-index: -1 沉到日期底
+   下 — 轨道 (will-change) 自成层叠上下文, 负一沉不穿卡面; pointer-events:
+   none, 点按全落在日期上 */
+.push-pane .rc-month-bg {
+  position: absolute; inset: 0; z-index: -1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 92px; font-weight: 700; letter-spacing: -2px;
+  color: rgba(235,235,245,.09); pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+/* 换月滑入 (2026-10-10 用户点名「切换要有动画」): 点档联动/‹› 步进/自定义
+   翻月都走 calJump 挂类 — 往后翻从右进, 往回翻从左进; 只动格子区,
+   步进器/周头不跟 */
+@keyframes cal-in-l { from { transform: translateX(-26px); opacity: 0; } }
+@keyframes cal-in-r { from { transform: translateX(26px); opacity: 0; } }
+.push-pane .rc-grid.cal-l { animation: cal-in-l .26s ease; }
+.push-pane .rc-grid.cal-r { animation: cal-in-r .26s ease; }
+.push-pane .rc-blank { aspect-ratio: 1 / 1; }
+.push-pane .rc-d {
+  aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--ink-1); border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.push-pane .rc-d:active { background: var(--press); }
+/* 日期半透明 (10-11 用户点名): 月份水印从底下透出来 — 普通日子 .55, 选中
+   两头/今日留重一档, 选区还一眼认得出; 未来日整枚 .3 (opacity 不叠加) */
+.push-pane .rc-d { opacity: .55; }
+.push-pane .rc-d.fut { opacity: .3; }               /* 未来不可选 (账还没记) */
+.push-pane .rc-d.inr { background: var(--surface-2); }   /* 区间内 */
+.push-pane .rc-d.sel { background: var(--accent); color: var(--accent-ink);
+                       font-weight: 700; opacity: .85; }
+.push-pane .rc-d.today:not(.sel) { box-shadow: inset 0 0 0 1.5px var(--ink-3);
+                                   opacity: .72; }
 
 /* ---------- 类别管理 ---------- */
 .push-pane .msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px;
@@ -303,6 +581,7 @@
 /* 图标栅格 (1.11.0 分节): .cm-icons 只是滚动一层, 装若干 .cm-group (小标 +
    自己的栅格) — 550 枚按意义分 19 组, 不分节翻不动 */
 .push-pane .cm-icons { flex: 1; min-height: 120px; overflow-y: auto;
+                       overflow-x: hidden;    /* 同 gran-view: 掐横向橡皮筋 */
                        overscroll-behavior-y: contain; padding: 2px; }
 .push-pane .cm-glabel { padding: 12px 2px 6px; font-size: 11.5px;
                         color: var(--ink-3); }
@@ -331,3 +610,105 @@
                     background: var(--accent); color: var(--accent-ink);
                     font-size: 15px; font-weight: 600; }
 .push-pane .cm-ok:active { filter: brightness(.92); }
+
+/* ---------- 标签管理 (1.15.0, 设置页里再推一层): 全量标签一张平榜按字符
+   顺序排 (手动添的 + 账上在用的 + 挖财种子), 行 = #名字 + 用了几笔 + 改名
+   笔; 点行行内改名 (输入框换下名字), 顶上添加口与记账的标签选择同一副清洗 ---------- */
+.push-pane .tg-add { display: flex; gap: 8px; padding: 12px 14px 2px; }
+.push-pane .tg-add input {
+  min-width: 0; flex: 1; border: 0; outline: 0;
+  font: inherit; font-size: 16px;   /* iOS 聚焦 <16px 会自动放大整页 */
+  background: var(--surface-2); border-radius: 10px;
+  padding: 10px 12px; color: var(--ink-1);
+}
+.push-pane .tg-add input::placeholder { color: var(--ink-3); }
+.push-pane .tg-add button {
+  flex: none; padding: 0 16px; border-radius: 10px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 14px; font-weight: 600;
+}
+.push-pane .tg-add button:active { filter: brightness(.92); }
+.push-pane .tg-msg { padding: 10px 14px 0; font-size: 13px; color: var(--red); }
+.push-pane .tg-row { width: 100%; display: flex; align-items: center; gap: 10px;
+                     padding: 11px 14px; text-align: left; }
+.push-pane .tg-row + .tg-row { border-top: 1px solid var(--hairline); }
+.push-pane .tg-row:active { background: var(--press); }
+.push-pane .tg-name { flex: 1; min-width: 0; font-size: 14.5px; color: var(--ink-1);
+                      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.push-pane .tg-n { flex: none; font-size: 12.5px; color: var(--ink-3);
+                   font-variant-numeric: tabular-nums; }
+.push-pane .tg-pen { flex: none; color: var(--ink-3); font-size: 13px; }
+.push-pane .tg-row.edit { display: flex; gap: 8px; padding: 8px 14px; }
+.push-pane .tg-row.edit input {
+  min-width: 0; flex: 1; border: 0; outline: 0;
+  font: inherit; font-size: 16px;   /* iOS 聚焦 <16px 会自动放大整页 */
+  background: var(--surface-2); border-radius: 10px;
+  padding: 8px 12px; color: var(--ink-1);
+}
+.push-pane .tg-ok, .push-pane .tg-no {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink-1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.push-pane .tg-ok { background: var(--accent); color: var(--accent-ink); }
+.push-pane .tg-ok:active, .push-pane .tg-no:active { filter: brightness(.92); }
+
+/* ---------- 周期账清单 (1.15.0, 设置页里再推一层): 一行一条规则 — 类别对
+   金额、下一笔哪天入、从哪天到哪天; 删除两道闸 (点删除亮「确认删除」, 与
+   全应用的删除同一套礼数), 删了就停 (已落的账留着) ---------- */
+.push-pane .cy-rules-row { padding: 12px 14px; }
+.push-pane .cy-rules-row + .cy-rules-row { border-top: 1px solid var(--hairline); }
+.push-pane .cy-main { display: flex; align-items: center; gap: 10px; }
+.push-pane .cy-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600;
+                      color: var(--ink-1); overflow: hidden; text-overflow: ellipsis;
+                      white-space: nowrap; }
+.push-pane .cy-amt { flex: none; font-size: 14px; color: var(--ink-1);
+                     font-variant-numeric: tabular-nums; }
+.push-pane .cy-del {                 /* 删除笔: 与标签管理的「改名」笔同一副身 */
+  flex: none; padding: 4px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-3); font-size: 12.5px;
+}
+.push-pane .cy-del:active { filter: brightness(.92); }
+.push-pane .cy-del.yes { background: var(--red); color: #fff; font-weight: 600; }
+.push-pane .cy-sub-line { margin-top: 3px; font-size: 12px; color: var(--ink-3);
+                          font-variant-numeric: tabular-nums; }
+
+/* ---------- 报表截图 (10-10 用户点名「报表保存截图, 下载到手机相册」): 海
+   报画在 canvas 里 (bookkeeping-report-shot.js), 预览框与筛选/日历同一副
+   bk-sheet — 图居中满宽 (bs-body 自带左右呼吸边)。长按存图那条小字提示
+   10-11 撤下 (用户点名「长按图片保存去掉」) ---------- */
+.push-pane .shot-img { display: block; width: 100%; border-radius: 12px;
+                       border: 1px solid var(--hairline); }
+
+/* ---------- 筛选两页横滑 (10-10 用户点名「左右滑动要可以切换」): 两页常驻,
+   原生滚动 + scroll-snap: 跟手、松手没滑到位自动弹回 = 手势可取消; 页签钉
+   在顶上不跟滑; 两页纵向各自滚 (类别树翻得深不带进标签页), 弹框身不再纵滚
+   (报表的 gran 横滑分页 10-15 退役后, 这副是仓里仅存的横滑分页器) ---------- */
+.push-pane .flt-pager {
+  flex: 1; min-height: 0;              /* 吃满弹框余高, 页在器里各自滚 */
+  display: flex; gap: 10px;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;           /* 原生 snap 平移要链上放行 pan-x
+                                          (touch-action 是链式约束, 祖辈掐了
+                                          子孙放行也没用 — my-music 分页器
+                                          同款明写) */
+  -webkit-overflow-scrolling: touch;
+}
+.push-pane .flt-page {
+  flex: 0 0 100%; width: 100%; scroll-snap-align: start;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;                  /* 页只纵滚, 横向归器 (别自己橡皮筋) */
+  overscroll-behavior: contain;        /* 页内回弹, 不牵层外 */
+}
+.push-pane #flt-body { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ---------- 日历跟手划月 (10-10 用户点名「滑动一定要跟手, 并且可以通过手
+   势取消」): 三张月格并卧一条轨道 — 当前月居中, 上/下月两翼影子候场; 划动
+   整条轨道横移 (JS 拖 transform, 手就是动画), 松手过了 1/3 或带甩劲才换月,
+   拖回来弹回 = 手势取消; clip 拦住轨道横溢 (弹框身才能安心纵滚) ---------- */
+.push-pane .rc-clip { overflow: hidden; }
+.push-pane .rc-track { position: relative; touch-action: pan-y; will-change: transform; }
+.push-pane .rc-ghost { position: absolute; top: 0; left: -100%; width: 100%; }
+.push-pane .rc-ghost.next { left: 100%; }

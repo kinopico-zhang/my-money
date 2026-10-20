@@ -1,11 +1,12 @@
 // bookkeeping-amount-pad — My Money 金额键盘: 表达式实时预览 + ⌫ 长按清空
 // + 改账带出的旧金额首个数字键直接重打 (不追加) + 完成 (saveEntry 求值落本地账本, 待同步)。
-// 纯计算在 amount-calculator.js。
+// 纯计算在 amount-calculator.js。设了周期账的, 完成 = 存账 + 规则上服务端 (bookkeeping-recurring)。
 // 拆自 bookkeeping.js (结构化重构: 代码逐字节未动, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
 /* global $, entries, dirty, persist, render, scheduleSync,
           uuid, sheetKind, sheetCat, sheetTags, editingId, closeSheet,
-          whenPicked, evaluateAmount, applyAmountKey, treeFor */
+          whenPicked, evaluateAmount, applyAmountKey, treeFor,
+          cyc, submitCycle */
 /* exported refreshAmountPreview, saveEntry */
 
 function refreshAmountPreview() {      // 表达式 (含运算符) 的实时结果, 裸数字不打扰
@@ -103,5 +104,6 @@ function saveEntry() {
   persist();
   render();
   scheduleSync();
+  if (cyc.on) submitCycle(entry);   // 周期账: 首账 (这一笔) 落本地, 规则紧跟上服务端
   return true;
 }

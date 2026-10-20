@@ -18,6 +18,7 @@ from ..models import User
 from ..schemas import ChangelogVersion
 from . import changelog, store
 from .category_admin import admin as category_admin
+from .recurring_admin import admin as recurring_admin
 from .schemas import (CategoryTree, EntryOut, SyncRequest, SyncResponse)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -144,6 +145,7 @@ def bookkeeping_sync(body: SyncRequest, request: Request,
     """
     user = _require_user(request, users)
     try:
+        store.materialize(bk)   # 周期账先落账: 到点的这拨随本次增量一起下发
         rows, server_now = store.sync_entries(
             bk, user.uuid, body.entries, body.last_sync)
     except ValueError as exc:
@@ -163,5 +165,6 @@ def bookkeeping_sync(body: SyncRequest, request: Request,
 
 bk_app.include_router(api)
 bk_app.include_router(category_admin)
+bk_app.include_router(recurring_admin)
 # 记账静态: 带 ?v= 的回一年 immutable (?v= 家规配套 — 手机公网导航提速的主修)
 bk_app.mount("/static", VersionedStaticFiles(directory=STATIC_DIR), name="static")

@@ -92,16 +92,18 @@ def test_bookkeeping_calendar_float_panel():
 
 
 def test_bookkeeping_calendar_bubble_content():
-    """胶囊的里子: 收支带方向色 + 定宽 + ‹ › 居中对齐 + 金额简写 + 换月对滑。"""
+    """胶囊的里子: 收支带方向色 + 定宽 + ‹ › 居中对齐 + 金额给足位数 + 换月对滑。"""
     base = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
     page_css = (base / "css" / "bookkeeping-page.css").read_text(encoding="utf-8")
     render = (base / "bookkeeping-render.js").read_text(encoding="utf-8")
     # 胶泡收支带方向色 (支出柔红/收入柔绿 — 日历格子/账目行同一副色, 磨砂里一眼
-    # 分得清); 金额走紧凑写法 (上千缩 1.2千/上万缩 1.2万 — 中间窗口宽度有限,
-    # 长数字简写不硬挤, 真放不下才省略号兜底)
-    assert '<span class="e">支 ${calAmt(t.expense)}</span>' in render \
-        and '<span class="i">收 ${calAmt(t.income)}</span>' in render
-    assert "if (n >= 1000) return" in render and "}千`;" in render
+    # 分得清); 金额给足位数 (10-11 用户点名「缩小日历的支出收入数字不要缩
+    # 写」): 胶泡与大日历标题同一副 fmtMoney, 不再缩 千/万 — 真放不下才省
+    # 略号兜底; 紧凑写法 calAmt 只剩日历格子还在用 (格子窄, 放不下整副金额)
+    assert '<span class="e">支 ${fmtMoney(t.expense)}</span>' in render \
+        and '<span class="i">收 ${fmtMoney(t.income)}</span>' in render
+    assert "if (n >= 1000) return" in render and "}千`;" in render \
+        and "calAmt(s.exp)" in render
     assert "#cal-bar .msum .e { color: var(--red); }" in page_css \
         and "#cal-bar .msum .i { color: var(--green);" in page_css
     # 胶泡文字一副面孔: 月份/收支同一副字号粗细 (.msum 不再自带小一号细一档, 都

@@ -14,7 +14,9 @@ from .engine import (
     migrate_columns,
     session_factory,
 )
-from .models import Category, Entry, EntryBase
+from .models import Category, Entry, EntryBase, Recurring
+from .recurring import (RecurringIn, RecurringOut, create_rule, delete_rule,
+                        list_rules, materialize)
 from .sync import MAX_SYNC_UPLOAD, sync_entries
 
 __all__ = [
@@ -23,12 +25,19 @@ __all__ = [
     "Category",
     "Entry",
     "EntryBase",
+    "Recurring",
+    "RecurringIn",
+    "RecurringOut",
     "category_tree",
     "create_all",
+    "create_rule",
+    "delete_rule",
     "dispose_engine",
     "engine",
     "get_db",
     "init_engine",
+    "list_rules",
+    "materialize",
     "migrate_columns",
     "seed_default_categories",
     "session_factory",

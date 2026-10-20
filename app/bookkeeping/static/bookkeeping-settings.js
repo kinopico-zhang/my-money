@@ -1,19 +1,22 @@
 // bookkeeping-settings — 设置视图 (1.8.0 起住推入层, 原 settings.html 整页退役):
-// 当前账号 (/api/me) 与版本号 (更新日志第一条) 拉接口填上; 类别管理/更新日志
-// 在层里再推一层; 退出登录 POST 完清 cookie 回登录页。更新日志视图 (原
+// 当前账号 (/api/me) 与版本号 (更新日志第一条) 拉接口填上; 类别管理/标签
+// 管理/周期账/更新日志在层里再推一层; 退出登录 POST 完清 cookie 回登录页。更新日志视图 (原
 // changelog.html) 也住这 — 小件同箱 (渲染函数模式照 my-music 的
 // music-settings-view / music-changelog-view, 渲染目标由调用方给)。
+// 1.15.0: 设置页顶部大标题/返回钮/右划都退役 (底部 tab 栏就是路, 回明细
+// 点 tab) — 内容顶头就上; 更新日志是层级深处, 标题+返回钮照旧。
 "use strict";
-// 类别管理/更新日志的入口是 data-push 钮 — 推层委托在 bookkeeping-push.js。
+// 类别管理/标签管理/更新日志的入口是 data-push 钮 — 推层委托在 bookkeeping-push.js。
 /* exported renderChangelogView, renderSettingsView */
 
 // ------------------------------------------------------------ 设置
 async function renderSettingsView(target) {
   target.innerHTML = `
-    <div class="pane-title">设置</div>
     <div class="card">
       <div class="row"><span class="lbl">当前账号</span><span class="val" id="me-name">…</span></div>
       <button type="button" class="row" data-push="categories"><span class="lbl">类别管理</span><span class="chev">›</span></button>
+      <button type="button" class="row" data-push="tags"><span class="lbl">标签管理</span><span class="chev">›</span></button>
+      <button type="button" class="row" data-push="cyc"><span class="lbl">周期账</span><span class="chev">›</span></button>
       <button type="button" class="row" data-push="changelog"><span class="lbl">更新日志</span><span class="chev">›</span></button>
       <div class="row"><span class="lbl">版本</span><span class="val" id="ver">…</span></div>
     </div>

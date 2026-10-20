@@ -1,19 +1,22 @@
 // bookkeeping-entry-sheet — My Money 记/改一笔 (底部弹层):
 // 顶部收入/支出标签页 + 金额行类别牌 (点开弹类别树选层: 大类手风琴, 点开才见小类)
 // + 5×3 类别格 (热度排: 时间窗内频率倒排 → 窗外 LRU → 树序垫底)
-// + 时间 iOS 闹钟式拨轮 (日期/时/分三列) + 标签列表层
+// + 时间 iOS 闹钟式拨轮 (日期/时/分三列; 周期账的开始/结束/入账时刻也借
+//   它拨 — 收列换副面孔) + 标签列表层
 // (单选一枚选中即收, 创建时间新→旧, 顶部可打新标签) + 备注浮层输入
 // (点备注行弹, 从行原位升起 rides 系统键盘; 系统键盘回车/点别处收) + 整层手势
 // (左右划换收支 — 只换类别那一摊; 任意部位下拽关层) + 删除/点行改账。
 // 类别聪明事 (逻辑在 bookkeeping-categorizer.js): 备注收起时按历史备注自动配类别,
 // 新记支出没选类别时按拨轮钟点预选一顿饭 — 手选/带出的绝不覆盖。
 // 金额键盘常驻吸底 (amount-pad), 键盘上的「完成」就是保存。
+// 周期账面板 (bookkeeping-recurring.js) 开层回零/关层收面板挂在这。
 // 拆自 bookkeeping.js (结构化重构, 经典脚本按 bookkeeping.html 里的顺序加载, 跨模块引用走全局)。
 "use strict";
 /* global $, esc, entries, dirty, persist, render, scheduleSync,
-          parseTags, todayStr, nowTime, pad, catIcon, catTree,
+          parseTags, todayStr, nowTime, pad, catIcon, catTree, loadLS,
           refreshAmountPreview, matchNoteCategory, buildNoteIndex,
-          rankCategories, mealCategoryByHour */
+          rankCategories, mealCategoryByHour,
+          resetCyclePanel, closeCycPick */
 /* exported closeSheet, fillChips, whenPicked */
 
 // ---------- 记/改一笔 (底部弹层) ----------
@@ -47,9 +50,12 @@ function tagLib() {               // 列表数据: 本账本新打的在最前 (
   const seeds = ((catTree && catTree.tags) || [])    // 旧缓存里 tags 还是串数组, 兼一手
     .map(t => typeof t === "string" ? { name: t, created: "" } : t);
   const seedNames = new Set(seeds.map(s => s.name));
+  const dict = loadLS("bk-tags-v1", [])              // 标签管理里手动添的 (还没上过账)
+    .filter(t => typeof t === "string" && t && !seen.has(t) && !seedNames.has(t))
+    .map(name => ({ name, created: "" }));
   return [...local.filter(t => !seedNames.has(t)).reverse()
              .map(name => ({ name, created: "" })),
-          ...seeds];
+          ...seeds, ...dict];
 }
 
 function tpRow(t) {                // 名字前带 # (主页账目行同款 — 一眼认得出这截是标签; data-tag 留原名)
@@ -332,29 +338,45 @@ function buildDateWheel(sel) {    // 以 sel 为中心重摆窗口, 轮位停在
   wpFace(scroll);
 }
 
+/* 拨轮的三副面孔 (1.15.0 周期账借调): entry = 记一笔的三列; date = 只拨
+   日期 (周期账的开始/结束, 时分两列收起); time = 只拨时分 (周期账的入账
+   时刻, 日期列收起 — 列的收起由 css 按 #when-pick 的 data-mode 管)。
+   wpSink 是 date/time 模式的落点 (访问器对象: 拨定回写, 开层读初值);
+   entry 模式照旧落 whenVal (记一笔的唯一事实源)。 */
+let wpMode = "entry";
+let wpSink = null;
+
 function wireDateWheel() {
   wireWheel($("#wp-date"), idx => {
     idx = Math.max(0, Math.min(wpDates.length - 1, idx));
-    whenVal.d = wpDates[idx];
+    const d = wpDates[idx];
     if (idx < 15 || idx > wpDates.length - 16)
-      buildDateWheel(whenVal.d);       // 拨到窗口边沿: 换一扇窗, 停位照旧
-    updateWhenPill();
+      buildDateWheel(d);       // 拨到窗口边沿: 换一扇窗, 停位照旧
+    if (wpMode === "entry") { whenVal.d = d; updateWhenPill(); }
+    else wpSink.d = d;         // date 模式: 拨定回借调方的落点
   });
 }
 
-function openWhenPick() {
+function openWhenPick(mode, sink) {
+  wpMode = mode; wpSink = sink || null;
+  const src = wpSink || whenVal;
   const pick = $("#when-pick");
+  pick.dataset.mode = mode;
+  pick.querySelector(".cp-head span").textContent = mode === "date" ? "日期" : "时间";
   pick.hidden = false;                 // 先显示再摆位 (hidden 没有高度, scrollTop 立不住)
-  buildDateWheel(whenVal.d);
-  fillLoop($("#wp-hour"), 24, i => `${pad(i)}时`, whenVal.hh);
-  fillLoop($("#wp-min"), 60, i => `${pad(i)}分`, whenVal.mm);
+  if (mode !== "time") buildDateWheel(src.d);
+  if (mode !== "date") {
+    fillLoop($("#wp-hour"), 24, i => `${pad(i)}时`, src.hh);
+    fillLoop($("#wp-min"), 60, i => `${pad(i)}分`, src.mm);
+  }
   requestAnimationFrame(() => pick.classList.add("on"));
 }
 
 function closeWhenPick() {
   const pick = $("#when-pick");
   pick.classList.remove("on");
-  setTimeout(() => { pick.hidden = true; }, 250);
+  setTimeout(() => { if (!pick.classList.contains("on")) pick.hidden = true; }, 250);
+  wpMode = "entry"; wpSink = null;     // 落点清场: 下回谁借谁再给
 }
 
 function sheetCats() {            // 当前方向选得上去的全部类别 (匹配/预选的合法集)
@@ -409,6 +431,7 @@ function openSheet(entry) {
   updateNoteRow();
   sheetTags = entry ? [...(entry.tags || [])] : [];
   updateTagPill();
+  resetCyclePanel(entry);       // 周期账面板回零: 新记才开这个口 (初值跟这一笔的日期时刻走)
   $("#sheet-del").hidden = !entry;
   fillChips();
   updateAmtHead();
@@ -423,6 +446,7 @@ function closeSheet() {
   closeCatPick();               // 类别选层若还开着, 跟着收
   closeWhenPick();              // 时间拨轮同理
   closeTagPick();               // 标签列表同理
+  closeCycPick();               // 周期账设置层同理
   noteKbOpened = false;         // 程序化收起: 不触发备注匹配
   closeNoteKb();                // 备注浮层同理 (键盘落, 数字键盘回位)
   const mask = $("#sheet-mask"), sheet = $("#sheet");
@@ -617,12 +641,17 @@ $("#cp-list").addEventListener("click", e => {
 });
 
 // 时间牌点开 = 拨轮; 三列各自拨定回写 whenVal, 关层即存下所选时刻
-$("#when-btn").addEventListener("click", openWhenPick);
+$("#when-btn").addEventListener("click", () => openWhenPick("entry"));
 $("#wp-x").addEventListener("click", closeWhenPick);
 $("#wp-mask").addEventListener("click", closeWhenPick);
-wireLoop($("#wp-hour"), 24, v => { whenVal.hh = v; updateWhenPill(); });
-wireLoop($("#wp-min"), 60, v => { whenVal.mm = v; updateWhenPill(); });
+wireLoop($("#wp-hour"), 24, v => wpSet(v, "hh"));
+wireLoop($("#wp-min"), 60, v => wpSet(v, "mm"));
 wireDateWheel();
+
+function wpSet(v, key) {             // 时/分拨定: entry 模式回 whenVal, time 模式回借调方
+  if (wpMode === "entry") { whenVal[key] = v; updateWhenPill(); }
+  else wpSink[key] = v;
+}
 
 function switchKind(kind, silent) {  // 点标签页 / 左右划共用: 只换类别那一摊 (金额/备注/键盘都不动)
   if (kind === sheetKind) return;

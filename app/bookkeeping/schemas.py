@@ -6,23 +6,15 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 
-class EntryIn(BaseModel):
-    """客户端上传的一笔账 (id 由客户端生成, 离线可建)。
+class _EntryCore(BaseModel):
+    """记账上传模型的公共体 (EntryIn / 周期账 RecurringIn 共用): 金额恒正、
+    收支方向、类别/标签/备注 — 标签同一副清洗 (去空白/井号, 去重截断)。"""
 
-    不带记账人字段: 服务端按会话落 created_by / updated_by,
-    谁同步的这版就记谁 (每一笔都记是谁记的)。"""
-
-    id: str = Field(min_length=8, max_length=64)
-    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")    # 记账日期
-    time: str = Field(default="",
-                      pattern=r"^$|^([01][0-9]|2[0-3]):[0-5][0-9]$")   # 时刻
     amount: float = Field(gt=0, le=1e9)                 # 元 (恒正, 收支看 kind)
     kind: Literal["expense", "income"]
     category: str = Field(default="", max_length=20)
     tags: list[str] = Field(default_factory=list)       # 标签 (≤5 个)
     note: str = Field(default="", max_length=200)
-    deleted: bool = False
-    updated_at: datetime                                # 客户端版本时间 (LWW)
 
     @field_validator("tags")
     @classmethod
@@ -36,17 +28,36 @@ class EntryIn(BaseModel):
         return out[:5]
 
 
-class EntryOut(BaseModel):
-    """下发给客户端的账目 (记账人已解析成名称)。"""
+class EntryIn(_EntryCore):
+    """客户端上传的一笔账 (id 由客户端生成, 离线可建)。
 
-    id: str
-    date: str
-    time: str = ""
+    不带记账人字段: 服务端按会话落 created_by / updated_by,
+    谁同步的这版就记谁 (每一笔都记是谁记的)。"""
+
+    id: str = Field(min_length=8, max_length=64)
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")    # 记账日期
+    time: str = Field(default="",
+                      pattern=r"^$|^([01][0-9]|2[0-3]):[0-5][0-9]$")   # 时刻
+    deleted: bool = False
+    updated_at: datetime                                # 客户端版本时间 (LWW)
+
+
+class _EntryOutCore(BaseModel):
+    """记账下发模型的公共体 (EntryOut / RecurringOut 共用)。"""
+
     amount: float
     kind: Literal["expense", "income"]
     category: str
     tags: list[str] = Field(default_factory=list)
     note: str
+
+
+class EntryOut(_EntryOutCore):
+    """下发给客户端的账目 (记账人已解析成名称)。"""
+
+    id: str
+    date: str
+    time: str = ""
     deleted: bool
     updated_at: datetime
     created_by_name: str

@@ -9,16 +9,16 @@ from tests.bookkeeping_sync_helpers import _user
 # ---------------------------------------------------------------- 类别 (挖财导入)
 
 def test_categories_seeded_from_wacai(usersdb, bkdb):
-    """类别树种子: 空库建好就有 (挖财导出的 163 类), 大类在前子类随后。"""
+    """类别树种子: 空库建好就有 (挖财 172 类); 收入 24 大类为 2026-10-08 撞号补全 (公积金/报销款等 9 个)。"""
     from app.bookkeeping import store  # pylint: disable=import-outside-toplevel
     tree = store.category_tree(bkdb)
     assert len(tree.expense) == 14           # 支出大类
-    assert len(tree.income) == 15            # 收入大类
+    assert len(tree.income) == 24            # 收入大类 (平树, 无子类)
     canyin = tree.expense[0]
     assert canyin.name == "餐饮"
     assert "早餐" in canyin.children and "餐饮其他" in canyin.children
     income_names = [group.name for group in tree.income]
-    assert "工资薪水" in income_names and "顺风车" in income_names
+    assert "工资薪水" in income_names and "顺风车" in income_names and "公积金" in income_names   # 公积金=撞号补回
     # 子类总数对上 (大类的子类拼起来)
     assert sum(len(group.children) for group in tree.expense) == 134
     assert all(group.children == [] for group in tree.income)
@@ -44,7 +44,7 @@ def test_categories_seeded_only_once(usersdb, bkdb):
     store.seed_default_categories()
     count = bkdb.execute(
         select(func.count()).select_from(store.Category)).scalar_one()
-    assert count == 163
+    assert count == 172
 
 
 def test_categories_api_serves_tree(usersdb):

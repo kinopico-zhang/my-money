@@ -42,6 +42,37 @@ class Entry(EntryBase):
     deleted: Mapped[bool] = mapped_column(default=False)
 
 
+class Recurring(EntryBase):
+    """周期账规则 (1.15.0): 记一笔时顺手立下的重复设定。
+
+    只存「怎么重复」, 账本行不预生成 — 同步时由 store/recurring.materialize
+    现落。anchor_date 是手工记的那笔首账 (只往后生成, 不回头补); next_date
+    是待落的下一笔 (空 = 收摊); 入账日期随周期各表一个字段: weekly 用
+    post_day 0-6 (周日=0), monthly/yearly 用 post_day 1-31 (短月自动收
+    月底) + yearly 的 post_month 1-12; post_time 是入账时刻 (空 = 当天
+    零点就算到点)。删除也是墓碑: 已落的账留着, 之后不再生成。"""
+
+    __tablename__ = "recurring"
+
+    id: Mapped[str] = mapped_column(primary_key=True)     # 服务端 uuid
+    amount: Mapped[float]                                  # 元 (恒正, 收支看 kind)
+    kind: Mapped[Literal["expense", "income"]] = mapped_column(String)
+    category: Mapped[str] = mapped_column(String, default="")
+    tags: Mapped[str] = mapped_column(String, default="")  # 逗号连接 (≤5)
+    note: Mapped[str] = mapped_column(String, default="")
+    cycle: Mapped[str] = mapped_column(String)             # daily/weekly/monthly/yearly
+    post_day: Mapped[int] = mapped_column(default=0)       # weekly 周几 0-6 / 月·年 几号 1-31
+    post_month: Mapped[int] = mapped_column(default=1)     # yearly 几月 1-12
+    post_time: Mapped[str] = mapped_column(String, default="")   # 入账时刻 HH:MM (可空)
+    start_date: Mapped[str] = mapped_column(String)        # 从哪天起 YYYY-MM-DD
+    end_date: Mapped[str] = mapped_column(String, default="")    # 空 = 不限
+    anchor_date: Mapped[str] = mapped_column(String)       # 首账日期 (手工那笔)
+    next_date: Mapped[str] = mapped_column(String, default="")   # 待落下一笔 (空 = 收摊)
+    created_by: Mapped[str]                                # 立规则的记账人 (uuid)
+    created_at: Mapped[datetime]
+    deleted: Mapped[bool] = mapped_column(default=False)   # 墓碑 (已落的账不撤)
+
+
 class Category(EntryBase):
     """类别树 (大类 + 子类), 种子数据来自挖财账本导出 (default_categories)。
 
