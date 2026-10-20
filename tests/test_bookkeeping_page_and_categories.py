@@ -180,8 +180,8 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     for sel in (".cat-tiles .tile.on", ".cp-row.on", ".amt-cat.on"):
         assert f"{sel} .ci{on_ci}" in css
     #    ↑ 选中翻本色圆底压白线稿 (1.5.2 续: 底 = 行内 --cc 压深一档, 休眠 --sel 钩子启用)
-    assert "--icon-tint: #2c2c2e;" in css \
-        and ".ci-ring" not in css   # 未选中圆底 = 暗井一枚 (红/绿淡底撤), 边框规则整个撤掉
+    assert "--icon-tint: #F6F6F6;" in css \
+        and ".ci-ring" not in css   # 未选中圆底 = 浅井一枚 (红/绿淡底撤), 边框规则整个撤掉
     assert "margin-left: max(0px, calc((100% + 12px) / 10 - 36px));" in css   # 圆心对齐格子第一列 (半图标 44/2)
     assert ".cal-day .e { color: var(--red); }" in css   # 日历每天支出柔红
     assert "font-weight: 650; font-variant-numeric: tabular-nums;\n  color: var(--red);" in css
@@ -196,5 +196,5 @@ def test_bookkeeping_sheet_kind_colors_and_pad():
     assert ".cat-tiles.swap-l { animation: kind-swap-l .3s ease; }" in css
     #    ↑ 左右切换: 类别格顺着划的方向滑入 (去支出从右进/去收入从左进)
     assert (".amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; "
-             "color: color-mix(in srgb, #ebebf5 62%, var(--icon-tint)); }") in css
+             "color: var(--ink-2); }") in css   # 2.0: 灰线稿吃不透明 #999
     #    ↑ 弹层默认脸灰线稿 1.6.1 起不透明 (62% 白压平在井底上): 半透明灰交叉处叠亮

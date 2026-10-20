@@ -1,39 +1,38 @@
 /* bookkeeping-page — bookkeeping 页样式。拆自 bookkeeping.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 :root {
-  color-scheme: dark;
-  /* 换装 my-music 同款暗色 (1.5.0, 用户令「配色参考 my music」): 纯黑壳 +
-     iOS 三层灰面 (卡 #1c1c1e / 控件静止 #2c2c2e / 按下·选中 #3a3a3c — 没有东西
-     常驻最亮那档), 白墨三档, 发丝线白 9%。主强调色用户拍板蓝 #3987e5
-     (my-music home 的主按钮/链接/选中色; 不跟 my-music 的红 — 记账里红=支出,
-     界面强调色得让开语义色)。平贴黑底的卡不投影只描边, 浮层才投黑影;
-     按压一律提亮不变暗 (my-music 全仓规矩)。收支红绿在黑底上各提亮一档
-     (my-music 暗底上的销毁红/成功绿), 图标线稿同理; 深档填色底黑白通吃不动 */
-  --bg: #000;                      /* 壳底: 纯黑 (my-music 同款; 橡皮筋回弹也露黑) */
-  --bg-ink: rgba(235,235,245,.85); /* 坐在黑壳上的字: 同步条/日子行/哨兵/空态
-                                       (卡片上的字是 ink 系; 黑壳上比卡片亮半档,
-                                       日历日子数字这类主内容要够亮) */
-  --surface: #1c1c1e;              /* 卡面: iOS 深色抬升灰 (黑底上的卡) */
-  --surface-2: #2c2c2e;            /* 圆钮/图标井: 控件静止档 */
-  --surface-3: #3a3a3c;            /* 按下·选中·嵌套输入档 (键盘数字键也在这档) */
-  --press: rgba(255,255,255,.06);  /* 按下 = 提亮一层: 深面上的自然反应 (iOS 键感) */
-  --ink-1: #f5f5f7;                /* 主文字: Apple 偏白 (不是死白) */
-  --ink-2: rgba(235,235,245,.62);  /* 次文字 */
-  --ink-3: rgba(235,235,245,.32);  /* 弱文字: 「几点·谁记的」这类辅助行 */
-  --hairline: rgba(255,255,255,.09);   /* 发丝线: 行分隔 + 黑底卡的描边 */
-  --accent: #3987e5;               /* 蓝 (my-music home 主行动色): 今天的胶囊/完成键/
-                                       加号/选中态 — 只给「选中/可执行」 */
-  --accent-ink: #fff;              /* 压在蓝上的白字 (my-music 登录钮同款);
-                                       黑底上的光标/勾选不再借它 — 直接用 --accent */
-  --steel-2: #1c1c1e;              /* 键盘运算键 (暗键盘里比数字键沉一档) */
-  --steel-3: #232326;              /* 键盘 ⌫ 键 (沉档与静止档之间的半档) */
-  --green: #5fd47f;                /* 收入: my-music 暗底成功绿 (黑底上小字也读得清) */
-  --red: #e5484d;                  /* 支出: my-music 暗底销毁红 (兼做白字按钮底) */
-  --icon-red: #e5666a;             /* 类别图标线稿的方向红: 暗井上要亮要饱和 (1.5.0
-  的粉彩档 #d18f8f 坐 #2c2c2e 发灰 — 2026-10-02 用户点名「图标颜色没适配暗黑」) */
-  --icon-green: #5fd47f;           /* 方向绿 (= 主页收入绿, 同上) */
-  --icon-tint: #2c2c2e;            /* 未选中圆底: 暗井 (控件静止档; 白井在黑底上太炸) */
-  --tab-h: 56px;                   /* 底部常驻 tab 栏高 (1.15.0): 主内容/推入层/悬浮加号
-                                       都拿它垫底, 安全区另算 */
+  color-scheme: light;
+  /* 2.0 挖财亮色 (复刻挖财记账 com.wacai365 v13.1.6): 令牌权威值 =
+     resources.arsc 逆向 (jz_* 记账模块, 2026-10-20 取证)。页底 #F6F6F6
+     (jz_background_color), 卡 #FFFFFF (jz_list_bg_color), 主字 #333333
+     (jz_major_text), 提示 #999999 (jz_hint_txt), 弱字 #CACACC
+     (jz_minor_text), 发丝线 #ECECEC (jz_divider_color)。强调橘 #FF7A40
+     (jz_theme_red — ⊕/保存/激活); 收 #32B572 支 #DE4A3F (挖财语义色)。
+     标尺沿用 16px 网格; 挖财 size{N}=Ndp 字面标尺与本仓同构 */
+  --bg: #F6F6F6;                      /* 壳底: 挖财页底灰 (jz_background_color) */
+  --bg-ink: #999;                  /* 坐在壳底上的字: 日子行/哨兵/空态 (= jz_hint_txt;
+                                       卡外灰底上的次级灰字, 与卡上 ink-2 同值不同位) */
+  --surface: #FFF;                 /* 卡面: 挖财白卡 (jz_list_bg_color), 平贴灰底不加边 */
+  --surface-2: #F6F6F6;               /* 圆钮/图标井: 控件静止档 (页底灰当井) */
+  --surface-3: #ECECEC;               /* 按下·选中·嵌套输入档 (= 发丝线灰) */
+  --press: rgba(0,0,0,.05);           /* 按下 = 压暗一层: 白面上的自然反应 (iOS 键感) */
+  --ink-1: #333;                   /* 主文字: jz_major_text */
+  --ink-2: #999;                   /* 次文字: jz_hint_txt */
+  --ink-3: #CACACC;                   /* 弱文字: jz_minor_text (「几点·谁记的」这类辅助行) */
+  --hairline: #ECECEC;                /* 发丝线: jz_divider_color (行分隔) */
+  --accent: #FF7A40;                  /* 挖财橘 (jz_theme_red): ⊕ 中央钮/保存键/选中态 */
+  --accent-ink: #fff;                 /* 压在橘上的白字 */
+  --steel-2: #3F4250;                 /* 键盘运算键 (挖财深色键盘: 比键面沉一档的蓝灰) */
+  --steel-3: #46495A;                 /* 键盘 ⌫ 键 (沉档与键面之间的半档) */
+  --pad-face: #4A4D5B;                /* 键盘数字键面 (挖财记一笔键盘像素实测 rgb(74,77,91)) */
+  --pad-gap: #33353F;                 /* 键缝底 (1px 缝衬出来的深一档) */
+  --green: #32B572;                   /* 收入: 挖财收入绿 */
+  --red: #DE4A3F;                     /* 支出: 挖财支出红 */
+  --icon-red: #DE4A3F;                /* 类别图标线稿的方向红 (= 支出红, 白井上本就够饱和) */
+  --icon-green: #32B572;              /* 方向绿 (= 收入绿) */
+  --icon-tint: #F6F6F6;               /* 未选中圆底: 浅井 (白卡上的灰圆, 挖财图标底座) */
+  --tab-h: 56px;                      /* 底部 tab 栏高: 主内容/推入层都拿它垫底, 安全区另算 */
+  --cover-1: #7699D7;                 /* 首页封面蓝渐变上端 (挖财封面像素实测 ±3, Dart 侧无 token) */
+  --cover-2: #698CC8;                 /* 封面蓝渐变下端 */
 }
 /* 顶带下限 (my-music music-base.css 同款, 1.8.1 立的规矩): iOS 26+ 主屏
    独立模式的系统磨砂带比安全区深一截 (WebKit 301994 还把
@@ -74,8 +73,8 @@
 ::-webkit-scrollbar { display: none; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-/* 壳就是纯平黑 (my-music 同款): 1.4.0 那层钉在视口上的冰蓝渐变环境光随换装
-   撤了 — html 底色一黑到底, 不再需要固定伪元素垫底 */
+/* 壳就是页底灰一平到底 (挖财 jz_background_color): 橡皮筋回弹/overscroll 露的
+   都是同一片灰, 不另画固定层垫底 */
 body {
   background: none; color: var(--ink-1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
@@ -101,9 +100,9 @@ button, a, summary { touch-action: manipulation; }
 .sync-strip {
   position: fixed; top: 0; left: 0; right: 0; z-index: 68;
   display: flex; align-items: center; gap: 6px; justify-content: center;
-  font-size: 11.5px; color: var(--bg-ink);
+  font-size: 11.5px; color: rgba(255,255,255,.92);
   padding: var(--top-clear) 14px 7px;
-  background: rgba(10,10,12,.72); border-bottom: 1px solid rgba(255,255,255,.12);
+  background: rgba(20,22,30,.72); border-bottom: 1px solid rgba(255,255,255,.12);
   transform: translateY(-101%);
   transition: transform .3s cubic-bezier(.32,.72,.35,1);
 }
@@ -111,23 +110,73 @@ button, a, summary { touch-action: manipulation; }
 .sync-strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
 .sync-strip.pending { color: #f0b13d; }
 .sync-strip.pending .dot { background: #f0b13d; }
-.sync-strip.off .dot { background: var(--bg-ink); }
+.sync-strip.off .dot { background: rgba(255,255,255,.55); }
 /* 静默期的问题态 (1.11.1, 用户点名「其他同步的提示不要特别明显」): 离线/
    没连上不再是亮堂堂一条 — 整条降半档挂着 (小一号再打六折), 不抢眼但低头
    看得见; 问题解除自己收, 想看报时下拉就是 */
 .sync-strip.hush { font-size: 10.5px; opacity: .62; }
 
-/* ---------- 日历卡 (主页顶: 月份切换 + 每天收支, 点日子跳到瀑布流那天)。
-   条子 1.11.0 起不占文档流, 顶衬由 main 自己吃 (原先靠条子的 padding 顶着) ---------- */
+/* ---------- 主页骨架 (2.0 挖财版式): 蓝渐变封面 (铺到 y=0 填 iOS 27 顶带 —
+   系统黑条压在深蓝上成「深蓝状态栏」观感, 带下内容钉在 --top-clear 之下)
+   + 快捷行 + 日历卡 + (过渡期) 账目瀑布流 ---------- */
 main {
   flex: 1; width: 100%; max-width: 560px; margin: 0 auto;
-  padding: calc(var(--top-clear) + 14px) 16px calc(env(safe-area-inset-bottom) + 96px);
+  padding: 0 16px calc(env(safe-area-inset-bottom) + var(--tab-h) + 40px);
 }
+/* 封面: 顶衬吃掉安全区/顶带, 渐变底从 y=0 一路铺到底沿 (负边距破 main 的
+   16px 侧衬, 全出血); 下沿圆角收个边, 快捷行骑在下沿上 */
+.cover {
+  margin: 0 -16px;
+  padding: calc(var(--top-clear) + 8px) 16px 34px;
+  background: linear-gradient(180deg, var(--cover-1), var(--cover-2));
+  border-radius: 0 0 18px 18px;
+}
+.cov-label { font-size: 12px; color: rgba(255,255,255,.78); }
+.cov-big {
+  font-size: 34px; font-weight: 700; color: #fff; line-height: 1.25;
+  font-variant-numeric: tabular-nums; margin-top: 2px;
+}
+.cov-sub {
+  display: flex; gap: 18px; margin-top: 6px;
+  font-size: 12px; color: rgba(255,255,255,.78);
+  font-variant-numeric: tabular-nums;
+}
+.cov-sub b { color: #fff; font-weight: 600; margin-left: 4px; }
+/* 月预算条 (设了预算才亮): 白 26% 底槽 + 白芯, 超支翻满红警示 */
+.cov-budget { margin-top: 12px; }
+.cov-budget .cb-track {
+  height: 4px; border-radius: 2px; overflow: hidden;
+  background: rgba(255,255,255,.26);
+}
+.cov-budget .cb-track i { display: block; height: 100%; background: #fff;
+  border-radius: 2px; transition: width .3s ease; }
+.cov-budget.over .cb-track i { background: var(--red); }
+.cov-budget .cb-txt {
+  display: flex; justify-content: space-between; margin-top: 5px;
+  font-size: 10.5px; color: rgba(255,255,255,.78);
+  font-variant-numeric: tabular-nums;
+}
+/* 快捷行: 三枚白卡骑在封面下沿 (负 margin 压上封面), 图标 + 一行字;
+   周期账走推入层, 明细/日历 (过渡期) 先滚到页内锚点 */
+.quick-row {
+  display: flex; gap: 10px;
+  margin: -22px 0 12px;
+}
+.q-cell {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 6px;
+  height: 74px; border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgba(105,140,200,.18);   /* 封面蓝投下来的软影 */
+  color: var(--ink-1); font-size: 12px; font-weight: 500;
+}
+.q-cell:active { background: var(--surface-2); }
+.q-cell svg { width: 26px; height: 26px; display: block; color: var(--accent); }
+/* ---------- 日历卡 (快捷行下: 月份切换 + 每天收支, 点日子跳到瀑布流那天) ---------- */
 .cal-card {
-  background: var(--surface); border: 1px solid var(--hairline);
-  border-radius: 18px; padding: 8px 10px 10px; margin-bottom: 12px;
-}              /* 平贴黑底的卡不投影 (my-music 全仓规矩): 层次交给发丝线描边 +
-                   比黑壳亮一档的卡面; 影子只留给真浮层 (磨砂胶囊/菜单/浮面板) */
+  background: var(--surface); border-radius: 18px; padding: 8px 10px 10px;
+  margin-bottom: 12px;
+}              /* 挖财白卡平贴灰底不加边 (jz_list_bg_color): 层次交给底色差 */
 .cal-head { display: flex; align-items: center; gap: 4px; }
 .cal-head button {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
@@ -155,9 +204,8 @@ main {
 .cal-day .e { color: var(--red); }      /* 每天支出柔红 (与账目行/记一笔同一个调子) */
 .cal-day .i { color: var(--green); }
 .cal-day.today .d { background: var(--accent); color: var(--accent-ink);
-  border-radius: 999px; padding: 0 5px; }   /* 今天 = 蓝胶囊压白字 (my-music home
-                                   的选中章同款 — 强调色只给「选中」; 白描一圈的
-                                   细线在深卡上立不住, 胶囊才立得住) */
+  border-radius: 999px; padding: 0 5px; }   /* 今天 = 橘胶囊压白字 (挖财 jz_theme_red
+                                   同款 — 强调色只给「选中/今天」) */
 .cal-day.blank { min-height: 0; }       /* 月初补位的空格 */
 /* 月尾补位的下月日子: 灰字不可点只管补足六行恒高; 日期数字与真日子同一道槽
    (顶对齐, 三个槽位让给真日子的水平线) */
@@ -205,15 +253,15 @@ main {
                                         (分身是定格快照本就不重排, 再圈一道, 外面
                                         一并少脏) — 帧率 */
   font-size: 12.5px; font-weight: 700; color: var(--ink-1);   /* 磨砂底随卡面淡, 月份/收支提到主文字色 (玻璃上仍读得清) */
-  background: rgba(44,44,46,.7);     /* 磨砂玻璃: 控件静止档的玻璃底 (my-music 浮动
-                                        件同款色), blur(20) 把底下划过的账糊成深影
-                                        透上来; 色值跟控件档同源 — 歇着的胶囊与
-                                        展开的日历同一副材料, 收拢落位不换脸 */
+  background: rgba(255,255,255,.78);   /* 磨砂玻璃: 白卡同源的玻璃底, blur(20) 把底下
+                                        划过的账糊成浅影透上来; 色值跟卡面同源 —
+                                        歇着的胶囊与展开的日历同一副材料,
+                                        收拢落位不换脸 */
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--hairline); border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);   /* 浮层档黑影 (my-music 浮钮/迷你条同款):
-                                        胶囊浮在内容上, 这才轮得到影子说话 */
+  box-shadow: 0 8px 24px rgba(105,140,200,.16);   /* 浮层档软影: 白胶囊浮在
+                                        灰底上, 影子说话但轻声 */
   visibility: hidden;
 }
 #cal-bar .cb-in {         /* 胶泡里子: ‹ 月份+收支 › — 收拢后段从分身内容交叉淡入
@@ -398,8 +446,8 @@ main {
   display: flex; justify-content: space-between;
   font-size: 12px; color: var(--bg-ink); padding: 0 4px 6px;
 }
-.entries {                /* 账目卡: 平贴黑底不投影, 发丝线描边 (与日历卡同规矩) */
-  background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px;
+.entries {                /* 账目卡: 挖财白卡平贴灰底 (与日历卡同规矩) */
+  background: var(--surface); border-radius: 18px;
   overflow: hidden;       /* 圆角裁住滑出的行身/删除钮 (钮在行内右侧, 不许露角) */
 }
 .entry {                  /* 左滑删除: 行只是裁剪框, 行身 (.sw-body) 与身后的删除钮分层 */
@@ -424,7 +472,7 @@ main {
   opacity: 0; pointer-events: none;
 }
 .entry:not(.dragging) .sw-body:active::after { opacity: 1; }   /* 按下压暗 (拖动中不糊脸) */
-.ci { color: var(--cc); }   /* 类别图标: 暗圆底 (svg 自带, 不描边) 上坐本色线稿
+.ci { color: var(--cc); }   /* 类别图标: 浅圆底 (svg 自带, 不描边) 上坐本色线稿
                           (stroke=currentColor); 记一笔弹层里另有收口 — 未选中
                           灰线稿, 选中翻本色圆底压白线稿 (entry-sheet.css) */
 .entry .cat-dot {      /* 类别井: 只管占位与排布 (34 方) — 圆底在 svg 里 */
@@ -468,8 +516,8 @@ main {
   position: absolute; left: 50%; top: 42%;      /* 比正中高一线 (iOS 警示框的落位) */
   transform: translate(-50%, -50%) scale(1.05);
   width: 272px; background: var(--surface); border-radius: 18px; overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0,0,0,.5);    /* 弹层浮在一切之上 — 菜单档黑影
-                                   (my-music 同款); 卡面发丝线描边收形 */
+  box-shadow: 0 12px 32px rgba(0,0,0,.18);    /* 弹层浮在一切之上 — 菜单档软影;
+                                   卡面白底自身立得住 */
   opacity: 0; transition: opacity .2s ease, transform .2s ease;
 }
 #del-confirm.on .dc-card { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -479,49 +527,46 @@ main {
 .dc-btn { display: block; width: 100%; padding: 13px 0; font-size: 16px;
   text-align: center; border-top: 1px solid var(--hairline); }
 .dc-btn:active { background: var(--press); }
-#dc-ok { color: #ff6961; font-weight: 600; }   /* 删除钮红字提亮一档 (暗卡上的销毁位,
-                                   my-music 暗底错误红同款 — 深红在深面上发闷) */
+#dc-ok { color: var(--red); font-weight: 600; }   /* 删除钮红字 (= 挖财支出红,
+                                   白卡上的销毁位) */
 
-/* ---------- 底部常驻菜单 (1.15.0) ---------- */
-/* 明细/报表/设置三枚主 tab; tab 不另起导航, 直接驱动推入层栈
-   (bookkeeping-push.js switchTab)。常驻在层之上 (z 69), 记一笔弹层起
-   (70) 才让位 —— 报表/设置页里也能随手切 tab, 加号任何页面都点得到 */
+/* ---------- 底部常驻菜单 (2.0 挖财三槽中央 morph) ---------- */
+/* [报表] [⊕/首页 中央槽] [我的]: 中央槽首页态 = 橘 ⊕ (点开记一笔), 其他
+   tab 态 morph 成「首页」跳回 (挖财中央槽同款语义); tab 字默认 #999 激活
+   #333 (jz 口径 — 选中不点亮强调橘, 橘只归中央 ⊕)。tab 不另起导航, 直接
+   驱动推入层栈 (bookkeeping-push.js switchTab)。常驻在层之上 (z 69),
+   记一笔弹层 (70) 起才让位 */
 #tab-bar {
   position: fixed; left: 0; right: 0;
   bottom: 0; z-index: 69;
   display: flex; max-width: 560px; margin: 0 auto;   /* 跟 main 同宽, 宽屏居中不摊大饼 */
-  background: var(--bg);
+  background: var(--surface);
   border-top: 1px solid var(--hairline);
   padding: 5px 8px calc(env(safe-area-inset-bottom) + 5px);   /* 安全区往里垫 (PWA 底横条) */
 }
-#tab-bar button {              /* 单枚 tab: 图标 + 一行小字, 平时弱字, 选中提亮变蓝 */
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+#tab-bar > button, .tb-mid { flex: 1; }    /* 三槽等宽: 报表 | 中央 | 我的 */
+#tab-bar button {              /* 单枚 tab: 图标 + 一行小字, 平时弱字, 选中提主字色 */
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 3px 0 1px;
-  color: var(--ink-3); font-size: 10.5px; font-weight: 500;
+  color: var(--ink-2); font-size: 10.5px; font-weight: 500;
 }
-#tab-bar button.on { color: var(--accent); font-weight: 600; }
+#tab-bar button.on { color: var(--ink-1); font-weight: 600; }
 #tab-bar button:active svg { transform: scale(.88); }
-/* 图标描边吃不透明弱灰 (1.6.1 类别图标同款教训): 直接吃 --ink-3 的半透明,
-   笔画交点 (报表的柱脚垫着底线、设置的滑轨接圆) 两笔叠色会深一截 — 32% 白
-   先在壳底纯黑上算成不透明, 观感与 rgba 版分毫不差, 交点与单根线条同色 */
 #tab-bar svg { width: 24px; height: 24px; display: block; transition: transform .15s ease;
-               color: color-mix(in srgb, #ebebf5 32%, var(--bg)); }
-#tab-bar button.on svg { color: var(--accent); }   /* 选中态整枚提蓝 (本就不透明) */
-
-/* ---------- 记一笔 (全局悬浮) ---------- */
-/* 右下角一枚蓝加号, 任何页面都在 (垫在 tab 栏上头一截); 统计/设置的入口
-   1.15.0 起搬去底部 tab 栏, 这里不再放暗井圆钮 */
-#fab-stack {
-  position: fixed; right: 18px;
-  bottom: calc(env(safe-area-inset-bottom) + var(--tab-h) + 18px);
-  z-index: 69;                       /* 压得住层 (65) 和同步条 (68); 记一笔弹层起 (70) 就让位 */
-}
-#fab {
-  width: 54px; height: 54px; border-radius: 50%;
-  background: var(--accent);                   /* 蓝球压白加号 (my-music 登录钮
-                                    同一支蓝 — 全页唯一发光的可执行位) */
-  color: var(--accent-ink); font-size: 28px; font-weight: 300;
+               color: var(--ink-2); }
+#tab-bar button.on svg { color: var(--ink-1); }   /* 选中态整枚提到主字色 */
+/* 中央槽: 两副面孔 — .at-home 亮橘 ⊕ (记一笔入口), 否则亮「首页」(普通 tab
+   相, 回主页); 表现切换只翻 #tab-bar 的态类, 两枚按钮各自的听众不变 */
+.tb-mid { display: flex; justify-content: center; }
+.tb-add, .tb-home { flex: none; }
+.tb-add {                    /* 橘 ⊕: 挖财中央槽的记一笔钮 (jz_theme_red 压白加号) */
+  width: 46px; height: 46px; border-radius: 50%;
+  margin-top: -18px;         /* 破栏顶冒头一截 (挖财 ⊕ 骑在栏沿上) */
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 30px; font-weight: 300; line-height: 1;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,.5);   /* 黑色光晕垫着球 */
+  box-shadow: 0 6px 16px rgba(255,122,64,.4);   /* 橘球自带一圈暖晕 */
 }
-#fab:active { transform: scale(.94); }
+.tb-add:active { transform: scale(.94); }
+#tab-bar.at-home .tb-home { display: none; }
+#tab-bar:not(.at-home) .tb-add { display: none; }

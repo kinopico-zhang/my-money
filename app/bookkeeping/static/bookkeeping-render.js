@@ -21,7 +21,7 @@
 "use strict";
 /* global $, esc, WEEK, entries, pad, todayStr,
           catIcon, creatorName, fmtMoney, renderSyncStrip, curMonth,
-          visibleEntries */
+          visibleEntries, pushView */
 /* exported render */
 
 // ---------- 账目瀑布流 ----------
@@ -207,10 +207,33 @@ function jumpToMonth(mon) {     // 明细联动: 日历翻了 (箭头/左右划/
   jumpToDate(`${mon}-${pad(new Date(y, m, 0).getDate())}`);
 }
 
+// ---------- 封面 (2.0 挖财版式): 本月支出大数字 + 收入/结余 + 月预算条 ----------
+// 口径与日历标题/胶泡同一份 (feedMonths, buildFeed 顺着组一遍算出); 月预算
+// 存 localStorage bk-budget-v1 (输入口批次 4 落我的页), 没设不亮条
+function renderCover() {
+  const st = feedMonths.get(curMonth()) || { expense: 0, income: 0 };
+  const bal = st.income - st.expense;
+  $("#cov-expense").textContent = st.expense.toFixed(2);
+  $("#cov-income").textContent = st.income.toFixed(2);
+  $("#cov-balance").textContent = (bal < 0 ? "-" : "") + Math.abs(bal).toFixed(2);
+  const budget = parseFloat(localStorage.getItem("bk-budget-v1") || "") || 0;
+  const box = $("#cov-budget");
+  if (budget > 0) {
+    box.hidden = false;
+    box.classList.toggle("over", st.expense > budget);
+    $("#cb-fill").style.width = Math.min(st.expense / budget, 1) * 100 + "%";
+    $("#cb-used").textContent = "已用 " + Math.round(st.expense / budget * 100) + "%";
+    $("#cb-total").textContent = "月预算 " + budget.toFixed(2);
+  } else {
+    box.hidden = true;
+  }
+}
+
 function render() {
   const sig = feedSignature();  // 数据/筛选没变: 只刷日历和状态, 列表不动 (滚动不跳)
   if (sig !== feedSig) { feedSig = sig; buildFeed(); }
   renderCalendar();
+  renderCover();
   renderSyncStrip();
 }
 
@@ -413,6 +436,15 @@ $("#cal-grid").addEventListener("click", e => {
   if (btn) jumpToDate(btn.dataset.date);
 });
 $("#feed-top").addEventListener("click", drawLess);
+// 快捷行 (2.0): 周期账推入层; 明细/日历过渡期滚到页内锚点 (批次 3 换推入页)。
+// 直落不演 smooth — 全应用程序动画一副弹簧, 系统 smooth 全撤 (calendar_collapse 钉)
+$("#quick-row").addEventListener("click", e => {
+  const cell = e.target.closest("[data-q]");
+  if (!cell) return;
+  if (cell.dataset.q === "cyc") { pushView("cyc"); return; }
+  (cell.dataset.q === "calendar" ? $("#cal-card") : $("#entry-list"))
+    .scrollIntoView();
+});
 
 // ---------- 日历 ⇄ 顶部胶囊 (缩放全程跟手, 面板开合走弹簧) ----------
 // 日历卡顶一碰到 --cal-top 落位线, #cal-bar 就化身日历分身接管 (搬真身内容,

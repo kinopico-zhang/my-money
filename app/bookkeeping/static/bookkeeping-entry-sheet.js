@@ -613,7 +613,9 @@ function closeSheet() {
   }, true);
 })();
 
-$("#fab").addEventListener("click", () => openSheet(null));
+// 2.0: 右下角悬浮 ⊕ 退役, 记一笔入口 = 底栏中央槽橘 ⊕ (挖财三槽 morph 的
+// 首页面孔; 其他 tab 下中央槽变「首页」, 那两页想记账先回首页)
+$("#tab-add").addEventListener("click", () => openSheet(null));
 $("#sheet-mask").addEventListener("click", closeSheet);
 $("#sheet-close").addEventListener("click", closeSheet);
 

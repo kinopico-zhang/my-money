@@ -127,7 +127,7 @@ def test_calendar_month_watermark():
     assert '<div class="rc-month-bg" aria-hidden="true">${y}/${pad(m)}</div>' in js
     assert 'id="rc-month"' not in js and ".push-pane .rc-month {" not in css   # 小字年月行退役
     assert "rc-hint" not in js and ".rc-hint" not in css and "选结束日期" not in js
-    assert "z-index: -1;" in css and "rgba(235,235,245,.09)" in css \
+    assert "z-index: -1;" in css and "rgba(51,51,51,.08)" in css \
         and "pointer-events: none;" in css      # 沉底 + 不挡点按 (按到的还是日期)
     assert ".rc-d { opacity: .55; }" in css and "font-weight: 700; opacity: .85; }" in css \
         and ".rc-d.today:not(.sel) { box-shadow: inset 0 0 0 1.5px var(--ink-3);" in css

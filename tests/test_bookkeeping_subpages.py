@@ -17,45 +17,43 @@ def _static(name: str) -> str:
 
 
 def test_tab_bar_push_layers():
-    """底部常驻 tab 栏 (1.15.0): 明细/报表/设置三枚主 tab 驱动推入层栈
-    (不跳页), 旧加号上方的快捷圆钮退役, 入口全收进 tab 栏; 记一笔加号全局
-    悬浮 (垫在 tab 栏上头, 任何页面都点得到); 层挂点 #push-stack 在主页骨架
-    里, 层样式/层机制/视图脚本随主页一起装 (点开零网络零编译 — 「先弹页面
-    再慢慢加载数据」的终极形态)。"""
+    """底部常驻 tab 栏 (2.0 挖财三槽中央 morph): [报表|⊕/首页|我的] 三枚主
+    槽驱动推入层栈 (不跳页) — 中央槽首页态是橘 ⊕ (开记一笔), 其他 tab 态
+    morph 成「首页」跳回 (栏挂 .at-home 翻面孔, CSS 管); 明细 tab 退役
+    (明细内容批次 3 搬进推入页), 右下悬浮加号 fab 一并退役 (记一笔入口
+    全归中央 ⊕); 层挂点 #push-stack 在主页骨架里, 层样式/层机制/视图脚本
+    随主页一起装 (点开零网络零编译 — 「先弹页面再慢慢加载数据」的终极形态)。"""
     html = _static("bookkeeping.html")
     css = _static("css/bookkeeping-page.css")
     assert 'id="tab-bar"' in html and 'aria-label="主导航"' in html
-    for tab in ("home", "stats", "settings"):
+    for tab in ("home", "stats", "mine"):
         assert f'data-tab="{tab}"' in html, f"tab 栏缺 {tab} 标签"
     assert "quick-btn" not in html and "quick-btn" not in css   # 快捷圆钮退役
-    assert 'data-push="stats"' not in html and 'data-push="settings"' not in html
+    assert 'id="fab-stack"' not in html and 'id="fab"' not in html \
+        and '<div id="push-stack"></div>' in html   # fab 退役 (⊕ 进中央槽), 层挂点在骨架
     assert 'href="/bookkeeping/stats' not in html and \
         'href="/bookkeeping/settings' not in html   # 跳页入口退役
-    assert 'id="fab-stack"' in html and 'id="fab"' in html
-    assert '<div id="push-stack"></div>' in html
-    for src in ("css/bookkeeping-panes.css?v=35",
+    for src in ("css/bookkeeping-panes.css?v=36",
                 "bookkeeping-recurring.js?v=2",
                 "bookkeeping-settings.js?v=9", "bookkeeping-stats.js?v=33",
-                "bookkeeping-report-shot.js?v=4", "bookkeeping-categories.js?v=10",
-                "bookkeeping-tags.js?v=2", "bookkeeping-push.js?v=12",
+                "bookkeeping-report-shot.js?v=4", "bookkeeping-categories.js?v=11",
+                "bookkeeping-tags.js?v=2", "bookkeeping-push.js?v=13",
                 "bookkeeping-boot.js?v=10"):
         assert f'src="/bookkeeping/static/{src}"' in html or \
             f'href="/bookkeeping/static/{src}"' in html, f"主页没装 {src}"
     boot = _static("bookkeeping-boot.js")
     assert "for (const warm" not in boot      # 1.7.4 子页预热随独立页退役
-    # 悬浮加号: 垫在 tab 栏上头一截, 与 tab 栏一起压过层 (65) 和同步条 (68),
-    # 记一笔弹层 (70) 起才让位 — 报表/设置页里也随手点得到
-    fab = css.split("#fab-stack {")[1].split("}")[0]
-    assert "position: fixed; right: 18px;" in fab and "z-index: 69;" in fab \
-        and "var(--tab-h) + 18px" in fab
+    # 中央槽两副面孔: .at-home 亮橘 ⊕ (骑栏沿冒头), 否则亮「首页」回主页
+    assert 'id="tab-add"' in html and 'class="tb-mid"' in html
+    assert "#tab-bar.at-home .tb-home { display: none; }" in css \
+        and "#tab-bar:not(.at-home) .tb-add { display: none; }" in css
+    add = css.split(".tb-add {")[1].split("}")[0]
+    assert "background: var(--accent);" in add and "margin-top: -18px;" in add
     tabs = css.split("#tab-bar {")[1].split("}")[0]
     assert "position: fixed" in tabs and "z-index: 69;" in tabs \
         and "max-width: 560px" in tabs       # 跟 main 同宽, 宽屏居中不摊大饼
-    # 1.15.0 图标描边吃不透明弱灰 (1.6.1 类别图标同款教训): 半透明弱字色在
-    # 笔画交点 (报表柱脚/设置滑轨接圆) 两笔叠色深一截 — 32% 白在壳底上先算成
-    # 不透明, 观感不变; svg 自吃色 (不吃按钮继承), 选中态照常整枚提蓝
-    assert "color-mix(in srgb, #ebebf5 32%, var(--bg))" in css
-    assert "#tab-bar button.on svg { color: var(--accent); }" in css
+    # 2.0 tab 字色 jz 口径: 默认 #999 激活 #333 — 橘只归中央 ⊕
+    assert "#tab-bar button.on svg { color: var(--ink-1); }" in css
     panes = _static("css/bookkeeping-panes.css")
     z = panes.split("#push-stack {")[1].split("}")[0]
     assert "z-index: 65;" in z   # 层让位 tab 栏 (69): 层开着也能切 tab、记一笔
@@ -66,12 +64,13 @@ def test_tab_bar_push_layers():
     # 明盖住), 清栏高的垫底挪进页身 (.gran-view 自己的滚动垫, 滚到尾才见)
     assert "padding-bottom: 10px;" in panes \
         and "padding-bottom: calc(env(safe-area-inset-bottom) + var(--tab-h) + 18px);" in panes
-    # 1.15.0 根层 (报表/设置) 内容上沿 = 全局上边界同线 (安全区+36 / 独立模式
-    # 96 磨砂带底沿, my-tesla 同款 --content-top): 层级层大标题的 env+14 线
-    # 不归根层用 — 标题退役后内容顶头就上, 会钻进模糊带 (2026-10-08 用户报)
+    # 1.15.0 根层 (报表/我的) 内容上沿 = 全局上边界同线 (安全区+36 / 独立模式
+    # 80 磨砂带底沿, my-tesla 同款 --content-top): 层级层大标题的 env+14 线
+    # 不归根层用 — 标题退役后内容顶头就上, 会钻进模糊带 (2026-10-08 用户报);
+    # 2.0 设置根层改名 mine (data-view 钉要跟上 — 漏改根层垫顶就丢)
     assert "--content-top: max(calc(env(safe-area-inset-top, 0px) + 36px)," in css
     assert '.push-pane[data-view="stats"] .pane-scroll,' in panes \
-        and '.push-pane[data-view="settings"] .pane-scroll {' in panes \
+        and '.push-pane[data-view="mine"] .pane-scroll {' in panes \
         and "padding-top: var(--content-top);" in panes
 
 
@@ -120,11 +119,13 @@ def test_push_layer_mechanics():
     # 类别管理行左滑与层右划分家: 行的右向让给层 (层任意位置起手都是返回)
     cats = _static("bookkeeping-categories.js")
     assert "if (dx > 12) { sw = null; return; }" in cats
-    # 1.15.0 tab 栏驱动: 类别管理/更新日志归设置 tab; 目标层在栈里就收到它
-    # 露头 (顶上还压着嵌套层也一并收走, 层壳与滚动位置原样保住), 不在栈里
-    # 先清场再推; tab 间平级跳转一律即切 — 不放「从右进入」的滑入 (那是
-    # 层级语义), 滑出留给收嵌套层与手势
-    assert "const TAB_OF = {" in js and 'categories: "settings"' in js
+    # 1.15.0 tab 栏驱动: 类别管理/更新日志/标签/周期账归我的 tab; 下钻两层
+    # (大类→小类→明细) 归报表 tab; 目标层在栈里就收到它露头 (顶上还压着
+    # 嵌套层也一并收走, 层壳与滚动位置原样保住), 不在栈里先清场再推; tab 间
+    # 平级跳转一律即切 — 不放「从右进入」的滑入 (那是层级语义), 滑出留给收
+    # 嵌套层与手势
+    assert "const TAB_OF = {" in js and 'categories: "mine"' in js \
+        and '"cat-subs": "stats"' in js
     assert "function topTab()" in js and "function updateTabs()" in js
     assert 'classList.toggle("on"' in js and 'getElementById("tab-bar")' in js
     assert "function switchTab(" in js and "closePushStack(idx + 1)" in js \
@@ -196,4 +197,4 @@ def test_tags_management_view():
     assert "dirty.add(e.id);" in js and "persist();" in js \
         and "scheduleSync();" in js and "\n    render();" in js   # 主页账目行跟着换
     assert '"bk-tags-v1"' in sheet           # 记一笔的选择列表同吃字典
-    assert 'tags: "settings"' in push and 'view === "tags") renderTagsView(target)' in push
+    assert 'tags: "mine"' in push and 'view === "tags") renderTagsView(target)' in push

@@ -1,7 +1,7 @@
-"""记一笔类别横划跟手 + 类别图标色暗底适配 (1.5.1) 的锁: 拆新文件 —
+"""记一笔类别横划跟手 + 类别图标色的锁: 拆新文件 —
 test_bookkeeping_page_and_categories 已顶 200 行硬上限。
 2026-10-02 用户报两件: 「支出和收入类别左右滑动有抖动, 而且不跟手」+
-「图标的颜色没有适配暗黑风格界面」。"""
+「图标的颜色没有适配暗黑风格界面」(色档 2.0 已随挖财亮色翻新)。"""
 from pathlib import Path
 
 _STATIC = Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
@@ -34,36 +34,37 @@ def test_swipe_follows_finger():
     #   `go ? 0 : -d.dir * d.w` 是它自己的, 不相干)
 
 
-def test_category_icon_colors_dark():
+def test_category_icon_colors_light():
     """图标色: 方向线稿色 :root 档 (page.css — 1.8.0 起唯一副本, 子页并进
-    推入层后层随主文档吃同一份 :root) 暗底提亮档 (1.5.0); 1.5.2 起弹层里
-    未选中灰线稿、选中翻本色圆底压白线稿 (深档底由 color-mix 从 --cc 就地
-    导出, 不再养 token); 色票盘 12 枚暗底档 (库里自选色列全空, 换值无迁移)。"""
+    推入层后层随主文档吃同一份 :root) 2.0 挖财亮色档 (= 收支语义色本体,
+    浅井上本就够饱和); 1.5.2 起弹层里未选中灰线稿、选中翻本色圆底压白
+    线稿 (深档底由 color-mix 从 --cc 就地导出, 不再养 token); 色票盘
+    12 枚亮色井饱和档 (库里自选色列全空, 换值无迁移 — 1.5.1 暗底档退役)。"""
     page_css = (_STATIC / "css" / "bookkeeping-page.css").read_text(
         encoding="utf-8")
     for css, name in ((page_css, "bookkeeping-page.css"),):
-        assert "--icon-red: #e5666a;" in css, name
-        assert "--icon-green: #5fd47f;" in css, name
-        assert "--icon-red: #d18f8f;" not in css, name    # 粉彩档不许回潮
-        assert "--icon-green: #7fb5a3;" not in css, name
+        assert "--icon-red: #DE4A3F;" in css, name
+        assert "--icon-green: #32B572;" in css, name
+        assert "--icon-red: #e5666a;" not in css, name    # 暗底提亮档不许回潮
+        assert "--icon-green: #5fd47f;" not in css, name
     # 1.5.2 续 (用户点名「被选中的图标要有颜色」): 选中翻本色圆底压白线稿 —
     # svg 里休眠的 --sel 钩子启用, 底 = 行内 --cc 经 color-mix 压深一档 (旧填色底
     # 深档 token --icon-*-deep/--ic-deep 退役, 深档现由 mix 就地导出, 自选色全适用)
     assert "--icon-red-deep" not in page_css and "--icon-green-deep" not in page_css
     assert "--ic-deep" not in _SHEET_CSS
-    assert ("transition: color .3s ease; color: color-mix(in srgb, "
-            "#ebebf5 62%, var(--icon-tint)); }") in _SHEET_CSS
-    #   ↑ 1.6.1: 灰线稿压平成不透明等效 (62% 白在井底上) — 半透明的灰在线稿
-    #   path 交叉处两次合成叠亮一截, 观感脏
+    # 2.0: 灰线稿直接吃不透明 --ink-2 (#999) — 暗色时代它曾是 62% 透明度的白,
+    # 半透明灰在线稿 path 交叉处两次合成叠亮一截 (1.6.1 换算成不透明等效);
+    # 亮色 --ink-2 本就不透明, 无此问题
+    assert "transition: color .3s ease; color: var(--ink-2); }" in _SHEET_CSS
     assert _SHEET_CSS.count("--sel: color-mix(in srgb, var(--cc) 72%, #000)") == 3
     assert " { transition: fill .3s ease; }" in _SHEET_CSS   # 圆底换色同步渐变
-    assert "--icon-tint: #2c2c2e;" in page_css       # 圆井底: 控件静止档不换
+    assert "--icon-tint: #F6F6F6;" in page_css       # 圆井底: 控件静止档 (页底灰当井)
     cats_js = (_STATIC / "bookkeeping-categories.js").read_text(encoding="utf-8")
-    for hexc in ("#e5696e", "#e88a55", "#d9b04c", "#b3bd5a", "#4dbf90",
-                 "#57bdd1", "#79a8ec", "#95a0f2", "#b897e8", "#e687ad",
-                 "#b59a7e", "#9aa7b9"):
-        assert hexc in cats_js, f"色票 {hexc} 没上暗底档"
-    for old in ("#d64953", "#cf6b32", "#b58a1f", "#8a9a27", "#18906a",
-                "#1b8e9c", "#3a7cc8", "#5a6fd6", "#8a5fc9", "#c9527f",
-                "#8a6b4f", "#64707f"):
-        assert old not in cats_js, f"浅色档色票 {old} 回潮了"
+    for hexc in ("#d64953", "#cf6b32", "#b58a1f", "#8a9a27", "#18906a",
+                 "#1b8e9c", "#3a7cc8", "#5a6fd6", "#8a5fc9", "#c9527f",
+                 "#8a6b4f", "#64707f"):
+        assert hexc in cats_js, f"色票 {hexc} 没上亮色井档"
+    for old in ("#e5696e", "#e88a55", "#d9b04c", "#b3bd5a", "#4dbf90",
+                "#57bdd1", "#79a8ec", "#95a0f2", "#b897e8", "#e687ad",
+                "#b59a7e", "#9aa7b9"):
+        assert old not in cats_js, f"暗底档色票 {old} 回潮了"

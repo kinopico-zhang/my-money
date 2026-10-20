@@ -70,7 +70,7 @@ def test_money_changelog_view_css():
     css = (Path(__file__).parent.parent / "app" / "bookkeeping" / "static"
            / "css" / "bookkeeping-panes.css").read_text(encoding="utf-8")
     assert ".push-pane .cl-entries .v-badge {" in css
-    assert "color: #7db3f0;" in css and "k-add" in css and "k-imp" in css \
+    assert "color: var(--accent);" in css and "k-add" in css and "k-imp" in css \
         and "k-fix" in css
     # 层内滚动器: 本体回弹保留、向外滚动链掐断 (别带主页), 横向锁死
     # (滚动条不画是 page.css 的文档级规则, 层天然继承)

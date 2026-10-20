@@ -16,10 +16,10 @@
 <link rel="apple-touch-icon" href="/bookkeeping/static/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/bookkeeping/static/manifest.json">
   <title>My Money</title>
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=65">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=43">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=10">
-<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=35">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-page.css?v=66">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-entry-sheet.css?v=44">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-amount-pad.css?v=11">
+<link rel="stylesheet" href="/bookkeeping/static/css/bookkeeping-panes.css?v=36">
 </head>
 <body data-kind="expense">
 <script src="/static/no-zoom.js?v=2"></script>
@@ -31,6 +31,33 @@
 <div id="cal-bar"></div>
 
 <main>
+  <!-- 封面 (2.0 挖财版式): 蓝渐变铺到 y=0 (iOS 27 顶带 = 深蓝状态栏观感),
+       本月支出大数字 + 收入/结余 + 月预算条 (设了才亮); 数字由 render.js
+       renderCover 随账本刷新 (feedMonths 本月口径) -->
+  <section class="cover" id="cover">
+    <div class="cov-label">本月支出</div>
+    <div class="cov-big" id="cov-expense">0.00</div>
+    <div class="cov-sub">
+      <span>本月收入<b id="cov-income">0.00</b></span>
+      <span>结余<b id="cov-balance">0.00</b></span>
+    </div>
+    <div class="cov-budget" id="cov-budget" hidden>
+      <div class="cb-track"><i id="cb-fill"></i></div>
+      <div class="cb-txt"><span id="cb-used"></span><span id="cb-total"></span></div>
+    </div>
+  </section>
+  <!-- 快捷行 (2.0): 明细/日历 过渡期滚到页内锚点 (批次 3 换推入页), 周期账走推入层 -->
+  <div class="quick-row" id="quick-row">
+    <button type="button" class="q-cell" data-q="ledger">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11"/><circle cx="4.6" cy="6.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17.5" r="1.4" fill="currentColor" stroke="none"/></g></svg><span>明细</span>
+    </button>
+    <button type="button" class="q-cell" data-q="calendar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v3.5M16 3.5v3.5M4 10.5h16"/><path d="M8.5 14.5h2M13.5 14.5h2M8.5 17.5h2"/></g></svg><span>日历</span>
+    </button>
+    <button type="button" class="q-cell" data-q="cyc">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5a7.5 7.5 0 0 1 13.2-3.4"/><path d="M17.5 4.5v3h-3"/><path d="M19.5 13.5a7.5 7.5 0 0 1-13.2 3.4"/><path d="M6.5 19.5v-3h3"/></g></svg><span>周期账</span>
+    </button>
+  </div>
   <div class="cal-card" id="cal-card">
     <div class="cal-head">
       <button type="button" id="cal-prev" aria-label="上月">‹</button>
@@ -45,13 +72,6 @@
   <div class="list-empty" id="list-empty" hidden>还没有账目</div>
   <div class="feed-end" id="feed-end" hidden></div>
 </main>
-
-<!-- 1.15.0 起导航换底部常驻菜单 (明细/报表/设置), 右下角只剩全局悬浮的记一笔
-     加号 (任何页面都能点); 统计/设置/类别管理/更新日志仍是推入层
-     (bookkeeping-push.js), 层栈由 tab 驱动, 设置页里的类别管理/更新日志在层里再推一层 -->
-<div id="fab-stack">
-  <button type="button" id="fab" aria-label="记一笔">＋</button>
-</div>
 
 <div id="sheet-mask" hidden></div>
 <div id="sheet" hidden>
@@ -155,21 +175,21 @@
   <input type="text" id="f-note" maxlength="200" placeholder="输入备注..." autocomplete="off" enterkeyhint="done">
 </div>
 
-<!-- 推入层挂点 (1.8.0): 设置/统计/类别管理/更新日志从右滑入盖住主页 -->
+<!-- 2.0 挖财三槽中央 morph (批次 1): 右下角悬浮 ⊕ 退役, 记一笔入口 =
+     中央槽; 推入层挂点照旧 -->
 <div id="push-stack"></div>
-
-<!-- 底部常驻菜单 (1.15.0): 三枚主 tab 明细/报表/设置; tab 不另起导航,
-     直接驱动层栈 (bookkeeping-push.js switchTab) — 常驻在层之上 (z 69),
-     记一笔弹层 (70) 起才让位 -->
-<nav id="tab-bar" aria-label="主导航">
-  <button type="button" data-tab="home" class="on">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11"/><circle cx="4.6" cy="6.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17.5" r="1.4" fill="currentColor" stroke="none"/></g></svg><span>明细</span>
-  </button>
+<nav id="tab-bar" class="at-home" aria-label="主导航">
   <button type="button" data-tab="stats">
     <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4.5 19.5h15"/><path d="M7 19.5v-5.5M12 19.5V7.5M17 19.5v-8.5"/></g></svg><span>报表</span>
   </button>
-  <button type="button" data-tab="settings">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6.5h8.6M17.4 6.5H20M4 12h3.6M12.4 12H20M4 17.5h10.6M19.4 17.5H20"/><circle cx="15" cy="6.5" r="2.4"/><circle cx="10" cy="12" r="2.4"/><circle cx="17" cy="17.5" r="2.4"/></g></svg><span>设置</span>
+  <div class="tb-mid">
+    <button type="button" class="tb-add" id="tab-add" aria-label="记一笔">＋</button>
+    <button type="button" class="tb-home" data-tab="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11.5L12 4.5l7.5 7"/><path d="M6.5 10v9.5h11V10"/></g></svg><span>首页</span>
+    </button>
+  </div>
+  <button type="button" data-tab="mine">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M5 19.5c1.2-3.2 3.8-4.8 7-4.8s5.8 1.6 7 4.8"/></g></svg><span>我的</span>
   </button>
 </nav>
 
@@ -179,17 +199,17 @@
 <script src="/bookkeeping/static/bookkeeping-categorizer.js?v=1"></script>
 <script src="/bookkeeping/static/bookkeeping-state.js?v=4"></script>
 <script src="/bookkeeping/static/category-icons.js?v=21"></script>
-<script src="/bookkeeping/static/bookkeeping-render.js?v=44"></script>
+<script src="/bookkeeping/static/bookkeeping-render.js?v=45"></script>
 <script src="/bookkeeping/static/bookkeeping-sync.js?v=7"></script>
 <script src="/bookkeeping/static/bookkeeping-recurring.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=30"></script>
+<script src="/bookkeeping/static/bookkeeping-entry-sheet.js?v=31"></script>
 <script src="/bookkeeping/static/bookkeeping-amount-pad.js?v=10"></script>
 <script src="/bookkeeping/static/bookkeeping-settings.js?v=9"></script>
 <script src="/bookkeeping/static/bookkeeping-stats.js?v=33"></script>
 <script src="/bookkeeping/static/bookkeeping-report-shot.js?v=4"></script>
-<script src="/bookkeeping/static/bookkeeping-categories.js?v=10"></script>
+<script src="/bookkeeping/static/bookkeeping-categories.js?v=11"></script>
 <script src="/bookkeeping/static/bookkeeping-tags.js?v=2"></script>
-<script src="/bookkeeping/static/bookkeeping-push.js?v=12"></script>
+<script src="/bookkeeping/static/bookkeeping-push.js?v=13"></script>
 <script src="/bookkeeping/static/bookkeeping-boot.js?v=10"></script>
 </body>
 </html>

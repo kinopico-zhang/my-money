@@ -11,7 +11,7 @@
   padding-bottom: 6px;
   background: var(--surface); border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--hairline);
-  box-shadow: 0 -12px 40px rgba(0,0,0,.5);   /* 暗色浮层压黑影 (底下垫着压暗的页面) */
+  box-shadow: 0 -12px 40px rgba(0,0,0,.18);   /* 浮层软影 (底下垫着压暗的页面) */
   z-index: 71; transform: translateY(102%); transition: transform .25s;
   max-width: 560px; margin: 0 auto; padding-left: 18px; padding-right: 18px; padding-top: 8px;
   max-height: calc(var(--shell-h, 100dvh) - 24px); overflow-y: auto;   /* 小屏整层滚, 键盘吸底不动 (dvh 赖账时吃 --shell-h 真高) */
@@ -19,13 +19,13 @@
   overscroll-behavior-y: contain;     /* 日期/备注行超宽 7px 就能整层左右拖 */
 }
 #sheet.on { transform: translateY(0); }
-/* 记一笔弹层 = 主页卡同一张深灰面 (iOS 深色抬升灰) — 从屏幕底下升上来的一张大卡,
-   白字暗井, 与主页一副设计语言。token 全吃页面的 (白墨字/暗井/白发丝线 —
-   不再就地改值), 键盘数字键跟着页面 --surface-3 走,
-   选层 (.pick .cp-panel) / 备注浮层 (#note-kb) 同一副身 */
+/* 记一笔弹层 = 白面板 (2.0 亮色: --surface 白卡 + 灰井控件 + 发丝线,
+   token 全吃页面的, 不再就地改值), 键盘是深蓝灰的 (amount-pad.css,
+   挖财记一笔键盘同款), 选层 (.pick .cp-panel) / 备注浮层 (#note-kb)
+   同一副白身 */
 /* 方向配色跟收支走 (标签页点选/左右划都换): 支出红 (删除钮同款), 收入绿 (主页收入同款),
    金额大字吃 --kind (挂 body 上)。类别图标 (1.5.2 改款, 2026-10-02 用户点名「未选中
-   灰色线条款」+ 续「被选中的要有颜色」): 圆底平时恒暗井 (--icon-tint), 弹层里线稿
+   灰色线条款」+ 续「被选中的要有颜色」): 圆底平时恒浅井 (--icon-tint), 弹层里线稿
    默认灰 (--ink-2); 选中翻本色圆底压白线稿 — svg 里休眠的 --sel 钩子派上用场,
    底 = 行内 --cc (catColor 给的方向色/自选色) 经 color-mix 压深一档 (白线稿压得住,
    方向色/12 色票全适用); 主页/统计/类别管理没有选中态, 那边 .ci 仍走 page.css 的本色 */
@@ -34,13 +34,13 @@ body[data-kind="income"] { --kind: var(--green); }
 /* 左右切换的过渡: 吃方向色的元素红↔绿渐变过去 (金额大字; 图形颜色走
    currentColor — color 带上过渡, 灰↔白也吃它), 不生硬跳变 */
 .tabs button, .amt-line input { transition: color .3s ease; }
-.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; color: color-mix(in srgb, #ebebf5 62%, var(--icon-tint)); }
+.amt-cat .ci, .cp-row .ci, .cat-tiles .tile .ci { transition: color .3s ease; color: var(--ink-2); }
                               /* ↑ 弹层内的默认脸: 灰线稿 (各自的 .on 规则翻彩色
-                              圆底压白线稿, 特异度多一级压得住)。灰不直接用 --ink-2
-                              (62% 透明度的白): 线稿是好几条 path, 半透明的灰在线条
-                              交叉处会两次合成叠亮一截, 一粒粒发亮的结点 (2026-10-02
-                              用户报) — 这里取 62% 白在井底 (icon-tint) 上的不透明
-                              等效, 单看一模一样, 交叉处与单线同色 */
+                              圆底压白线稿, 特异度多一级压得住)。暗色时代 --ink-2
+                              是 62% 透明度的白, 线稿好几条 path 交叉处两次合成
+                              会叠亮一截 (2026-10-02 用户报), 当时换算成不透明
+                              等效; 2.0 亮色 --ink-2 本就是不透明 #999, 直接用,
+                              交叉处天然同色 */
 .amt-cat .ci circle, .cp-row .ci circle, .cat-tiles .tile .ci circle { transition: fill .3s ease; }
                               /* ↑ 圆底换色 (暗井↔本色深档) 同步渐变, 选中不生硬跳变 */
 /* 类别那摊顺着划的方向滑入: 去支出从右进 (左划), 去收入从左进 (右划) */
@@ -49,7 +49,7 @@ body[data-kind="income"] { --kind: var(--green); }
 @keyframes kind-swap-l { from { transform: translateX(46px); opacity: 0; } }
 @keyframes kind-swap-r { from { transform: translateX(-46px); opacity: 0; } }
 .grab-zone { padding: 7px 0 3px; margin: 0 0 8px; touch-action: none; cursor: pointer; }
-.grab { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.22); margin: 0 auto; }   /* 深灰面板上的把手: 白色半透一档才摸得着 */
+.grab { width: 36px; height: 4px; border-radius: 2px; background: rgba(0,0,0,.16); margin: 0 auto; }   /* 白面板上的把手: 灰色一档才摸得着 */
 /* 头部: 左边收入/支出标签页 (不是按钮, 低占位), 右边删除/关闭圆钮 */
 .sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .tabs { flex: 1; display: flex; gap: 22px; min-width: 0; }
@@ -173,7 +173,7 @@ body[data-kind="income"] { --kind: var(--green); }
   border-top: 1px solid var(--hairline);
   transform: translateY(102%); transition: transform .25s;
   padding: 8px 18px calc(env(safe-area-inset-bottom) + 10px);
-  box-shadow: 0 -12px 40px rgba(0,0,0,.5);   /* 选层压重一档的黑影 (浮在记一笔之上) */
+  box-shadow: 0 -12px 40px rgba(0,0,0,.2);   /* 选层压重一档的软影 (浮在记一笔之上) */
 }
 .pick.on .cp-panel { transform: translateY(0); }
 .cp-head {
@@ -258,7 +258,7 @@ body[data-kind="income"] { --kind: var(--green); }
 .wp-band {                                /* 居中高亮带: 拨到哪格哪格入带 */
   position: absolute; left: 18px; right: 18px; top: 50%; height: 40px;
   transform: translateY(-50%); border-radius: 10px; pointer-events: none;
-  background: rgba(255,255,255,.12);   /* 高亮带: 暗底上一道白 (拨到哪格哪格入带) */
+  background: rgba(0,0,0,.05);   /* 高亮带: 白底上一道灰 (拨到哪格哪格入带) */
   border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
 }
 /* 拨轮的另两副面孔 (1.15.0 周期账借调, #when-pick 的 data-mode 换): date 模式

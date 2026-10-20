@@ -186,7 +186,7 @@ def test_recurring_js_wiring():
     assert "submitCycle(entry);" in pad and "flushCycleQueue();" in sync_js
     # 设置入口 + 层注册 + 清单样式
     assert 'data-push="cyc"' in settings_js
-    assert 'cyc: "settings"' in push_js \
+    assert 'cyc: "mine"' in push_js \
         and 'view === "cyc") renderCycView(target)' in push_js
     assert "cy-rules-row" in rec_js and ".push-pane .cy-rules-row" in panes
     assert "确认删除" in rec_js and "两道闸" in rec_js

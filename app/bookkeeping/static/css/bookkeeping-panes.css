@@ -17,7 +17,7 @@
   position: absolute; left: 0; right: 0; top: 0; bottom: 0;
   display: flex; justify-content: center;      /* 内容列宽对齐主页的 640px */
   background: var(--bg);
-  box-shadow: -10px 0 26px -8px rgba(0,0,0,.5);   /* 主页在左侧露头时的深度 */
+  box-shadow: -10px 0 26px -8px rgba(0,0,0,.18);  /* 主页在左侧露头时的深度 */
   transform: translateX(100%);
   transition: transform .34s cubic-bezier(.32,.72,.35,1);
   will-change: transform;   /* 层滑出结束不降级合并: 合并瞬间 WebKit 会把旁边
@@ -52,12 +52,12 @@
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px
            calc(env(safe-area-inset-bottom) + var(--tab-h) + 24px);
 }
-/* tab 根层 (报表/设置) 内容上沿 (1.15.0): 钉 --content-top — 与
+/* tab 根层 (报表/我的) 内容上沿 (1.15.0): 钉 --content-top — 与
    my-music/my-tesla 根页同一条线 (安全区+36 / 独立模式磨砂带底沿);
    层级层照旧 env+14, 那是页顶大标题的顶衬, 根层没标题, 沿用它会让
-   内容钻进模糊带 (2026-10-08 用户报) */
+   内容钻进模糊带 (2026-10-08 用户报)。2.0 设置根层改名 mine (批次 4 重排) */
 .push-pane[data-view="stats"] .pane-scroll,
-.push-pane[data-view="settings"] .pane-scroll {
+.push-pane[data-view="mine"] .pane-scroll {
   padding-top: var(--content-top);
 }
 /* 报表页顶大标题 (10-19 用户点名「标题放在最上面, 不要进浏览器的模糊区
@@ -115,7 +115,7 @@
                                  gap: 8px; margin-bottom: 9px; }
 .push-pane .cl-entries .v-badge {
   font-family: ui-monospace, Menlo, monospace;
-  font-size: 15px; font-weight: 600; color: #7db3f0;
+  font-size: 15px; font-weight: 600; color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .push-pane .cl-entries .v-date {
@@ -131,9 +131,9 @@
 .push-pane .cl-entries .k { flex: none; margin-top: 2px; font-size: 10.5px;
                             font-weight: 600; padding: 1.5px 7px; border-radius: 6px;
                             white-space: nowrap; }
-.push-pane .cl-entries .k-add { color: #7db3f0; background: rgba(57,135,229,.18); }
-.push-pane .cl-entries .k-imp { color: #f0b13d; background: rgba(224,138,60,.16); }
-.push-pane .cl-entries .k-fix { color: #6fce8e; background: rgba(31,163,73,.16); }
+.push-pane .cl-entries .k-add { color: #E85A20; background: rgba(255,122,64,.16); }
+.push-pane .cl-entries .k-imp { color: #C98A12; background: rgba(240,177,61,.2); }
+.push-pane .cl-entries .k-fix { color: #1E9E58; background: rgba(50,181,114,.16); }
 .push-pane .cl-entries .t { flex: 1; min-width: 0; }
 
 /* ---------- 统计 (1.14.0 大改: 时间范围/筛选/大小类两档/圆环+条形榜) ---------- */
@@ -259,7 +259,7 @@
   position: absolute; left: 14px; top: calc(100% + 4px); z-index: 30;
   min-width: 132px; border-radius: 12px; overflow: hidden;
   background: var(--surface-2); border: 1px solid var(--hairline);
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  box-shadow: 0 8px 24px rgba(0,0,0,.16);
 }
 .push-pane .gran-menu button { display: block; width: 100%; text-align: left;
                                padding: 9px 16px; font-size: 14px;
@@ -341,7 +341,7 @@
   border-top: 1px solid var(--hairline);
   transform: translateY(102%); transition: transform .25s;
   padding: 8px 18px calc(env(safe-area-inset-bottom) + 12px);
-  box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  box-shadow: 0 -12px 40px rgba(0,0,0,.18);
 }
 .push-pane .bk-sheet.on .bs-panel { transform: translateY(0); }
 .push-pane .bk-sheet .bs-head {
@@ -409,7 +409,7 @@
   position: absolute; inset: 0; z-index: -1;
   display: flex; align-items: center; justify-content: center;
   font-size: 92px; font-weight: 700; letter-spacing: -2px;
-  color: rgba(235,235,245,.09); pointer-events: none;
+  color: rgba(51,51,51,.08); pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
 /* 换月滑入 (2026-10-10 用户点名「切换要有动画」): 点档联动/‹› 步进/自定义
@@ -496,7 +496,7 @@
   width: 72px; color: rgba(255,255,255,.92);
   font-size: 13px; font-weight: 600;
 }
-.push-pane .sw-act.edit { background: var(--accent); }  /* 非销毁性: 蓝, 红留给删除 */
+.push-pane .sw-act.edit { background: var(--accent); }  /* 非销毁性: 橘, 红留给删除 */
 .push-pane .sw-act.del { background: var(--red); }
 .push-pane .sw-act.confirm { box-shadow: inset 0 0 0 2px #fff; font-weight: 700; }
 .push-pane .sw-body {
@@ -551,7 +551,7 @@
   border-top: 1px solid var(--hairline);
   transform: translateY(102%); transition: transform .25s;
   padding: 8px 18px calc(env(safe-area-inset-bottom) + 12px);
-  box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  box-shadow: 0 -12px 40px rgba(0,0,0,.18);
 }
 .push-pane #cat-modal.on .cm-panel { transform: translateY(0); }
 .push-pane .cm-head {

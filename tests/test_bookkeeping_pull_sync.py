@@ -15,14 +15,19 @@ def _static(name):
 def test_sync_strip_transient_css():
     """条子改 fixed 盖内容 (不占文档流): 平时 translateY(-101%) 收在顶沿外
     (101% 连底边线一起带走), .show 滑下; z 68 压推入层 (65) 让位记一笔弹层
-    (70); main 自己吃顶衬 (原先靠条子的 padding 顶着 — 条子不占流了);
-    hush 弱化档: 小一号再打六折 (1.11.1 问题态专用)。"""
+    (70); 2.0 顶衬改由封面吃 (main 不再垫顶 — 封面自己 padding-top 钉在
+    --top-clear 之下, 蓝底顺势铺到 y=0 填 iOS 顶带); 条子 2.0 换自足深色
+    toast 脸 (页面亮色后压暗蒙层仍是最稳的对比路); hush 弱化档: 小一号
+    再打六折 (1.11.1 问题态专用)。"""
     css = _static("css/bookkeeping-page.css")
     assert "position: fixed; top: 0; left: 0; right: 0; z-index: 68;" in css
     assert "transform: translateY(-101%);" in css
     assert ".sync-strip.show { transform: translateY(0); }" in css
-    assert "padding: calc(var(--top-clear) + 14px) 16px" in css
     assert ".sync-strip.hush { font-size: 10.5px; opacity: .62; }" in css
+    cover = css.split(".cover {")[1].split("}")[0]
+    assert "padding: calc(var(--top-clear) + 8px) 16px 34px;" in css \
+        and "linear-gradient(180deg, var(--cover-1), var(--cover-2));" in css \
+        and "border-radius: 0 0 18px 18px;" in cover   # 封面填带 + 下沿圆角
 
 
 def test_sync_strip_quiet_unless_pulled():
@@ -44,7 +49,7 @@ def test_sync_strip_quiet_unless_pulled():
     assert 'addEventListener("online", () => syncNow());' in js  # 联网恢复静默
     html = _static("bookkeeping.html")
     assert "bookkeeping-sync.js?v=7" in html and "bookkeeping-boot.js?v=10" in html \
-        and "css/bookkeeping-page.css?v=65" in html
+        and "css/bookkeeping-page.css?v=66" in html
 
 
 def test_pull_to_sync_gesture():

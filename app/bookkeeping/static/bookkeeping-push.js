@@ -13,6 +13,10 @@
 // 留给层级推入 (设置→类别管理) 与回退 (右划/Esc)。tab 根层 (报表/设置)
 // 当正经页面: 无右划无 Esc, 切换只走底部 tab 栏。返回圆钮同版退役 —
 // 怎么来怎么回去: 子界面统一从右滑入, 回头路统一是全局右划收回。
+// 2.0 (批次 1): 底栏换挖财三槽中央 morph [报表|⊕/首页|我的] — 「明细」
+// tab 退役 (明细内容批次 3 搬进推入页), 设置视图改名 mine (内容批次 4
+// 重排); 中央槽首页态是橘 ⊕ (开记一笔, 接线在 entry-sheet), 其他 tab
+// 态 morph 成「首页」跳回 — 栏上 .at-home 翻两副面孔 (CSS 管)。
 "use strict";
 /* global renderCategoriesView, renderChangelogView, renderSettingsView,
           renderStatsView, renderCatSubsView, renderCatEntriesView,
@@ -21,16 +25,16 @@
 
 const pushStack = [];   // [{view, pane}] — 设置→类别管理会叠两层
 
-// 视图 → 所属主 tab (1.15.0): 类别管理/更新日志是设置页里再推的层, 高亮归
-// 设置; 下钻两层 (大类→小类→明细) 是报表页里再推的层, 高亮归报表
-const TAB_OF = { stats: "stats", settings: "settings",
-                 categories: "settings", changelog: "settings",
-                 tags: "settings", cyc: "settings",
+// 视图 → 所属主 tab (2.0): 类别管理/更新日志/标签/周期账是我的页里再推的
+// 层, 高亮归我的; 下钻两层 (大类→小类→明细) 是报表页里再推的层, 高亮归报表
+const TAB_OF = { stats: "stats", mine: "mine",
+                 categories: "mine", changelog: "mine",
+                 tags: "mine", cyc: "mine",
                  "cat-subs": "stats", "cat-entries": "stats" };
 
 /** 按页铺内容 (渲染函数在各视图文件, 全局名字引用 — 加载序上它们都在本文件前)。 */
 function renderView(view, target) {
-  if (view === "settings") renderSettingsView(target);
+  if (view === "mine") renderSettingsView(target);   // 2.0: mine = 现设置页内容 (批次 4 重排)
   else if (view === "stats") renderStatsView(target);
   else if (view === "categories") renderCategoriesView(target);
   else if (view === "tags") renderTagsView(target);
@@ -87,16 +91,20 @@ function closePushStack(keep = 0, instant = false) {
   updateTabs();   // 收到哪层, 栏上亮到哪 (全收就是亮明细) — 1.15.0
 }
 
-/** 栈顶落在哪个主 tab: 空栈是明细, 别的视图按 TAB_OF 归口。 */
+/** 栈顶落在哪个主 tab: 空栈是首页, 别的视图按 TAB_OF 归口。 */
 function topTab() {
   const top = pushStack[pushStack.length - 1];
-  return top ? TAB_OF[top.view] || "settings" : "home";
+  return top ? TAB_OF[top.view] || "mine" : "home";
 }
 
-/** 刷新底部 tab 栏高亮 (亮栈顶所属的 tab)。 */
+/** 刷新底部 tab 栏 (2.0 三槽中央 morph): 报表/我的亮栈顶所属的 tab;
+    栏挂 .at-home = 栈收空回首页, 中央槽亮橘 ⊕ (CSS 翻面孔),
+    否则中央槽是「首页」跳回钮。 */
 function updateTabs() {
   const cur = topTab();
-  document.querySelectorAll("#tab-bar button[data-tab]").forEach(
+  const bar = document.getElementById("tab-bar");
+  bar.classList.toggle("at-home", cur === "home");
+  bar.querySelectorAll("button[data-tab]").forEach(
     b => b.classList.toggle("on", b.dataset.tab === cur));
 }
 
